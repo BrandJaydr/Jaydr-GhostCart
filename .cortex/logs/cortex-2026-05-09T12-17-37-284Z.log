@@ -1,0 +1,14 @@
+[2026-05-09T12:17:37.285Z] [INFO] Logger initialized. Writing logs to: c:\Users\jayst\Documents\GitHub\Jaydr GhostCart\.cortex\logs\cortex-2026-05-09T12-17-37-284Z.log
+[2026-05-09T12:17:37.289Z] [INFO] ═══════════════════════════════════════════════════════════════
+[2026-05-09T12:17:37.291Z] [INFO] 🧠 CORTEX AI SCAN - Análisis Contextual Jerárquico
+[2026-05-09T12:17:37.293Z] [INFO] ═══════════════════════════════════════════════════════════════
+
+[2026-05-09T12:17:37.301Z] [INFO] 🔍 Seleccionando mejor modelo...
+[2026-05-09T12:17:43.804Z] [ERROR] Model selection failed
+{}
+[2026-05-09T12:17:43.806Z] [STACK] Error: CLIPBOARD_FALLBACK
+	at selectBestModel (c:\Users\jayst\.windsurf\extensions\ecuabyte.cortex-vscode-0.8.2-universal\dist\extension.js:5500:11)
+	at async scanProjectWithAI (c:\Users\jayst\.windsurf\extensions\ecuabyte.cortex-vscode-0.8.2-universal\dist\extension.js:5718:20)
+	at async c:\Users\jayst\.windsurf\extensions\ecuabyte.cortex-vscode-0.8.2-universal\dist\extension.js:8036:26
+[2026-05-09T12:17:43.808Z] [INFO] \n📋 Usuario solicitó copiar prompt al portapapeles...
+[2026-05-09T12:17:44.386Z] [INFO] ✅ Prompt copiado al portapapeles

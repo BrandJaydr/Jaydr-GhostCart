@@ -1,0 +1,56 @@
+You are a senior software architect. Analyze this project and extract key knowledge as memories.
+
+
+(Map out project structure. Example..)
+## PROJECT STRUCTURE:
+```
+├── Jaydr Left sidebar Back up/
+│   ├── documentation/
+│   └── src/
+│       └── components/
+│           └── layout/
+├── 🧭 PHASE PLAN (Clean + Executable).txt
+├── 🧱 1. Expected Supabase Schema (Final Form).txt
+├── 🧱 Step 1 The UI Flow.txt
+├── 10 Best Google Alerts Alternatives.txt
+├── 3- real command interface.txt
+├── A.I. GuardRails Plan.jmd
+├── AddFeedModal.tsx
+├── Agile Task Management VS Code and CLine Integration for JaydrRss.txt
+├── BACK END CHEAT SHEET.txt
+├── ChatGPT plan.txt
+├── CLAUDE PLAN.txt
+├── command-driven intelligence interface.txt
+├── CONCEPT.txt
+├── Connected Portal Technical Help.md
+├── FeedPreviewCard-DesignReference.md
+├── FeedPreviewCard.tsx
+├── FLoating overlay serach bar.txt
+├── production-ready worker codebase.txt
+├── skills.json
+├── Todo documentation for implimentations on securuty.txt
+├── Todo list.txt
+├── VSCODE AND CLINE INTEGRATION PLAN.txt
+└── What is Jaydr Rss.txt
+
+```
+
+## KEY FILES:
+
+
+## TASK:
+1. Understand the project's purpose, tech stack, and architecture
+2. Identify the main areas/modules
+3. Extract important memories about:
+   - Architecture decisions
+   - Key components and their responsibilities
+   - Important patterns and conventions
+   - Configuration and setup requirements
+   - API contracts and interfaces
+
+Respond with a list of memories in this format:
+[TYPE] Content of the memory
+- Tags: tag1, tag2
+- Source: file or area
+
+Types: architecture, component, pattern, decision, api, config, workflow
