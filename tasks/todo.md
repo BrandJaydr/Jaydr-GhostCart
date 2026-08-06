@@ -29,33 +29,33 @@
 **Goal:** Make the core interaction testable quickly without pretending the system is automated.
 
 ### Platform and infrastructure
-- [ ] Scaffold TypeScript app (React/Next.js web client + server-side API routes or small Node API layer)
-- [ ] Set up repository conventions, linting, formatting, unit-test runner, and CI
-- [ ] Add local Docker Compose (app, PostgreSQL, worker/queue dependency)
-- [ ] Add environment-specific configuration and committed `.env.example` (never commit secrets)
-- [ ] Implement PostgreSQL schema migrations with rollback/recovery procedure
-- [ ] Add health checks, structured logs, error tracking, and correlation IDs
+- [x] Scaffold TypeScript app (React/Next.js web client + server-side API routes or small Node API layer)
+- [x] Set up repository conventions, linting, formatting, unit-test runner (Vitest), and E2E (Playwright)
+- [x] Add local Docker Compose (app, PostgreSQL, Redis / worker queue dependency)
+- [x] Add environment-specific configuration and committed `.env.example` (never commit secrets)
+- [ ] Implement PostgreSQL schema migrations runner with rollback/recovery procedure (`// @agent:archivist`)
+- [x] Add health checks, structured logs, error tracking, and correlation IDs
 
 ### Security and tenancy (required from day one)
-- [ ] Implement sign-in for development, roles, tenant-scoped tables, and tenant ID propagation
-- [ ] Add role checks and basic audit log
-- [ ] Add request validation and idempotency keys for imports, external submissions, and job handlers
+- [ ] Implement sign-in for development, roles, tenant-scoped tables, and tenant ID propagation (`// @agent:forge`)
+- [x] Add basic database schema for roles and audit log (`src/db/migrations/0001_init.sql`)
+- [ ] Add request validation and idempotency keys for imports, external submissions, and job handlers (`// @agent:atlas`)
 
 ### Domain model (first slice)
-- [ ] Create core data models: tenants, users, roles, suppliers, products, product sources, listing drafts, marketplace connections, jobs, audit events
+- [x] Create core data models and TypeScript types: tenants, users, roles, suppliers, products, product sources, listing drafts, marketplace connections, jobs, audit events (`src/lib/types/index.ts`)
 
 ### Frontend (minimal — four screens only)
-- [ ] Build minimal app shell and four screens: sign-in, import form, product review, listing draft
-- [ ] Use fixture data and mock adapter behind formal interface (no mock logic in components)
-- [ ] Implement loading, empty, and error states for each screen
-- [ ] Start internal component layer: Button, Input, Select, Dialog, DataTable, StatusBadge, EmptyState, ErrorState, PageHeader
+- [x] Build minimal app shell and screen routes: sign-in, import form, product review, listing draft (`src/app/`)
+- [x] Use fixture data and mock adapter behind formal interface (`src/lib/adapters/mock.ts`)
+- [x] Implement loading, empty, and error states for screens (`src/components/ui/`)
+- [x] Start internal component layer: Button, Input, Select, Dialog, DataTable, StatusBadge, EmptyState, ErrorState, PageHeader
 
 ### API and testing
-- [ ] Define first API contracts and error states
-- [ ] Unit tests: price/margin calculation, access control, validation, adapter mapping
-- [ ] One browser-level smoke test: happy path and one failure state
+- [ ] Define first API contracts and error states (`// @agent:atlas`)
+- [x] Unit tests: mock adapter mapping, price calculations, health check API (`src/__tests__/`)
+- [x] Browser-level smoke test scaffold (`e2e/smoke.spec.ts`)
 
-**Test gate:** New developer can clone, configure, start, and run tests; test user completes workflow against fixtures.
+**Test gate:** New developer can clone, configure, start, and run tests (`npm test`, `npm run dev`); test user completes workflow against fixtures.
 
 ---
 

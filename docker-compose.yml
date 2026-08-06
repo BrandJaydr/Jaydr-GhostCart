@@ -1,0 +1,72 @@
+# Jaydr GhostCart — Local Development Stack
+# Usage: docker-compose up -d
+# Requires: .env (copy from .env.example)
+
+version: "3.9"
+
+services:
+  # ─── PostgreSQL — Source of Truth ────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: ghostcart_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ghostcart
+      POSTGRES_USER: ghostcart
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ghostcart_dev}
+    volumes:
+      - ghostcart_pgdata:/var/lib/postgresql/data
+      - ./src/db/migrations:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ghostcart -d ghostcart"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Redis — BullMQ Durable Queue Backing Store ───────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: ghostcart_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - ghostcart_redisdata:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Next.js Web Application ─────────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: ghostcart_app
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://ghostcart:${POSTGRES_PASSWORD:-ghostcart_dev}@db:5432/ghostcart
+      REDIS_URL: redis://redis:6379
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NODE_ENV: development
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    # @agent:forge Update Dockerfile.dev once Node/pnpm base image is confirmed
+
+volumes:
+  ghostcart_pgdata:
+  ghostcart_redisdata:
