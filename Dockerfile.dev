@@ -1,0 +1,22 @@
+# Jaydr GhostCart — Development Dockerfile
+# Referenced by docker-compose.yml (`app` service).
+# Stage 1: simple node:20-alpine image running Next.js in dev mode with
+# hot-reload via the mounted source volume.
+#
+# @agent:forge (Stage 2) Confirm non-root user + pnpm pinning once baseline is stable.
+# @agent:archivist (Stage 3+) Add a multi-stage production Dockerfile.
+
+FROM node:20-alpine AS base
+WORKDIR /app
+
+# Install deps first (layer cache). package-lock.json locks Node deps.
+COPY package.json package-lock.json ./
+RUN npm ci --ignore-scripts
+
+# Copy source (node_modules is overridden by a named volume in compose for dev)
+COPY . .
+
+EXPOSE 3000
+
+# Dev server binds to 0.0.0.0 so Docker port mapping works.
+CMD ["npm", "run", "dev", "-H", "0.0.0.0"]

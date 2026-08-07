@@ -95,7 +95,6 @@ Agents communicate via explicit markers in code and docs:
 
 *Next Pipeline Actions:*
 ```
-// @agent:atlas Define and implement API contracts for /api/products and /api/listings (Stage 1)
-// @agent:archivist Implement PostgreSQL migrations runner and RLS policies from src/db/migrations/0001_init.sql
-// @agent:forge (Stage 2) Implement next-auth session, app shell navigation, and design tokens
+// @agent:archivist Implement PostgreSQL migrations runner and RLS policies from src/db/migrations/0001_init.sql (Stage 1)
+// @agent:forge Implement NextAuth development session integration & authentication middleware (Stage 1)
 ```

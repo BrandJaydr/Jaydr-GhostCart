@@ -39,7 +39,7 @@
 ### Security and tenancy (required from day one)
 - [ ] Implement sign-in for development, roles, tenant-scoped tables, and tenant ID propagation (`// @agent:forge`)
 - [x] Add basic database schema for roles and audit log (`src/db/migrations/0001_init.sql`)
-- [ ] Add request validation and idempotency keys for imports, external submissions, and job handlers (`// @agent:atlas`)
+- [x] Add request validation and idempotency keys for imports, external submissions, and job handlers (`src/lib/validation/schemas.ts`)
 
 ### Domain model (first slice)
 - [x] Create core data models and TypeScript types: tenants, users, roles, suppliers, products, product sources, listing drafts, marketplace connections, jobs, audit events (`src/lib/types/index.ts`)
@@ -51,7 +51,7 @@
 - [x] Start internal component layer: Button, Input, Select, Dialog, DataTable, StatusBadge, EmptyState, ErrorState, PageHeader
 
 ### API and testing
-- [ ] Define first API contracts and error states (`// @agent:atlas`)
+- [x] Define first API contracts and error states (`src/app/api/products/route.ts`, `src/app/api/listings/route.ts`)
 - [x] Unit tests: mock adapter mapping, price calculations, health check API (`src/__tests__/`)
 - [x] Browser-level smoke test scaffold (`e2e/smoke.spec.ts`)
 
@@ -182,3 +182,80 @@ Do not start these until Stages 0–3 are complete and pilot evidence supports e
 - [ ] Optimize database queries as data volume grows
 - [ ] Improve error handling and user-visible failure recovery
 - [ ] Enhance logging, monitoring, and alerting
+
+---
+
+## 📌 Decision Log — Import Pipeline Strategy (2026-08-06)
+
+> **Decision:** Adopted **Option C** — worker + enqueue with graceful degradation.
+> Full rationale: see `Jaydr Journal/Jaydr Memo` → "Decision Memo."
+
+**Implemented (Stage 1):**
+- [x] `POST /api/products` enqueues a real BullMQ `product.import` job
+      (lazily imported queue module, guarded by `process.env.REDIS_URL`, fallback 202)
+- [x] Worker resolves adapter via `src/lib/adapters/factory.ts`, calls `importProduct()`,
+      persists to Postgres (`products` + `jobs` + `audit_events`), returns `{ productId }`
+      (persistence wrapped in try/catch — graceful degradation)
+- [x] `mock.adapter.ts` `mockProduct` fixture added; broken route import fixed
+- [x] `Dockerfile.dev` created to unblock `docker-compose up`
+- [x] `TECHNICAL_WIKI.md` amended (§7.2, §11, §12.5, §12.6, §12.11; `e2e/` marked existing)
+
+**Known limitations (Stage 1 tradeoff):**
+- [ ] DB/Redis outages degrade (log + complete) rather than retry — tighten retry
+      semantics + dead-letter queue in Stage 2
+- [ ] `npm run db:migrate` still a TODO echo (`@agent:archivist` handoff)
+- [ ] `0001_init.sql` archivist TODOs (RLS, constraints, indexes, encryption, seeded
+      tenant/supplier rows) not yet applied — canonical `identifiers`/`additionalImageUrls`/
+      `confidence` fields mapped to `product_sources.raw_source_metadata` in Stage 2
+
+**Feature improvements for consideration:**
+- [ ] Add idempotency-key dedup at the route layer (reject duplicate imports)
+- [ ] Add job status polling endpoint `GET /api/jobs/[id]`
+- [ ] Wire `POST /api/listings/[id]/submit` to `listingQueue` (Stage 3+)
+
+---
+
+## 📋 Proposed Stable Plan — Design & Deployment (OPEN for later deliberation)
+
+> Status: PLAN-REVIEW. Decision-making record, NOT a locked plan. Re-evaluate
+> when the time is right (component-library selection, deployment commitment).
+> Companion note: `Jaydr Journal/Jaydr Memo` → "Proposed Stable Plan".
+
+**Locked so far:**
+- ✅ Styling base: **Tailwind CSS** (approved)
+- 🟡 Component library — **OPEN**: shadcn/ui (Radix) vs **Lightswind UI** vs **MeetUI**
+- 🟡 Deployment model: Dockerized standalone Next.js mod-monolith
+     (app + PostgreSQL + Redis + worker) — **NOT** WordPress / not a plugin (non-goal)
+- 🟡 Host — **OPEN**: VPS (DigitalOcean) / Fly.io / Railway / Render (or TBD)
+- 🟡 Animation: CSS-first; anime.js deferred until concrete needs
+
+**Logic / why (decision trail):**
+- Design-system must be React/Next-native, license-safe, accessible, and map onto
+  the existing component primitives (Button, Input, EmptyState, ErrorState,
+  PageHeader, StatusBadge) so we strengthen stubs instead of discarding them.
+- Worker + durable queue + PostgreSQL favour a container-capable host over a
+  serverless-only (Vercel) shape; Vercel = frontend inspiration, not sole hosting
+  for this stack.
+- WordPress/plugin + microservices/Kafka remain deferred (Stage 3+); see
+  TECHNICAL_WIKI §1.3 for the aspirational-vs-current distinction.
+- Formal ADRs (`deployment platform`, `design-system foundation`) to be written
+  only once the component library and host are chosen.
+
+---
+
+## 🔐 SECURITY-DEBUG Notation — Security & Debugging Posture (later stages, Stage 4+)
+
+> Label: **SECURITY-DEBUG**. Forward-looking notes for enterprise hardening +
+> debugging. **NOT** Stage 1–2 work.
+
+- [ ] **Security Posture Overlay / debug panel** — operator overlay to inspect
+      authN/authZ state, tenant isolation (RLS) enforcement, secrets handling,
+      audit-trail coverage, rate limiting, security headers/CSP, dependency/CVE status
+- [ ] **Webhook event log pages** — inbound/outbound delivery records (see Jaydr Journal note)
+- [ ] **General log-view pages** — audit log, application/error log, job/queue history,
+      integration/environment status
+- [ ] **Debug facilities tied to the overlay** — correlation ids / request tracing,
+      RBAC preview, "what would RLS allow?" inspector, feature-flag view
+- [ ] **Link to** `@agent:scout` (observability) + a future security-review workstream
+- [ ] **Align with** Production Blueprint §7.1 (authorization boundaries,
+      backup-restore tests) and `tasks/todo.md` Stage 4 hardening items

@@ -12,6 +12,8 @@ export default defineConfig({
     // Automatically import testing utilities
     globals: true,
     setupFiles: ['./src/__tests__/setup.ts'],
+    // Exclude E2E tests (run via Playwright)
+    exclude: ['node_modules/**', '.next/**', 'e2e/**'],
     // Coverage thresholds — tighten as the codebase grows
     coverage: {
       provider: 'v8',

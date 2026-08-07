@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { ListingListQuerySchema, ListingCreateSchema } from '@/lib/validation/schemas';
 import type { ListingDraft } from '@/lib/types/canonical';

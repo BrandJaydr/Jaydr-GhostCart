@@ -92,3 +92,102 @@
 **The system is NOT complete.** It is entirely in the planning phase. The architecture documentation is thorough and well-thought-out for an enterprise-grade platform, but there is no functional implementation of any component whatsoever.
 
 **To make this a functional system, the entire codebase needs to be built from scratch** — starting with the foundation (package management, Docker setup, database schema, API gateway) and building upward through the microservices layer (product, listing, order, price, store, analytics, CRM services) and outward through marketplace integrations (eBay, Amazon, Facebook, Etsy, Shopify adapters).
+
+---
+
+## 📌 DECISION MEMO — `product.import` Pipeline Strategy (2026-08-06)
+
+**Status:** Adopted (Option C) — graceful degradation. Tracked in `tasks/todo.md` → "Decision Log."
+
+**Context:** The `product.import` BullMQ worker processor (`src/worker/index.ts`) threw
+"not yet implemented." `POST /api/products` returned a stubbed 202 without enqueuing a
+real job. As `@agent:atlas`, we implemented the processor and wired the route.
+
+**Options considered:**
+| Option | What it does | Upside | Downside |
+|---|---|---|---|
+| A — Full pipeline, no fallback | POST writes a `jobs` row + enqueues a real BullMQ job; worker persists product + audit | 202 "queued" is truthful; fully end-to-end | `src/lib/queue/index.ts` throws at import if `REDIS_URL` is unset → breaks `products.test.ts` in no-infra envs; needs Postgres for the `jobs` insert |
+| B — Worker only | Implement processor; POST stays a 202 stub | Zero test risk; literal handoff match | Worker is dead code — nothing ever enqueues; "queued" is untruthful |
+| C — Worker + enqueue, graceful degradation (CHOSEN) | POST enqueues via lazily-imported queue module guarded by `process.env.REDIS_URL`; worker resolves adapter, calls `importProduct()`, persists in try/catch | Functional pipeline when up; tests green without infra; aligns with Blueprint §2 conservative-automation | Persistence failure is logged/audited, not auto-retried (tightened in Stage 2) |
+
+**Rationale:** C delivers a real vertical slice while honoring the Blueprint's test gate
+("new developer can run tests") and "automate conservatively" principle. A DB/Redis outage
+degrades (log + complete) instead of a BullMQ retry storm that could duplicate imports. The
+worker still returns the `CanonicalProduct` payload so data is never silently lost; audit
+events capture failures for review.
+
+**Implemented:**
+1. `src/lib/adapters/factory.ts` — adapter registry resolved by `adapterId`.
+2. `src/worker/index.ts` — processor resolves adapter → `importProduct()` → persist
+   `products` + `jobs` + `audit_events` → return `{ productId, persisted }`.
+3. `POST /api/products` — enqueues a real `product.import` BullMQ job with graceful fallback.
+4. `mock.adapter.ts` — added `mockProduct` fixture; fixed the broken route import.
+5. `Dockerfile.dev` created (unblocks `docker-compose up`).
+6. `TECHNICAL_WIKI.md` — §7.2/§11/§12.5/§12.6/§12.11 updated; `e2e/` marked existing.
+
+**Trade-off owner note:** The "log, don't retry" behavior for DB failures is a deliberate
+Stage 1 simplification. Stage 2 should add retry-on-transient-error + dead-letter queue.
+
+---
+
+## 🧭 NOTE — Proposed Stable Plan: Design & Deployment (OPEN for later deliberation)
+
+Recorded so the **decision-making process can be revisited and designs re-evaluated
+"when the time is right"** — a decision trail, not a locked plan. Mirror in
+`tasks/todo.md` → "Proposed Stable Plan — Design & Deployment."
+
+**Design system**
+- ✅ Styling base: **Tailwind CSS** (approved).
+- 🟡 **Component library — OPEN**: the doc-recommended default is **shadcn/ui (Radix)**,
+  but the user is **strongly considering Lightswind UI or MeetUI** (in addition to /
+  instead of solely shadcn + Radix) — see "Component Library Options" note below.
+  Evaluate licensing/cost, accessibility, React 18 + Next.js App Router fit, theming/
+  dark mode, bundle size, maintenance velocity, and copy-&-modify-ability before deciding.
+- 🎨 Ideal: a component library we can *modify* and *own*, inspired by Vercel-style
+  reference templates — not a heavy, opinionated, purchased template.
+
+**Deployment**
+- 🟡 Model (settled direction): **Dockerized standalone Next.js modular monolith**
+  (web + API + PostgreSQL + Redis + worker). **NOT** WordPress / not a plugin (non-goal).
+- 🟡 **Host — OPEN**: VPS (DigitalOcean) / Fly.io / Railway / Render / TBD. The
+  background worker + durable queue + DB favour a **container-capable host** over
+  serverless-only; Vercel = frontend inspiration, not sole hosting for this stack.
+- ⏳ Deferred: self-hosting branding, white-label, mobile, K8s/microservices (Stage 4+).
+
+**Animation**
+- 🎞 CSS transitions first; **anime.js** (or Framer Motion) deferred until concrete
+  animation requirements exist. anime.js is framework-agnostic and non-conflicting,
+  so it can be added later without rework.
+
+**Next:** formalize as ADRs (`deployment platform`, `design-system foundation`) once the
+component library and host are chosen; do a design/tech-eval pass before frontend build-out.
+
+---
+
+## 🌐 FEATURE NOTE — Webhook Event Logs & Log Pages
+
+Forward-looking feature consideration (aligns with Stage 3+ webhook handling and
+Stage 4 operations):
+- **Webhook event log page** — inbound/outbound delivery records: event type, source,
+  payload summary, signature/validation result, retries, final status, latency.
+- **Pages for other logs** — operator-facing views for: audit trail, application/error
+  log, job/queue history, and integration/environment status.
+- **Why:** visibility + reversibility (Production Blueprint §1.1 — "Make automation
+  explainable, reviewable, and reversible"), plus easier troubleshooting and cleaner
+  handover to outsourcing partners / future developers. Cross-references the
+  SECURITY-DEBUG notation in `tasks/todo.md` (Stage 4+).
+
+---
+
+## 🧩 DESIGN NOTE — Component Library Options Beyond shadcn/Radix
+
+- ✅ **Tailwind** approved as the styling base.
+- User is **strongly considering**:
+  - **Lightswind UI**
+  - **MeetUI**
+  in addition to (or instead of) **shadcn/ui (Radix primitives)**.
+- Re-evaluation criteria for when the time is right: licensing / cost, accessibility,
+  React 18 + Next.js App Router fit, theming + dark mode, bundle size, maintenance
+  velocity, and how easily components can be **copied & modified** (preferred) versus
+  consumed as a black box.
+- Track in `tasks/todo.md` → "Proposed Stable Plan" (Component library — OPEN).
