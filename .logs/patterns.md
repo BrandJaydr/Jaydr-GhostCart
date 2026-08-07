@@ -32,3 +32,9 @@ This file captures recurring design patterns, integration gotchas, database guid
 - **Pattern:** BullMQ queue names follow `entity.action` format (e.g. `product.import`, `listing.submit`). Worker processor files mirror the queue name.
 - **Rationale:** Consistent naming enables discoverability, monitoring dashboards, and future Bull Board integration.
 - **Discovered by:** Forge 🏗️ — 2026-08-06 Stage 1 scaffold
+
+### 7. Worker Graceful Degradation (async pipeline)
+- **Pattern:** Background worker processors wrap DB/queue persistence in `try/catch` and still return the normalized result (with a `persisted` flag) rather than re-throwing on transient infra failure. API routes that enqueue lazy-import the queue module guarded by `process.env.REDIS_URL` so unit tests pass without Redis/Postgres running.
+- **Rationale:** Avoids a BullMQ retry-storm that could duplicate imports when Postgres/Redis is momentarily unavailable; keeps the Stage 1 test gate ("new developer can run tests") green without a full stack. Persistence failures are logged + audited (never silently dropped) — the normalized `CanonicalProduct` is preserved in the job result.
+- **Trade-off:** persistence failures are logged/audited rather than auto-retried. Stage 2 should add retry-on-transient-error with exponential backoff + a dead-letter queue.
+- **Discovered by:** Atlas 🗺️ — 2026-08-06 (`product.import` worker; see Decision Memo in `Jaydr Journal/Jaydr Memo` and `tasks/todo.md`)
