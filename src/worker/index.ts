@@ -320,32 +320,82 @@ importWorker.on('failed', (job, err) => {
 // ─── Product Refresh Worker ───────────────────────────────────────────────────
 // Stage 2: refreshes an already-imported product from its supplier feed by
 // re-running the adapter's fetchProduct and re-persisting (upsert).
+// Stage 4: Extended to handle stock/price refresh with change detection and logging.
 const refreshWorker = new Worker(
   'product.refresh',
   async (job) => {
-    const { productId, tenantId, supplierId, idempotencyKey } = job.data;
+    const { productId, tenantId, supplierId, idempotencyKey, refreshType = 'both' } = job.data;
 
     const adapter = getSupplierAdapter(supplierId);
     if (!adapter) {
       throw new Error(`Unknown supplier adapter: ${supplierId}`);
     }
 
+    // Get current product data for change detection
+    const currentProduct = await db.query(
+      'SELECT supplier_price_cents, current_stock FROM products WHERE id = $1',
+      [productId],
+    );
+
+    const oldPrice = (currentProduct.rowCount ?? 0) > 0 ? currentProduct.rows[0].supplier_price_cents : null;
+    const oldStock = (currentProduct.rowCount ?? 0) > 0 ? currentProduct.rows[0].current_stock : null;
+
     const product = await adapter.fetchProduct(productId, tenantId);
 
     let persisted = true;
+    let priceChanged = false;
+    let stockChanged = false;
+
     try {
       await persistImport(product, { jobId: job.id, tenantId, idempotencyKey });
+
+      // Log price change if different
+      if (refreshType === 'price' || refreshType === 'both') {
+        const priceHistoryId = await db.query(
+          'SELECT products.log_price_change($1, $2, $3, $4, $5) as history_id',
+          [productId, oldPrice, product.supplierPriceCents, 'scheduled', null],
+        );
+        priceChanged = (priceHistoryId.rowCount ?? 0) > 0 && priceHistoryId.rows[0].history_id !== null;
+      }
+
+      // Log stock change if different
+      if (refreshType === 'stock' || refreshType === 'both') {
+        const stockChangedResult = await db.query(
+          'SELECT products.log_stock_change($1, $2, $3, $4, $5) as changed',
+          [productId, oldStock, product.availability === 'in_stock' ? 100 : 0, 'scheduled', null],
+        );
+        stockChanged = (stockChangedResult.rowCount ?? 0) > 0 && stockChangedResult.rows[0].changed;
+      }
+
       await db.query(
         `UPDATE products SET last_refreshed_at = now(), review_status = review_status
           WHERE id = $1`,
         [productId],
+      );
+
+      // Audit event for refresh
+      await db.query(
+        `INSERT INTO audit_events
+           (tenant_id, user_id, action, entity_type, entity_id, metadata, created_at)
+         VALUES ($1, NULL, 'product.refreshed', 'products', $2, $3, now())`,
+        [
+          tenantId,
+          productId,
+          JSON.stringify({
+            refreshType,
+            priceChanged,
+            stockChanged,
+            oldPrice,
+            newPrice: product.supplierPriceCents,
+          }),
+        ],
       );
     } catch (err) {
       persisted = false;
       console.error(`[Worker] Refresh persist failed for ${job.id}:`, (err as Error).message);
     }
 
-    return { productId, persisted };
+    return { productId, persisted, priceChanged, stockChanged };
   },
   { connection: redis, concurrency: 5 },
 );

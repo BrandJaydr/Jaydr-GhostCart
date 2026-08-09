@@ -53,6 +53,7 @@ export async function POST(
     }
 
     const idempotencyKey = parseResult.data.idempotencyKey ?? `refresh_${productId}`;
+    const refreshType = (parseResult.data as { refreshType?: string }).refreshType ?? 'both';
     const fallbackJobId = `job_${Date.now()}`;
 
     if (process.env.REDIS_URL) {
@@ -60,11 +61,11 @@ export async function POST(
         const { importQueue } = await import('@/lib/queue');
         const job = await importQueue.add(
           'product.refresh',
-          { productId, tenantId, supplierId, idempotencyKey },
+          { productId, tenantId, supplierId, idempotencyKey, refreshType },
           { jobId: `refresh_${idempotencyKey}` },
         );
         if (job?.id) {
-          return apiSuccess({ jobId: job.id, status: 'queued', idempotencyKey }, undefined, 202);
+          return apiSuccess({ jobId: job.id, status: 'queued', idempotencyKey, refreshType }, undefined, 202);
         }
       } catch (err) {
         console.warn('[api/products/refresh] Enqueue failed — falling back to 202:', (err as Error).message);
