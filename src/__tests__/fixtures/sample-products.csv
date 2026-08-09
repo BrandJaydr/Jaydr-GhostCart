@@ -1,0 +1,6 @@
+title,description,supplier_price_cents,currency,availability,source_url,sku,primary_image_url,additional_image_urls,weight_grams,category
+Wireless Mouse,Ergonomic wireless mouse with 2.4GHz connectivity,$29.99,USD,in_stock,https://supplier.example/products/mouse,MOUSE-001,https://supplier.example/images/mouse.jpg,https://supplier.example/images/mouse-side.jpg,https://supplier.example/images/mouse-back.jpg,150,Electronics
+Mechanical Keyboard,RGB mechanical keyboard with Cherry MX switches,$79.99,USD,in_stock,https://supplier.example/products/keyboard,KEYBOARD-001,https://supplier.example/images/keyboard.jpg,https://supplier.example/images/keyboard-rgb.jpg,https://supplier.example/images/keyboard-side.jpg,850,Electronics
+USB-C Hub,7-in-1 USB-C hub with HDMI and USB 3.0 ports,$14.99,USD,limited,https://supplier.example/products/hub,HUB-001,https://supplier.example/images/hub.jpg,,200,Electronics
+Laptop Stand,Adjustable aluminum laptop stand,$24.99,USD,out_of_stock,https://supplier.example/products/stand,STAND-001,https://supplier.example/images/stand.jpg,,400,Electronics
+Wireless Charger,15W fast wireless charging pad,$19.99,USD,in_stock,https://supplier.example/products/charger,CHARGER-001,https://supplier.example/images/charger.jpg,,120,Electronics
