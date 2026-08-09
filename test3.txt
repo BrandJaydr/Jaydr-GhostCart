@@ -1,0 +1,68 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+[7m[1m[36m RUN [39m[22m[27m [36mv2.0.3[39m [90mC:/Users/jayst/Documents/GitHub/Jaydr GhostCart[39m
+
+ [31m❯[39m src/__tests__/components/ProductCorrectionForm.test.tsx [2m ([22m[2m0 test[22m[2m)[22m
+ [32m✓[39m src/__tests__/adapters/csv.adapter.test.ts [2m ([22m[2m11 tests[22m[2m)[22m[90m 40[2mms[22m[39m
+ [32m✓[39m src/__tests__/health.test.ts [2m ([22m[2m2 tests[22m[2m)[22m[90m 28[2mms[22m[39m
+ [32m✓[39m src/__tests__/api/jobs.test.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 44[2mms[22m[39m
+ [32m✓[39m src/__tests__/api/products-idempotency.test.ts [2m ([22m[2m5 tests[22m[2m)[22m[90m 51[2mms[22m[39m
+ [32m✓[39m src/__tests__/api/listings.test.ts [2m ([22m[2m4 tests[22m[2m)[22m[90m 68[2mms[22m[39m
+ [32m✓[39m src/__tests__/api/products-stage2.test.ts [2m ([22m[2m5 tests[22m[2m)[22m[90m 56[2mms[22m[39m
+[90mstderr[2m | src/__tests__/api/products.test.ts[2m > [22m[2m/api/products API routes[2m > [22m[2mGET /api/products returns paginated products with valid default query[22m[39m
+[api/products] GET error: TypeError: Cannot read properties of undefined (reading 'total')
+    at GET [90m(C:\Users\jayst\Documents\GitHub\Jaydr GhostCart\[39msrc\app\api\products\route.ts:68:48[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:104:5)[39m
+    at [90mC:\Users\jayst\Documents\GitHub\Jaydr GhostCart\[39msrc\__tests__\api\products.test.ts:25:17
+    at runTest [90m(file:///C:/Users/jayst/Documents/GitHub/Jaydr%20GhostCart/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:939:11[90m)[39m
+    at runSuite [90m(file:///C:/Users/jayst/Documents/GitHub/Jaydr%20GhostCart/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1095:15[90m)[39m
+    at runSuite [90m(file:///C:/Users/jayst/Documents/GitHub/Jaydr%20GhostCart/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1095:15[90m)[39m
+    at runFiles [90m(file:///C:/Users/jayst/Documents/GitHub/Jaydr%20GhostCart/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1152:5[90m)[39m
+    at startTests [90m(file:///C:/Users/jayst/Documents/GitHub/Jaydr%20GhostCart/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1161:3[90m)[39m
+    at [90mfile:///C:/Users/jayst/Documents/GitHub/Jaydr%20GhostCart/[39mnode_modules/[4mvitest[24m/dist/chunks/runtime-runBaseTests.hkIOeriM.js:122:11
+    at withEnv [90m(file:///C:/Users/jayst/Documents/GitHub/Jaydr%20GhostCart/[39mnode_modules/[4mvitest[24m/dist/chunks/runtime-runBaseTests.hkIOeriM.js:84:5[90m)[39m
+
+ [31m❯[39m src/__tests__/api/products.test.ts [2m ([22m[2m8 tests[22m [2m|[22m [31m1 failed[39m[2m)[22m[90m 108[2mms[22m[39m
+[31m   [31m×[31m /api/products API routes[2m > [22mGET /api/products returns paginated products with valid default query[39m
+[31m     → expected 500 to be 200 // Object.is equality[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Failed Suites 1 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/__tests__/components/ProductCorrectionForm.test.tsx [2m[ src/__tests__/components/ProductCorrectionForm.test.tsx ][22m
+[31m[1mError[22m: Failed to resolve import "@testing-library/user-event" from "src/__tests__/components/ProductCorrectionForm.test.tsx". Does the file exist?[39m
+[90m [2m❯[22m TransformPluginContext._formatError ../Jaydr%20GhostCart/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:[2m49258:41[22m[39m
+[90m [2m❯[22m TransformPluginContext.error ../Jaydr%20GhostCart/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:[2m49253:16[22m[39m
+[90m [2m❯[22m normalizeUrl ../Jaydr%20GhostCart/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:[2m64307:23[22m[39m
+[90m [2m❯[22m ../Jaydr%20GhostCart/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:[2m64439:39[22m[39m
+[90m [2m❯[22m TransformPluginContext.transform ../Jaydr%20GhostCart/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:[2m64366:7[22m[39m
+[90m [2m❯[22m PluginContainer.transform ../Jaydr%20GhostCart/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:[2m49099:18[22m[39m
+[90m [2m❯[22m loadAndTransform ../Jaydr%20GhostCart/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:[2m51978:27[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 1 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/__tests__/api/products.test.ts[2m > [22m/api/products API routes[2m > [22mGET /api/products returns paginated products with valid default query
+[31m[1mAssertionError[22m: expected 500 to be 200 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 200[39m
+[31m+ 500[39m
+
+[36m [2m❯[22m src/__tests__/api/products.test.ts:[2m26:24[22m[39m
+    [90m 24| [39m    [35mconst[39m req [33m=[39m [35mnew[39m [33mNextRequest[39m([32m'http://localhost:3000/api/products?pa[39m…
+    [90m 25| [39m    [35mconst[39m res [33m=[39m [35mawait[39m [34mgetProducts[39m(req)[33m;[39m
+    [90m 26| [39m    [34mexpect[39m(res[33m.[39mstatus)[33m.[39m[34mtoBe[39m([34m200[39m)[33m;[39m
+    [90m   | [39m                       [31m^[39m
+    [90m 27| [39m
+    [90m 28| [39m    [35mconst[39m body [33m=[39m [35mawait[39m res[33m.[39m[34mjson[39m()[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯[22m[39m
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m6 passed[39m[22m[90m (8)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m37 passed[39m[22m[90m (38)[39m
+[2m   Start at [22m 14:18:34
+[2m   Duration [22m 5.01s[2m (transform 1.25s, setup 5.59s, collect 3.16s, tests 395ms, environment 19.33s, prepare 4.35s)[22m
+

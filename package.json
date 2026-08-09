@@ -14,7 +14,7 @@
     "lint": "eslint . --ext .ts,.tsx --max-warnings 0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "db:migrate": "echo 'TODO: @agent:archivist implement migration runner'"
+    "db:migrate": "ts-node --esm src/db/migrate.ts"
   },
   "dependencies": {
     "bullmq": "5.7.5",

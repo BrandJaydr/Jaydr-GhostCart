@@ -1,99 +1,3 @@
-# Jaydr GhostCart — Full Repository Analysis & Diagnostic
-
-## Executive Summary
-
-**This repository is 100% planning and documentation. There is zero executable code anywhere.** The project is in the pre-development blueprint phase — it has extensive architectural specifications but nothing has been built yet.
-
----
-
-## What Exists (Planning Artifacts)
-
-| File | Type | Content |
-|------|------|---------|
-| `.jules/config.md` | System config | Database, API gateway, marketplace, service, security, monitoring configurations |
-| `.jules/workflow.md` | Business workflows | Product research → Listing gen → Publishing → Pricing → Fulfillment → Error handling |
-| `.jules/architect.md` | Architecture | Event-driven, microservices, multi-tenancy, scaling, observability decisions |
-| `.logs/patterns.md` | Patterns log | Reusable architectural patterns (adapter, circuit breaker, etc.) |
-| `.logs/errors.md` | Gaps log | Identified missing pieces (event bus, job scheduling, CRM, observability, etc.) |
-| `tasks/plan.md` | Project plan | Roadmap with MVP scope, tech stack, phases, success metrics |
-| `tasks/todo.md` | TODO checklist | 3-phase development plan with 38+ unchecked items |
-| `Docs/Jaydr Ghostcart Project Concept.txt` | Product vision | 706-line brainstorm covering all features, revenue model, UI sitemap |
-| `Docs/Jaydr GhostCart Plan` | Architecture gap analysis | 344-line deep dive into missing backend infrastructure |
-| `Docs/senior software architect.txt` | Knowledge extraction template | Prompt template for architect analysis |
-
----
-
-## What's MISSING — Full Diagnostic
-
-### 🔴 Critical Gaps (MVP Blockers)
-1. **No source code at all** — 0 files with any programming language exist
-2. **No package.json / requirements.txt** — No dependency management configured
-3. **No Dockerfile or docker-compose.yml** — No containerization despite the plan requiring Docker
-4. **No database schema / migrations** — No PostgreSQL schema, no ORM models, no Prisma/Supabase
-5. **No API routes or controllers** — No Express, FastAPI, or any backend framework configured
-6. **No frontend code** — No React/Next.js components, no WordPress plugin code
-7. **No authentication or auth service** — No JWT, OAuth, session handling, or user management
-8. **No marketplace API client code** — No eBay, Amazon, Facebook, Etsy, or Shopify integrations
-9. **No message queue (Kafka/RabbitMQ)** — No producer/consumer code despite event-driven requirement
-10. **No browser automation scripts** — No Puppeteer/Playwright for supplier scraping
-
-### 🟡 Moderate Gaps
-11. **No CI/CD pipeline** — No GitHub Actions, deployment scripts, or build automation
-12. **No test files or test framework** — No unit, integration, or E2E tests
-13. **No monitoring/observability setup** — No Prometheus, Grafana, or ELK configuration
-14. **No AI/LLM integration code** — No OpenAI API calls for listing generation
-15. **No job scheduler** — No Temporal, Airflow, or Bull.js setup
-16. **No data warehouse or ETL** — No Snowflake/BigQuery, no Airflow DAGs
-17. **No caching layer** — No Redis configuration despite being in the plan
-18. **No audit logging** — No immutable audit trail implementation
-19. **No WebSocket/real-time infrastructure** — No Socket.io or WebSocket handlers
-20. **No WordPress plugin scaffolding** — No PHP despite WordPress being the primary admin interface
-
-### 🟢 What's Actually Complete
-- ✅ Product vision & feature specification (706-line concept document)
-- ✅ Architecture decisions documented (event-driven, microservices, multi-tenancy, etc.)
-- ✅ Business workflows defined (product research → fulfillment end-to-end)
-- ✅ Marketplace integration requirements (eBay, Amazon, Facebook, Etsy, Shopify)
-- ✅ UI sitemap & page structure (dashboard, import, library, rewrite, export, etc.)
-- ✅ TODO list & project roadmap (all items unchecked)
-- ✅ Identified gaps from previous analysis (documented in `.logs/errors.md`)
-- ✅ Infrastructure configuration specs (partially — config.md has specs but no actual setup)
-
----
-
-## Key Findings
-
-1. **The `.jules/config.md` is aspirational, not operational.** Database connection strings use placeholder credentials (`postgresql://user:pass@localhost:5432/ghostcart`), Kafka broker addresses use default ports (`kafka1:9092`), and marketplace API keys reference environment variables that don't exist.
-
-2. **The `.logs/errors.md` self-identifies the same gaps** — the team is aware. It states: *"Event-driven architecture missing", "CRM layer completely missing", "Multi-tenancy security gaps", "Observability missing", "Scalability patterns absent"*, and *"Underestimating backend complexity by 80%"*.
-
-3. **The GitHub remote points to `BrandJaydr/GG-Heroes.git`**, not `Jaydr GhostCart`, suggesting this repo was renamed or forked from another project.
-
-4. **The ZIP file `dropshipping-websites-master.zip`** likely contains reference dropshipping site templates but has not been extracted or integrated.
-
-5. **Everything in `tasks/todo.md` is unchecked** — not a single task has been completed across all 3 phases plus ongoing maintenance.
-
----
-
-## Verdict
-
-| Category | Status |
-|----------|--------|
-| **Project Phase** | Pre-development / Blueprint |
-| **Source Code** | 0% complete |
-| **Planning & Architecture Docs** | ~90% complete |
-| **Database Schema** | 0% complete |
-| **API Implementation** | 0% complete |
-| **Frontend UI** | 0% complete |
-| **Marketplace Integrations** | 0% complete |
-| **Infrastructure/DevOps** | 0% complete |
-| **Testing** | 0% complete |
-
-**The system is NOT complete.** It is entirely in the planning phase. The architecture documentation is thorough and well-thought-out for an enterprise-grade platform, but there is no functional implementation of any component whatsoever.
-
-**To make this a functional system, the entire codebase needs to be built from scratch** — starting with the foundation (package management, Docker setup, database schema, API gateway) and building upward through the microservices layer (product, listing, order, price, store, analytics, CRM services) and outward through marketplace integrations (eBay, Amazon, Facebook, Etsy, Shopify adapters).
-
----
 
 ## 📌 DECISION MEMO — `product.import` Pipeline Strategy (2026-08-06)
 
@@ -191,3 +95,19 @@ Stage 4 operations):
   velocity, and how easily components can be **copied & modified** (preferred) versus
   consumed as a black box.
 - Track in `tasks/todo.md` → "Proposed Stable Plan" (Component library — OPEN).
+
+---
+
+## 📌 DECISION MEMO — Stage 1 Authentication (2026-08-07)
+
+**Status:** Implemented.
+
+**Context:** To complete Stage 1, a basic authentication system was required to fulfill the "signed-in merchant" part of the thin vertical slice. The `tasks/todo.md` item for this was pending.
+
+**Implementation:**
+1.  **NextAuth.js Route:** Created `src/app/api/auth/[...nextauth]/route.ts` to handle auth logic. For Stage 1, it uses a `CredentialsProvider` that authenticates a static developer user based on `DEV_SEED_EMAIL` and `DEV_SEED_PASSWORD` from the `.env` file.
+2.  **AuthProvider:** Created `src/app/AuthProvider.tsx` to wrap the entire application with NextAuth's `SessionProvider`, making session state available globally.
+3.  **Sign-In UI:** Created a `SignInForm` component (`src/components/SignInForm.tsx`) and integrated it into the `/sign-in` page (`src/app/(auth)/sign-in/page.tsx`).
+4.  **Route Protection:** Secured the `(dashboard)` route group by adding a server-side session check in `src/app/(dashboard)/layout.tsx`. Unauthenticated users are now redirected to the `/sign-in` page.
+
+**Outcome:** Stage 1 is now functionally complete. The application supports a basic sign-in flow for a developer user, and the main application routes are protected. This unblocks the project to move to Stage 2: Functional Alpha.

@@ -38,3 +38,13 @@ This file captures recurring design patterns, integration gotchas, database guid
 - **Rationale:** Avoids a BullMQ retry-storm that could duplicate imports when Postgres/Redis is momentarily unavailable; keeps the Stage 1 test gate ("new developer can run tests") green without a full stack. Persistence failures are logged + audited (never silently dropped) — the normalized `CanonicalProduct` is preserved in the job result.
 - **Trade-off:** persistence failures are logged/audited rather than auto-retried. Stage 2 should add retry-on-transient-error with exponential backoff + a dead-letter queue.
 - **Discovered by:** Atlas 🗺️ — 2026-08-06 (`product.import` worker; see Decision Memo in `Jaydr Journal/Jaydr Memo` and `tasks/todo.md`)
+
+### 8. Additive SQL Migrations + Schema Migrations Table
+- **Pattern:** `.sql` migrations live in `src/db/migrations/NNNN_*.sql` (zero-padded order); `npm run db:migrate` (src/db/migrate.ts) applies un-applied files inside transactions and records each in a `schema_migrations` table. Migrations are **additive** (new files like `0002_harden.sql`, `0003_rls_seed.sql`) rather than mutating earlier ones.
+- **Rationale:** Idempotent, replayable schema evolution; a failure mid-migration rolls back the whole file; real environments replay cleanly.
+- **Discovered by:** Archivist 🗄️ — 2026-08-06
+
+### 9. Tenant Isolation via RLS + Session GUC
+- **Pattern:** Every tenant-scoped table enables row-level security with policies that filter/check on `tenant_id = current_setting('ghostcart.tenant_id', true)::uuid`. A least-privilege `ghostcart_app` role is used, and the app sets the tenant GUC per transaction (`setTenantContextOn`) before querying. `audit_events` is INSERT-only.
+- **Rationale:** "Secure by default" (Blueprint §2/§6.1) — if the GUC is unset the policy is NULL → deny (fail-closed), preventing cross-tenant leakage and tenant bleed across pooled connections.
+- **Discovered by:** Archivist 🗄️ — 2026-08-06 (migration `0003_rls_seed.sql`)

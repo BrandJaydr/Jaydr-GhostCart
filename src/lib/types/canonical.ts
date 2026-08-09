@@ -20,11 +20,25 @@ export type ListingState =
   | 'published'
   | 'failed';
 
+/**
+ * Product review status — the review-before-use gate (Production Blueprint §6.2).
+ * New imports start as `needs_review`; an explicit merchant approval promotes to `ready`.
+ */
+export type ProductReviewStatus = 'needs_review' | 'ready';
+
 /** Normalization confidence for a specific field */
 export interface FieldConfidence {
   field: string;
   score: number; // 0.0 – 1.0
   warnings: string[];
+}
+
+/** Single manual correction entry preserved for audit traceability */
+export interface CorrectionEntry {
+  original: unknown;
+  corrected: unknown;
+  correctedAt: string;
+  correctedBy: string;
 }
 
 /** Canonical product model — normalized from any supplier adapter */
@@ -61,6 +75,14 @@ export interface CanonicalProduct {
   importedAt: string;
   /** ISO 8601 timestamp of last supplier data refresh */
   lastRefreshedAt: string | null;
+  /** Review-before-use gate status (migration 0005; populated by worker on import) */
+  reviewStatus?: ProductReviewStatus;
+  /** Manual corrections stored as JSONB (migration 0004) */
+  userCorrections?: Record<string, CorrectionEntry>;
+  /** Import duration in milliseconds (migration 0005 instrumentation) */
+  importDurationMs?: number | null;
+  /** Normalization completeness score 0..1 (migration 0005 instrumentation) */
+  normalizationCompleteness?: number | null;
 }
 
 // ─── Listing Domain ───────────────────────────────────────────────────────────

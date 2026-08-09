@@ -1,7 +1,8 @@
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { ProductListQuerySchema, ProductImportSchema } from '@/lib/validation/schemas';
-import { mockProduct } from '@/lib/adapters/mock.adapter';
+import { db, DEV_TENANT_ID } from '@/lib/db/index.js';
+import { checkDuplicateSourceUrl } from '@/lib/api/idempotency';
 
 /**
  * GET /api/products
@@ -16,9 +17,83 @@ export async function GET(req: NextRequest) {
     return apiError('Invalid query parameters', parseResult.error.flatten().fieldErrors, 400);
   }
 
-  const { page, limit } = parseResult.data;
+  const { page, limit, supplierId } = parseResult.data;
+  const offset = (page - 1) * limit;
 
-  return apiSuccess([mockProduct], { page, limit, total: 1 });
+  // @agent:forge Replace this with the tenantId resolved from the
+  // authenticated session once next-auth is configured.
+  const tenantId = DEV_TENANT_ID;
+
+  try {
+    // Build WHERE clause for optional filters
+    const conditions: string[] = ['p.tenant_id = $1'];
+    const values: unknown[] = [tenantId];
+    let paramIndex = 2;
+
+    // supplierId filters on the supplier adapter's row via product_sources link.
+    if (supplierId) {
+      conditions.push(`ps.supplier_id = $${paramIndex}`);
+      values.push(supplierId);
+      paramIndex++;
+    }
+
+    const whereClause = conditions.join(' AND ');
+
+    // Query products with tenant-scoped RLS. Supplier linkage comes from
+    // product_sources (products has no supplier_id column).
+    const result = await db.query(
+      `SELECT
+        p.id, p.tenant_id, p.title, p.description, p.identifiers, p.primary_image_url,
+        p.additional_image_urls, p.supplier_price_cents, p.currency, p.availability,
+        p.source_url, ps.supplier_id, p.confidence, p.imported_at, p.last_refreshed_at,
+        p.review_status, p.import_duration_ms, p.normalization_completeness,
+        p.user_corrections
+       FROM products p
+       LEFT JOIN product_sources ps ON ps.product_id = p.id
+       WHERE ${whereClause}
+       ORDER BY p.imported_at DESC
+       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
+      [...values, limit, offset],
+    );
+
+    // Get total count for pagination
+    const countResult = await db.query(
+      `SELECT COUNT(*) as total
+         FROM products p
+         LEFT JOIN product_sources ps ON ps.product_id = p.id
+        WHERE ${whereClause}`,
+      values,
+    );
+
+    const total = parseInt(countResult.rows[0].total as string, 10);
+
+    const products = result.rows.map((row) => ({
+      id: row.id,
+      tenantId: row.tenant_id,
+      title: row.title,
+      description: row.description,
+      identifiers: row.identifiers,
+      primaryImageUrl: row.primary_image_url,
+      additionalImageUrls: row.additional_image_urls,
+      supplierPriceCents: row.supplier_price_cents,
+      currency: row.currency,
+      availability: row.availability,
+      sourceUrl: row.source_url,
+      supplierId: row.supplier_id,
+      confidence: row.confidence,
+      reviewStatus: row.review_status,
+      importDurationMs: row.import_duration_ms,
+      normalizationCompleteness: row.normalization_completeness,
+      userCorrections: row.user_corrections ?? {},
+      importedAt: row.imported_at,
+      lastRefreshedAt: row.last_refreshed_at,
+    }));
+
+    return apiSuccess(products, { page, limit, total });
+  } catch (err) {
+    console.error('[api/products] GET error:', err);
+    return apiError('Failed to fetch products', null, 500);
+  }
 }
 
 /**
@@ -46,9 +121,18 @@ export async function POST(req: NextRequest) {
   const { url, supplierId, idempotencyKey } = parseResult.data;
   const fallbackJobId = `job_${Date.now()}`;
 
-  // @agent:forge (Stage 2) Replace 'tenant_demo' with the tenantId resolved from
-  // the authenticated session once next-auth is configured.
-  const tenantId = 'tenant_demo';
+  // @agent:forge (Stage 2) Replace this with the tenantId resolved from the
+  // authenticated session once next-auth is configured.
+  // @agent:archivist Seeded dev tenant UUID (migration 0003) — lets the worker
+  // persist under the tenants FK + RLS instead of the old 'tenant_demo' string.
+  const tenantId = '00000000-0000-0000-0000-000000000001';
+
+  // ── Idempotency guard (API layer) ──────────────────────────────────────────
+  // Fast 409 feedback for duplicate source_url within this tenant.
+  const isDuplicate = await checkDuplicateSourceUrl(tenantId, url);
+  if (isDuplicate) {
+    return apiError('Duplicate import', { sourceUrl: url }, 409);
+  }
 
   // Graceful enqueue (Option C): the queue module throws at import time when
   // REDIS_URL is unset, so we guard with `process.env.REDIS_URL` and lazy-import

@@ -245,9 +245,19 @@ All are **Stage 1 stubs** — they render semantic HTML with TODOs for design to
 | File | Purpose | Key Details |
 |---|---|---|
 | `setup.ts` | Vitest setup file | Imports `@testing-library/jest-dom`. TODOs: global test DB setup/teardown, fixture seeding (Stage 2). |
-| `health.test.ts` | Unit test | Stage 1 gate test: asserts `GET()` returns 200 + `{status:'ok'}` + JSON content-type. Imports directly from `@/app/api/health/route`. |
+| src/__tests__/health.test.ts` | Unit test | Stage 1 gate test: asserts `GET()` returns 200 + `{status:\'ok\'}` + JSON content-type. Imports directly from `@/app/api/health/route`. |
+249→
+### 4.8 Authentication
 
-## 5. Environment Configuration (`.env.example`)
+| File | Purpose | Key Details |
+|---|---|---|
+| `src/app/api/auth/[...nextauth]/route.ts` | NextAuth.js route handler | Handles all authentication requests (sign-in, sign-out, session management). Uses a `CredentialsProvider` to authenticate a developer user against credentials stored in `.env`.|
+| `src/app/AuthProvider.tsx` | Session Provider | A client-side component that wraps the application in a NextAuth.js `SessionProvider`, making the session available globally. |
+| `src/components/SignInForm.tsx` | Sign-in Form | A client-side component containing the sign-in form. It uses the `signIn` function from `next-auth/react` to authenticate the user. |
+| `src/app/(auth)/sign-in/page.tsx` | Sign-in Page | The page where users are directed to sign in. It uses the `SignInForm` component. |
+| `src/app/(dashboard)/layout.tsx` | Dashboard Layout | Protects all dashboard routes. It uses `getServerSession` to check for a valid session on the server side and redirects unauthenticated users to the sign-in page. |
+
+250→## 5. Environment Configuration (`.env.example`)
 
 | Variable | Example | Purpose |
 |---|---|---|
@@ -297,7 +307,7 @@ npx playwright test      # E2E (requires running dev server)
 | `lint` | `eslint . --ext .ts,.tsx --max-warnings 0` | Lint (CI gate). |
 | `format` | `prettier --write .` | Format all files. |
 | `format:check` | `prettier --check .` | Verify formatting (CI gate). |
-| `db:migrate` | `echo 'TODO: @agent:archivist'` | **Not implemented yet** — placeholder. The migration runner must be built. |
+| `db:migrate` | `ts-node --esm src/db/migrate.ts` | ✅ Applies `src/db/migrations/*.sql` in filename order (tracked in `schema_migrations`); rollback/recovery guidance in migrate.ts header + §12.4. |
 
 ### Docker Compose
 - `db` (`ghostcart_db`): PostgreSQL 16-alpine. Mounts `./src/db/migrations` into `/docker-entrypoint-initdb.d/:ro` — Postgres auto-runs `*.sql` files in that directory on first init.
@@ -390,7 +400,7 @@ These files exist in the repository but are **NOT relevant to the GhostCart appl
 | `@agent:archivist` | `audit_events` | Add RLS: INSERT only, no UPDATE/DELETE; add index on `(tenant_id, created_at DESC)` |
 | `@agent:archivist` | All tables | Add tenant-scoped RLS policies on `tenant_id` |
 | `@agent:archivist` | All tables | Add rollback/recovery procedure document |
-| `@agent:archivist` | N/A | Implement migration runner (`npm run db:migrate` is a TODO echo) |
+| ✅ RESOLVED | N/A | Migration runner implemented (`src/db/migrate.ts`); schema hardened via `0002_harden.sql`; RLS + app role + dev seed via `0003_rls_seed.sql` |
 
 ### Stale TODOs in source code
 | # | File | TODO | Agent Responsible |
@@ -410,7 +420,7 @@ These files exist in the repository but are **NOT relevant to the GhostCart appl
 
 | File | Purpose | Production Readiness |
 |---|---|---|
-| `package.json` | Project manifest; npm scripts (`dev`, `build`, `start`, `worker`, `test`, `test:e2e`, `lint`, `format`, `db:migrate`) | ✅ (but `db:migrate` is a TODO echo — see §11) |
+| `package.json` | Project manifest; npm scripts (`dev`, `build`, `start`, `worker`, `test`, `test:e2e`, `lint`, `format`, `db:migrate`) | ✅ (`db:migrate` implemented — see §12.4) |
 | `tsconfig.json` | TypeScript compiler config; `@/*` → `./src/*` path alias | ✅ |
 | `.eslintrc.json` | ESLint config with Next.js + TypeScript rules; `--max-warnings 0` enforced | ✅ |
 | `.prettierrc` | Prettier formatting config; import ordering, single quotes, trailing commas | ✅ |
@@ -432,8 +442,12 @@ These files exist in the repository but are **NOT relevant to the GhostCart appl
 
 | File | Purpose | Production Readiness |
 |---|---|---|
-| `src/db/migrations/0001_init.sql` | Initial schema: tenants, users, suppliers, products, product_sources, listing_drafts, marketplace_connections, jobs, audit_events | 🟡 (RLS, constraints, indexes, encryption marked as TODO for @agent:archivist) |
-| `src/lib/db/index.ts` | PostgreSQL connection pool (`pg` Pool); throws if `DATABASE_URL` missing; graceful SIGTERM drain | 🟡 (migration runner TODO; tenant-scoped query helper TODO) |
+| `src/db/migrations/0001_init.sql` | Initial schema: 9 core tables | ✅ (0001 + hardening `0002` + RLS/seed `0003`) |
+| `src/db/migrations/0002_harden.sql` | Constraints, indexes, canonical product columns (`identifiers`/`additional_image_urls`/`confidence`), audit guarantees | ✅ |
+| `src/db/migrations/0003_rls_seed.sql` | App role (`ghostcart_app`), tenant-scoped RLS (fail-closed), dev seed (tenant / owner user / mock supplier) | ✅ |
+| `src/db/migrations/0004_user_corrections.sql` | User corrections tracking (`user_corrections` JSONB column), idempotency enforcement (`UNIQUE(source_url)` constraint), indexes for duplicate detection and correction queries | ✅ |
+| `src/db/migrate.ts` | Migration runner (`npm run db:migrate`); applies `.sql` in order via `schema_migrations` | ✅ |
+| `src/lib/db/index.ts` | PG pool; `setTenantContextOn`/`withTenant` RLS helpers; `DEV_TENANT_ID`; SIGTERM drain | ✅ |
 
 ## 12. Critical File Inventory — Application Layers
 
@@ -454,19 +468,27 @@ These files exist in the repository but are **NOT relevant to the GhostCart appl
 
 ✅ **Resolved** (see §11 #1): `src/app/api/products/route.ts` now imports `mockProduct` from `@/lib/adapters/mock.adapter` and the fixture export exists in `mock.adapter.ts`.
 
+### 12.5.1 API Helpers
+
+| File | Purpose | Production Readiness |
+|---|---|---|
+| `src/lib/api/response.ts` | API response helpers: `apiSuccess`, `apiError` | ✅ |
+| `src/lib/api/idempotency.ts` | Idempotency helpers: `checkDuplicateSourceUrl` (DB query with tenant scoping), `generateIdempotencyKey` (SHA-256 hash) — Hybrid duplicate detection (API layer 409 Conflict + DB UNIQUE constraint) | ✅ |
+
 ### 12.6 API Layer
 
 | File | Route | HTTP Methods | Purpose | Production Readiness |
 |---|---|---|---|---|
 | `src/app/api/health/route.ts` | `/api/health` | GET | Health check: Returns `{ status: 'ok' }` | ✅ |
-| `src/app/api/products/route.ts` | `/api/products` | GET, POST | GET: fixture product list (mock). POST: enqueues BullMQ `product.import` job (202) with graceful fallback if Redis is unavailable. | 🟡 (GET still returns fixture — Stage 2 DB read; POST enqueue ✅) |
-| `src/app/api/listings/route.ts` | `/api/listings` | GET, POST | GET: paginated listing drafts (mock). POST: create draft (201). | ✅ |
+| `src/app/api/products/route.ts` | `/api/products` | GET, POST | GET: real DB read with pagination and filtering (category, supplierId). POST: duplicate detection (409 Conflict) + enqueues BullMQ `product.import` job (202) with graceful fallback if Redis is unavailable. | ✅ |
+| `src/app/api/products/[id]/route.ts` | `/api/products/[id]` | GET | Retrieve single product by ID with tenant isolation; returns 404 if not found or wrong tenant. | ✅ |
+| `src/app/api/products/[id]/corrections/route.ts` | `/api/products/[id]/corrections` | PATCH | Record merchant manual corrections for product fields; preserves original values in `user_corrections` JSONB; emits audit events; tenant-scoped with RLS. | ✅ |
+| `src/app/api/listings/route.ts` | `/api/listings` | GET, POST | GET: paginated listing drafts (mock). POST: create draft (201). | 🟡 (GET still returns mock — Stage 2+ DB read) |
+| `src/app/api/listings/[id]/route.ts` | `/api/listings/[id]` | GET, PUT | GET: retrieve single listing draft by ID with tenant isolation. PUT: partial updates (title, description, price, attributes, shipping, images) with audit events. | ✅ |
 
 **Missing API routes (planned):**
-- `src/app/api/products/[id]/route.ts` — GET single product
-- `src/app/api/listings/[id]/route.ts` — GET/PUT listing draft
 - `src/app/api/listings/[id]/submit/route.ts` — Submit draft (Stage 3+)
-- `src/app/api/auth/[...nextauth]/route.ts` — NextAuth handler (deps installed, not configured)
+- `src/app/api/auth/[...nextauth]/route.ts` — NextAuth handler (deps installed, configured with CredentialsProvider)
 
 ### 12.7 Queue / Worker Layer
 
@@ -491,6 +513,8 @@ These files exist in the repository but are **NOT relevant to the GhostCart appl
 | `src/components/ui/ErrorState.tsx` | Error state with title, message, optional retry | 🟡 (stub — icon, retry styling TODO) |
 | `src/components/ui/PageHeader.tsx` | Standard page header with title, subtitle, optional action | 🟡 (stub — breadcrumbs, layout TODO) |
 | `src/components/ui/StatusBadge.tsx` | Renders listing state as labeled badge; `STATE_LABELS` map | 🟡 (stub — color tokens, icons TODO) |
+| `src/components/import/ProductCorrectionForm.tsx` | Product correction form for manual data edits while preserving original values — Stage 2 scaffold | 🟡 (@agent:forge TODO items pending) |
+| `src/components/import/CorrectionField.tsx` | Individual field correction component with original value display, confidence scores, and revert functionality — Stage 2 scaffold | 🟡 (@agent:forge TODO items pending) |
 
 ### 12.10 App Router (Pages & Layouts)
 
@@ -510,10 +534,12 @@ These files exist in the repository but are **NOT relevant to the GhostCart appl
 
 | File | Purpose | Production Readiness |
 |---|---|---|
-| `src/__tests__/setup.ts` | Vitest setup; imports `@testing-library/jest-dom` | 🟡 (test DB setup/teardown TODO for Stage 2) |
-| `src/__tests__/health.test.ts` | Unit test: GET /api/health returns 200 + `{ status: 'ok' }` | ✅ (satisfies Stage 1 Test Gate) |
+| `src/__tests__/setup.ts` | Vitest setup: imports `@testing-library/jest-dom` | 🟡 (global test DB setup/teardown TODO) |
+| `src/__tests__/health.test.ts` | Unit test: GET /api/health → 200 + JSON | ✅ |
+| `src/__tests__/api/products-idempotency.test.ts` | Idempotency tests: duplicate detection, DB constraint enforcement, tenant isolation — Stage 2 scaffold | 🟡 (@agent:atlas TODO items pending) |
 | `src/__tests__/api/products.test.ts` | 4 tests: valid list, invalid query, valid import, invalid URL | ✅ |
 | `src/__tests__/api/listings.test.ts` | 4 tests: valid list, invalid state filter, valid draft creation, missing fields | ✅ |
+| `src/__tests__/components/ProductCorrectionForm.test.tsx` | Product correction form tests: field editing, save/cancel callbacks, confidence display — Stage 2 scaffold | 🟡 (@agent:forge TODO items pending) |
 | `e2e/smoke.test.ts` | Playwright smoke: sign-in page renders + `/api/health` returns 200 | ✅ |
 
 ### 12.12 Environment
@@ -548,7 +574,7 @@ These files exist in the repository but are **NOT relevant to the GhostCart appl
 7. **Lint:** `npm run lint` (zero warnings enforced)
 8. **Type check:** `npx tsc --noEmit` (strict mode)
 
-> **Note:** `npm run db:migrate` is not yet implemented. To apply the initial schema manually: `psql $DATABASE_URL -f src/db/migrations/0001_init.sql`
+> **Note:** Apply the schema with `npm run db:migrate` (runner in `src/db/migrate.ts`). Requires `DATABASE_URL`; applies migrations `0001 → 0003` in order, each in a transaction.
 
 <!-- END_OF_WIKI -->
 
