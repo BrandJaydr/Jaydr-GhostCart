@@ -42,3 +42,41 @@ This journal tracks structural patterns, architecture conventions, and reusable 
 - `@agent:archivist` — Finalize migrations, RLS policies, encryption, indexes
 - `@agent:forge` — Stage 2: Add auth (next-auth session), navigation shell, design tokens
 - `@agent:scout` — Stage 4: Add queue monitoring and observability
+
+---
+
+### [2026-08-08] Stage 2 — Product Corrections & Idempotency Scaffolding
+
+- **Stage:** AOP-CORE Stage 5 (Execution)
+- **Handoff received from:** User (Stage 2 planning)
+- **Files created:** 6 scaffold files (migration, helper, 2 components, 2 tests)
+
+#### Structural Patterns Established
+
+**6. Hybrid Idempotency Pattern**
+- API layer check for fast UX feedback (409 Conflict) + DB constraint as safety net.
+- Helper functions in `src/lib/api/idempotency.ts` for duplicate detection and key generation.
+- Pattern: `checkDuplicateSourceUrl(tenantId, sourceUrl)` → boolean, `generateIdempotencyKey(operation, params)` → string.
+- Benefit: Fast user feedback without sacrificing data integrity.
+
+**7. User Corrections JSONB Pattern**
+- Corrections stored as JSONB column preserving both original and corrected values.
+- Structure: `{ fieldName: { original: string, corrected: string, correctedAt: string, correctedBy: string } }`.
+- Pattern: Separate component for form (`ProductCorrectionForm`) and individual fields (`CorrectionField`).
+- Benefit: Full audit trail for compliance while allowing merchant flexibility.
+
+**8. Component Test Naming Convention**
+- Component tests use `.tsx` extension when testing React components.
+- Pattern: `src/__tests__/components/[ComponentName].test.tsx`.
+- Benefit: Clear distinction between API tests (`.ts`) and component tests (`.tsx`).
+
+**9. Migration Increment Pattern**
+- Each migration adds one logical schema change or feature set.
+- Pattern: `0004_user_corrections.sql` adds corrections column + idempotency constraint + indexes in one file.
+- Benefit: Atomic schema changes with clear rollback boundaries.
+
+#### Handoffs Placed
+- `@agent:atlas` — Implement actual duplicate detection logic in API routes
+- `@agent:atlas` — Implement correction persistence logic in worker
+- `@agent:forge` — Stage 2+: Add design tokens and styling to correction UI
+- `@agent:archivist` — Review migration for RLS policy alignment

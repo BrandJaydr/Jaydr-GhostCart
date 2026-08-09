@@ -31,7 +31,28 @@ export const ListingCreateSchema = z.object({
   idempotencyKey: z.string().optional(),
 });
 
+/** Approve a reviewed product (review-before-use gate → 'ready'). Body may be empty. */
+export const ProductApproveSchema = z.object({
+  idempotencyKey: z.string().optional(),
+});
+
+/** Trigger a background refresh of an imported product from its supplier feed. */
+export const ProductRefreshSchema = z.object({
+  idempotencyKey: z.string().optional(),
+});
+
+export const ListingUpdateSchema = z.object({
+  title: z.string().min(1, { message: 'Title is required' }).optional(),
+  description: z.string().min(1, { message: 'Description is required' }).optional(),
+  listPriceCents: z.number().int().min(0, { message: 'Price must be non-negative' }).optional(),
+  currency: z.string().length(3, { message: 'Currency must be ISO 4217 3-letter code' }).optional(),
+  attributes: z.record(z.unknown()).optional(),
+  shipping: z.record(z.unknown()).optional(),
+  imageUrls: z.array(z.string().url()).optional(),
+});
+
 export type ProductListQuery = z.infer<typeof ProductListQuerySchema>;
 export type ListingListQuery = z.infer<typeof ListingListQuerySchema>;
 export type ProductImportInput = z.infer<typeof ProductImportSchema>;
 export type ListingCreateInput = z.infer<typeof ListingCreateSchema>;
+export type ListingUpdateInput = z.infer<typeof ListingUpdateSchema>;

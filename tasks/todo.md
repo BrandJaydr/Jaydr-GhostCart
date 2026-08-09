@@ -33,11 +33,11 @@
 - [x] Set up repository conventions, linting, formatting, unit-test runner (Vitest), and E2E (Playwright)
 - [x] Add local Docker Compose (app, PostgreSQL, Redis / worker queue dependency)
 - [x] Add environment-specific configuration and committed `.env.example` (never commit secrets)
-- [ ] Implement PostgreSQL schema migrations runner with rollback/recovery procedure (`// @agent:archivist`)
+- [x] Implement PostgreSQL schema migrations runner with rollback/recovery procedure (`// @agent:archivist`) — `src/db/migrate.ts` + `0002_harden.sql`, `0003_rls_seed.sql`
 - [x] Add health checks, structured logs, error tracking, and correlation IDs
 
 ### Security and tenancy (required from day one)
-- [ ] Implement sign-in for development, roles, tenant-scoped tables, and tenant ID propagation (`// @agent:forge`)
+- [x] Implement sign-in for development, roles, tenant-scoped tables, and tenant ID propagation (`// @agent:forge`)
 - [x] Add basic database schema for roles and audit log (`src/db/migrations/0001_init.sql`)
 - [x] Add request validation and idempotency keys for imports, external submissions, and job handlers (`src/lib/validation/schemas.ts`)
 
@@ -203,7 +203,7 @@ Do not start these until Stages 0–3 are complete and pilot evidence supports e
 **Known limitations (Stage 1 tradeoff):**
 - [ ] DB/Redis outages degrade (log + complete) rather than retry — tighten retry
       semantics + dead-letter queue in Stage 2
-- [ ] `npm run db:migrate` still a TODO echo (`@agent:archivist` handoff)
+- [x] `npm run db:migrate` implemented (src/db/migrate.ts) — resolves the TODO-echo limitation (`@agent:archivist`)
 - [ ] `0001_init.sql` archivist TODOs (RLS, constraints, indexes, encryption, seeded
       tenant/supplier rows) not yet applied — canonical `identifiers`/`additionalImageUrls`/
       `confidence` fields mapped to `product_sources.raw_source_metadata` in Stage 2

@@ -1,0 +1,218 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+[7m[1m[36m RUN [39m[22m[27m [36mv2.0.3[39m [90mC:/Users/jayst/Documents/GitHub/Jaydr GhostCart[39m
+
+ [32m✓[39m src/__tests__/health.test.ts [2m ([22m[2m2 tests[22m[2m)[22m[90m 22[2mms[22m[39m
+ [32m✓[39m src/__tests__/adapters/csv.adapter.test.ts [2m ([22m[2m11 tests[22m[2m)[22m[90m 18[2mms[22m[39m
+ [32m✓[39m src/__tests__/api/jobs.test.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 38[2mms[22m[39m
+ [32m✓[39m src/__tests__/api/products-idempotency.test.ts [2m ([22m[2m5 tests[22m[2m)[22m[90m 37[2mms[22m[39m
+ [32m✓[39m src/__tests__/api/products-stage2.test.ts [2m ([22m[2m5 tests[22m[2m)[22m[90m 51[2mms[22m[39m
+ [32m✓[39m src/__tests__/api/listings.test.ts [2m ([22m[2m4 tests[22m[2m)[22m[90m 59[2mms[22m[39m
+ [31m❯[39m src/__tests__/api/products.test.ts [2m ([22m[2m8 tests[22m [2m|[22m [31m1 failed[39m[2m)[22m[90m 93[2mms[22m[39m
+[31m   [31m×[31m /api/products API routes[2m > [22mGET /api/products returns paginated products with valid default query[39m
+[31m     → [vitest] No "DEV_TENANT_ID" export is defined on the "@/lib/db/index.js" mock. Did you forget to return it from "vi.mock"?
+If you need to partially mock a module, you can use "importOriginal" helper inside:
+[39m
+ [31m❯[39m src/__tests__/components/ProductCorrectionForm.test.tsx [2m ([22m[2m6 tests[22m [2m|[22m [31m6 failed[39m[2m)[22m[90m 84[2mms[22m[39m
+[31m   [31m×[31m ProductCorrectionForm[2m > [22mshould render form with product data[39m
+[31m     → Unable to find an element with the text: /Product correction form/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33maria-label[31m=[32m"Product correction form"[31m
+    [36m>[31m
+      [36m<h2>[31m
+        [0mCorrect Product Data[0m
+      [36m</h2>[31m
+      [36m<p[31m
+        [33mstyle[31m=[32m"color: gray;"[31m
+      [36m>[31m
+        [0m[ProductCorrectionForm placeholder — Stage 2 scaffold][0m
+      [36m</p>[31m
+      [36m<button[31m
+        [33maria-busy[31m=[32m"false"[31m
+        [33mtype[31m=[32m"button"[31m
+      [36m>[31m
+        [0mSave Corrections[0m
+      [36m</button>[31m
+    [36m</div>[31m
+  [36m</div>[31m
+[36m</body>[31m[39m
+[31m   [31m×[31m ProductCorrectionForm[2m > [22mshould call onSaveCorrections when save is clicked[39m
+[31m     → expected true to be false // Object.is equality[39m
+[31m   [31m×[31m ProductCorrectionForm[2m > [22mshould call onCancel when cancel is clicked[39m
+[31m     → expected true to be false // Object.is equality[39m
+[31m   [31m×[31m ProductCorrectionForm[2m > [22mshould disable form when isLoading is true[39m
+[31m     → expected true to be false // Object.is equality[39m
+[31m   [31m×[31m ProductCorrectionForm[2m > [22mshould display confidence scores for fields[39m
+[31m     → expected true to be false // Object.is equality[39m
+[31m   [31m×[31m ProductCorrectionForm[2m > [22mshould allow reverting fields to original values[39m
+[31m     → expected true to be false // Object.is equality[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 7 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/__tests__/api/products.test.ts[2m > [22m/api/products API routes[2m > [22mGET /api/products returns paginated products with valid default query
+[31m[1mError[22m: [vitest] No "DEV_TENANT_ID" export is defined on the "@/lib/db/index.js" mock. Did you forget to return it from "vi.mock"?
+If you need to partially mock a module, you can use "importOriginal" helper inside:
+[39m
+vi[33m.[39m[34mmock[39m([32m"@/lib/db/index.js"[39m[33m,[39m [35masync[39m (importOriginal) [33m=>[39m {
+  [35mconst[39m actual [33m=[39m [35mawait[39m [34mimportOriginal[39m()
+  [35mreturn[39m {
+    [33m...[39mactual[33m,[39m
+    [90m// your mocked methods[39m
+  }
+})
+
+[36m [2m❯[22m GET src/app/api/products/route.ts:[2m25:20[22m[39m
+    [90m 23| [39m  [90m// @agent:forge Replace this with the tenantId resolved from the[39m
+    [90m 24| [39m  [90m// authenticated session once next-auth is configured.[39m
+    [90m 25| [39m  [35mconst[39m tenantId [33m=[39m [33mDEV_TENANT_ID[39m[33m;[39m
+    [90m   | [39m                   [31m^[39m
+    [90m 26| [39m
+    [90m 27| [39m  [35mtry[39m {
+[90m [2m❯[22m src/__tests__/api/products.test.ts:[2m24:23[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/__tests__/components/ProductCorrectionForm.test.tsx[2m > [22mProductCorrectionForm[2m > [22mshould render form with product data
+[31m[1mTestingLibraryElementError[22m: Unable to find an element with the text: /Product correction form/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33maria-label[31m=[32m"Product correction form"[31m
+    [36m>[31m
+      [36m<h2>[31m
+        [0mCorrect Product Data[0m
+      [36m</h2>[31m
+      [36m<p[31m
+        [33mstyle[31m=[32m"color: gray;"[31m
+      [36m>[31m
+        [0m[ProductCorrectionForm placeholder — Stage 2 scaffold][0m
+      [36m</p>[31m
+      [36m<button[31m
+        [33maria-busy[31m=[32m"false"[31m
+        [33mtype[31m=[32m"button"[31m
+      [36m>[31m
+        [0mSave Corrections[0m
+      [36m</button>[31m
+    [36m</div>[31m
+  [36m</div>[31m
+[36m</body>[31m[39m
+[90m [2m❯[22m Object.getElementError node_modules/@testing-library/dom/dist/config.js:[2m37:19[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m76:38[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m52:17[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m95:19[22m[39m
+[36m [2m❯[22m src/__tests__/components/ProductCorrectionForm.test.tsx:[2m60:19[22m[39m
+    [90m 58| [39m    [90m// TODO: @agent:forge Verify original values are displayed[39m
+    [90m 59| [39m    [90m// TODO: @agent:forge Verify editable fields are present[39m
+    [90m 60| [39m    [34mexpect[39m(screen[33m.[39m[34mgetByText[39m([36m/Product correction form/i[39m))[33m.[39m[34mtoBeInTheDocu[39m…
+    [90m   | [39m                  [31m^[39m
+    [90m 61| [39m  })[33m;[39m
+    [90m 62| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/__tests__/components/ProductCorrectionForm.test.tsx[2m > [22mProductCorrectionForm[2m > [22mshould call onSaveCorrections when save is clicked
+[31m[1mAssertionError[22m: expected true to be false // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+[36m [2m❯[22m src/__tests__/components/ProductCorrectionForm.test.tsx:[2m83:18[22m[39m
+    [90m 81| [39m    [90m// TODO: @agent:forge Click save button[39m
+    [90m 82| [39m    [90m// TODO: @agent:forge Verify onSaveCorrections was called with cor[39m…
+    [90m 83| [39m    [34mexpect[39m([35mtrue[39m)[33m.[39m[34mtoBe[39m([35mfalse[39m)[33m;[39m [90m// Placeholder[39m
+    [90m   | [39m                 [31m^[39m
+    [90m 84| [39m  })[33m;[39m
+    [90m 85| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/__tests__/components/ProductCorrectionForm.test.tsx[2m > [22mProductCorrectionForm[2m > [22mshould call onCancel when cancel is clicked
+[31m[1mAssertionError[22m: expected true to be false // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+[36m [2m❯[22m src/__tests__/components/ProductCorrectionForm.test.tsx:[2m107:18[22m[39m
+    [90m105| [39m    [90m// TODO: @agent:forge Click cancel button[39m
+    [90m106| [39m    [90m// TODO: @agent:forge Verify onCancel was called[39m
+    [90m107| [39m    [34mexpect[39m([35mtrue[39m)[33m.[39m[34mtoBe[39m([35mfalse[39m)[33m;[39m [90m// Placeholder[39m
+    [90m   | [39m                 [31m^[39m
+    [90m108| [39m  })[33m;[39m
+    [90m109| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/__tests__/components/ProductCorrectionForm.test.tsx[2m > [22mProductCorrectionForm[2m > [22mshould disable form when isLoading is true
+[31m[1mAssertionError[22m: expected true to be false // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+[36m [2m❯[22m src/__tests__/components/ProductCorrectionForm.test.tsx:[2m129:18[22m[39m
+    [90m127| [39m    [90m// TODO: @agent:forge Verify form fields are disabled[39m
+    [90m128| [39m    [90m// TODO: @agent:forge Verify save button shows loading state[39m
+    [90m129| [39m    [34mexpect[39m([35mtrue[39m)[33m.[39m[34mtoBe[39m([35mfalse[39m)[33m;[39m [90m// Placeholder[39m
+    [90m   | [39m                 [31m^[39m
+    [90m130| [39m  })[33m;[39m
+    [90m131| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/7]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/__tests__/components/ProductCorrectionForm.test.tsx[2m > [22mProductCorrectionForm[2m > [22mshould display confidence scores for fields
+[31m[1mAssertionError[22m: expected true to be false // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+[36m [2m❯[22m src/__tests__/components/ProductCorrectionForm.test.tsx:[2m151:18[22m[39m
+    [90m149| [39m    [90m// TODO: @agent:forge Verify confidence scores are visible[39m
+    [90m150| [39m    [90m// TODO: @agent:forge Verify warnings are displayed for low-confid[39m…
+    [90m151| [39m    [34mexpect[39m([35mtrue[39m)[33m.[39m[34mtoBe[39m([35mfalse[39m)[33m;[39m [90m// Placeholder[39m
+    [90m   | [39m                 [31m^[39m
+    [90m152| [39m  })[33m;[39m
+    [90m153| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/7]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/__tests__/components/ProductCorrectionForm.test.tsx[2m > [22mProductCorrectionForm[2m > [22mshould allow reverting fields to original values
+[31m[1mAssertionError[22m: expected true to be false // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+[36m [2m❯[22m src/__tests__/components/ProductCorrectionForm.test.tsx:[2m174:18[22m[39m
+    [90m172| [39m    [90m// TODO: @agent:forge Click revert button[39m
+    [90m173| [39m    [90m// TODO: @agent:forge Verify field value returns to original[39m
+    [90m174| [39m    [34mexpect[39m([35mtrue[39m)[33m.[39m[34mtoBe[39m([35mfalse[39m)[33m;[39m [90m// Placeholder[39m
+    [90m   | [39m                 [31m^[39m
+    [90m175| [39m  })[33m;[39m
+    [90m176| [39m})[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/7]⎯[22m[39m
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m6 passed[39m[22m[90m (8)[39m
+[2m      Tests [22m [1m[31m7 failed[39m[22m[2m | [22m[1m[32m37 passed[39m[22m[90m (44)[39m
+[2m   Start at [22m 14:16:19
+[2m   Duration [22m 10.07s[2m (transform 1.57s, setup 5.43s, collect 8.07s, tests 402ms, environment 21.16s, prepare 6.70s)[22m
+

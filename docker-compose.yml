@@ -16,7 +16,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ghostcart_dev}
     volumes:
       - ghostcart_pgdata:/var/lib/postgresql/data
-      - ./src/db/migrations:/docker-entrypoint-initdb.d:ro
+      # NOTE: migrations are applied by `npm run db:migrate` (src/db/migrate.ts)
+      # as the single source of truth — intentionally NOT mounted to
+      # /docker-entrypoint-initdb.d so the schema_migrations tracking stays correct.
     ports:
       - "5432:5432"
     healthcheck:

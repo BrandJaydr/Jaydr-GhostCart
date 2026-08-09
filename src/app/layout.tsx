@@ -1,6 +1,9 @@
 import type { Metadata } from 'next';
 
 // @agent:scribe Update metadata when brand tokens and SEO strategy are confirmed (Stage 3+)
+import AuthProvider from './AuthProvider';
+
+// @agent:scribe Update metadata when brand tokens and SEO strategy are confirmed (Stage 3+)
 export const metadata: Metadata = {
   title: {
     default: 'GhostCart',
@@ -23,8 +26,7 @@ export default function RootLayout({ children }: { readonly children: React.Reac
   return (
     <html lang="en">
       <body>
-        {/* TODO: @agent:forge Add AuthSessionProvider wrapping children */}
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

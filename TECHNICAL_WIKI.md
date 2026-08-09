@@ -20,18 +20,25 @@ supplier catalog management with major online marketplaces (eBay, Amazon SP-API,
 Marketplace, Etsy, Shopify). Core capabilities: multi-tenant catalog management,
 AI-assisted listing generation/optimization, real-time repricing guardrails, and audit logging.
 
-### Current Implementation Status: Stage 1 — Modular Monolith Scaffold
+### Current Implementation Status: Stage 2 — Real Import Pipeline & Enterprise Features
 Per the [Production Blueprint and Delivery Guide](Docs/Production%20Blueprint%20and%20Delivery%20Guide.md),
 GhostCart follows a **Modular Monolith** delivery model, not an early microservices rollout.
-The current repository is a **Stage 1 scaffold** implementing a single end-to-end "thin
-vertical slice":
+The current repository is in **Stage 2**, having progressed beyond the initial scaffold to implement:
 
+- Real supplier adapter implementations (CSV, eBay)
+- Stock/price refresh system with change detection (migration 0009)
+- Margin calculation system (migration 0010)
+- Repricing system with guardrails (migration 0011)
+- AI-powered listing analysis and optimization
+- Enhanced RLS policies and audit trails
+- 11 database migrations (0001-0011)
+
+The Stage 1 thin vertical slice remains the foundation:
 > A signed-in merchant imports an approved supplier product, reviews normalized data and
 > pricing, generates an editable listing draft, and exports or submits that draft through one
 > approved marketplace path.
 
-The codebase is intentionally minimal and heavily stubbed (most business logic is
-`TODO: @agent:…` placeholders awaiting Stage 2+ implementation).
+Technical debt remains (168 TODO markers across 34 files) — see §13 for investigation findings.
 
 ### Aspirational vs. Current Architecture — Important Distinction
 Several documents in this repository describe a **much larger future state** than what the
@@ -53,8 +60,8 @@ implemented**. See `tasks/todo.md` for the staged delivery path.
 | Stage | Goal | Entry Criteria |
 |---|---|---|
 | 0 | Product validation & operating constraints | — |
-| 1 | Foundation + clickable workflow (**current state**) | Scaffold, Docker Compose, schema, 4 screens, mock adapter, health test |
-| 2 | Real supplier import (CSV/sandboxed API) | Stage 0 complete |
+| 1 | Foundation + clickable workflow | Scaffold, Docker Compose, schema, 4 screens, mock adapter, health test |
+| 2 | Real supplier import & enhanced features (**current state**) | Stage 1 complete; CSV/EBay adapters, AI analysis, stock/price refresh, margin calculation |
 | 3 | Marketplace submission + audit history | Stage 2 stable |
 | 4 | Scale & enterprise options | Sustained measured load, bounded services |
 
@@ -66,18 +73,21 @@ Browser (React / Next.js, TS)
   ▼
 Next.js Web + API Server (src/app/)
   │
-  ├─► PostgreSQL  (src/db/migrations/0001_init.sql) — source of truth
+  ├─► PostgreSQL  (src/db/migrations/0001-0011.sql) — source of truth
   │
-  ├─► BullMQ ←→ Redis  (src/lib/queue/index.ts, src/worker/index.ts) — async import pipeline
+  ├─► BullMQ ←→ Redis  (src/lib/queue/index.ts, src/worker/index.ts) — async import + refresh pipeline
+  │
+  ├─► AI Services  (src/lib/ai/) — Ollama/VLLM integration for listing optimization
   │
   └─► Supplier Adapters  (src/lib/adapters/) — normalized via ISupplierAdapter interface
 ```
 
 **Stack:**
 - **Frontend & API:** React 18.3 / Next.js 14.2 (App Router, TypeScript)
-- **Database:** PostgreSQL 16 (multi-tenant, tenant_id columns, RLS planned)
-- **Queue:** BullMQ backed by Redis 7
+- **Database:** PostgreSQL 16 (multi-tenant, tenant_id columns, RLS implemented, 11 migrations)
+- **Queue:** BullMQ backed by Redis 7 (import + refresh workers)
 - **Background worker:** separate Node process (`npm run worker`) using `ts-node --esm`
+- **AI Services:** Ollama/VLLM integration with cache management
 - **Containerization:** Docker Compose (db, redis, app services)
 - **Testing:** Vitest (unit) + Playwright (E2E)
 - **Lint/Format:** ESLint + Prettier
@@ -141,7 +151,18 @@ Jaydr-GhostCart/
 │   │
 │   ├── 📁  db/
 │   │   └── 📁  migrations/
-│   │       └── 📄  0001_init.sql    Initial schema: 8 tables (tenants, users, suppliers, products, …).
+│   │       ├── 📄  0001_init.sql    Initial schema: 8 tables (tenants, users, suppliers, products, …).
+│   │       ├── 📄  0002_harden.sql  Constraints, indexes, canonical product columns.
+│   │       ├── 📄  0003_rls_seed.sql  RLS policies, app role, dev seed.
+│   │       ├── 📄  0004_user_corrections.sql  User corrections tracking, idempotency.
+│   │       ├── 📄  0005_ai_insights.sql  AI analysis results, cache tables.
+│   │       ├── 📄  0005_import_alpha.sql  Import alpha features.
+│   │       ├── 📄  0006_ebay_integration.sql  eBay-specific tables.
+│   │       ├── 📄  0007_job_management.sql  Enhanced job tracking.
+│   │       ├── 📄  0008_feature_flags.sql  Feature flag system.
+│   │       ├── 📄  0009_stock_price_refresh.sql  Stock/price refresh with change detection.
+│   │       ├── 📄  0010_margin_calculation.sql  Margin calculation system.
+│   │       └── 📄  0011_repricing_system.sql  Repricing with guardrails.
 │   │
 │   ├── 📁  lib/                     Core application library.
 │   │   ├── 📁  db/
@@ -245,9 +266,19 @@ All are **Stage 1 stubs** — they render semantic HTML with TODOs for design to
 | File | Purpose | Key Details |
 |---|---|---|
 | `setup.ts` | Vitest setup file | Imports `@testing-library/jest-dom`. TODOs: global test DB setup/teardown, fixture seeding (Stage 2). |
-| `health.test.ts` | Unit test | Stage 1 gate test: asserts `GET()` returns 200 + `{status:'ok'}` + JSON content-type. Imports directly from `@/app/api/health/route`. |
+| src/__tests__/health.test.ts` | Unit test | Stage 1 gate test: asserts `GET()` returns 200 + `{status:\'ok\'}` + JSON content-type. Imports directly from `@/app/api/health/route`. |
+249→
+### 4.8 Authentication
 
-## 5. Environment Configuration (`.env.example`)
+| File | Purpose | Key Details |
+|---|---|---|
+| `src/app/api/auth/[...nextauth]/route.ts` | NextAuth.js route handler | Handles all authentication requests (sign-in, sign-out, session management). Uses a `CredentialsProvider` to authenticate a developer user against credentials stored in `.env`.|
+| `src/app/AuthProvider.tsx` | Session Provider | A client-side component that wraps the application in a NextAuth.js `SessionProvider`, making the session available globally. |
+| `src/components/SignInForm.tsx` | Sign-in Form | A client-side component containing the sign-in form. It uses the `signIn` function from `next-auth/react` to authenticate the user. |
+| `src/app/(auth)/sign-in/page.tsx` | Sign-in Page | The page where users are directed to sign in. It uses the `SignInForm` component. |
+| `src/app/(dashboard)/layout.tsx` | Dashboard Layout | Protects all dashboard routes. It uses `getServerSession` to check for a valid session on the server side and redirects unauthenticated users to the sign-in page. |
+
+250→## 5. Environment Configuration (`.env.example`)
 
 | Variable | Example | Purpose |
 |---|---|---|
@@ -297,7 +328,7 @@ npx playwright test      # E2E (requires running dev server)
 | `lint` | `eslint . --ext .ts,.tsx --max-warnings 0` | Lint (CI gate). |
 | `format` | `prettier --write .` | Format all files. |
 | `format:check` | `prettier --check .` | Verify formatting (CI gate). |
-| `db:migrate` | `echo 'TODO: @agent:archivist'` | **Not implemented yet** — placeholder. The migration runner must be built. |
+| `db:migrate` | `ts-node --esm src/db/migrate.ts` | ✅ Applies `src/db/migrations/*.sql` in filename order (tracked in `schema_migrations`); rollback/recovery guidance in migrate.ts header + §12.4. |
 
 ### Docker Compose
 - `db` (`ghostcart_db`): PostgreSQL 16-alpine. Mounts `./src/db/migrations` into `/docker-entrypoint-initdb.d/:ro` — Postgres auto-runs `*.sql` files in that directory on first init.
@@ -374,23 +405,22 @@ These files exist in the repository but are **NOT relevant to the GhostCart appl
 | 4 | `Dockerfile` | No production Dockerfile for Stage 3+. |
 | 5 | `.github/workflows/*.yml` | No CI pipeline (lint, test, typecheck). |
 | 6 | `jest.config.*` / `playwright.config.ts` exists | ✅ Playwright config exists; no jest. Vitest covers unit tests. |
-| 7 | `e2e/` directory | ~~Playwright config points to `./e2e` but directory does not exist.~~ **✅ RESOLVED** — Directory exists with `e2e/smoke.test.ts`. |
+| 7 | `e2e/` directory | ✅ Directory exists with `e2e/smoke.test.ts` and additional E2E tests. |
 | 8 | `.env` | Not present (intentional — copy from `.env.example`). |
 | 9 | `next-env.d.ts` | Auto-generated by Next.js — not committed; expected. |
 
 ### Incomplete migration (`0001_init.sql`)
 | TODO | Table | Action Needed |
 |---|---|---|
-| `@agent:archivist` | `tenants` | Add `billing_plan`, `settings` (JSONB) columns |
-| `@agent:archivist` | `users` | Add `UNIQUE(tenant_id, email)`, indexes, RLS policy; add `hashed_password`, `last_login` columns |
-| `@agent:archivist` | `suppliers` | Encrypt `config` column at rest (AES-256 / KMS) |
-| `@agent:archivist` | `products` | Add `identifiers` (JSONB), `additional_image_urls` (TEXT[]), `confidence` (JSONB) columns |
-| `@agent:archivist` | `listing_drafts` | Add `CHECK` constraint on `state` enum values; add index on `(tenant_id, state)` |
-| `@agent:archivist` | `marketplace_connections` | Add `UNIQUE(tenant_id, marketplace)` |
-| `@agent:archivist` | `audit_events` | Add RLS: INSERT only, no UPDATE/DELETE; add index on `(tenant_id, created_at DESC)` |
-| `@agent:archivist` | All tables | Add tenant-scoped RLS policies on `tenant_id` |
-| `@agent:archivist` | All tables | Add rollback/recovery procedure document |
-| `@agent:archivist` | N/A | Implement migration runner (`npm run db:migrate` is a TODO echo) |
+| `@agent:archivist` | `tenants` | ✅ RESOLVED — `billing_plan`, `settings` added in 0002_harden.sql |
+| `@agent:archivist` | `users` | ✅ RESOLVED — UNIQUE constraint, indexes, `hashed_password`, `last_login` added in 0002_harden.sql |
+| `@agent:archivist` | `suppliers` | ⚠️ PENDING — Encrypt `config` column at rest (AES-256 / KMS) |
+| `@agent:archivist` | `products` | ✅ RESOLVED — `identifiers`, `additional_image_urls`, `confidence` added in 0002_harden.sql |
+| `@agent:archivist` | `listing_drafts` | ✅ RESOLVED — CHECK constraint, index added in 0002_harden.sql |
+| `@agent:archivist` | `marketplace_connections` | ✅ RESOLVED — UNIQUE constraint added in 0002_harden.sql |
+| `@agent:archivist` | `audit_events` | ✅ RESOLVED — RLS INSERT-only, index added in 0003_rls_seed.sql |
+| `@agent:archivist` | All tables | ✅ RESOLVED — RLS policies implemented in 0003_rls_seed.sql |
+| `@agent:archivist` | All tables | ✅ RESOLVED — Migration runner implemented (`src/db/migrate.ts`) |
 
 ### Stale TODOs in source code
 | # | File | TODO | Agent Responsible |
@@ -410,13 +440,13 @@ These files exist in the repository but are **NOT relevant to the GhostCart appl
 
 | File | Purpose | Production Readiness |
 |---|---|---|
-| `package.json` | Project manifest; npm scripts (`dev`, `build`, `start`, `worker`, `test`, `test:e2e`, `lint`, `format`, `db:migrate`) | ✅ (but `db:migrate` is a TODO echo — see §11) |
+| `package.json` | Project manifest; npm scripts (`dev`, `build`, `start`, `worker`, `test`, `test:e2e`, `lint`, `format`, `db:migrate`) | ✅ (`db:migrate` implemented — see §12.4) |
 | `tsconfig.json` | TypeScript compiler config; `@/*` → `./src/*` path alias | ✅ |
 | `.eslintrc.json` | ESLint config with Next.js + TypeScript rules; `--max-warnings 0` enforced | ✅ |
 | `.prettierrc` | Prettier formatting config; import ordering, single quotes, trailing commas | ✅ |
 | `vitest.config.ts` | Vitest unit/integration test config (jsdom, global globals, v8 coverage) | ✅ |
 | `playwright.config.ts` | Playwright E2E config (chromium only, auto-starts dev server in CI) | ✅ |
-| `docker-compose.yml` | Local dev stack: PostgreSQL 16, Redis 7, Next.js app container | 🟡 (references `Dockerfile.dev` which does not exist — see §11) |
+| `docker-compose.yml` | Local dev stack: PostgreSQL 16, Redis 7, Next.js app container | ✅ |
 | `.env.example` | Environment variable template (DATABASE_URL, REDIS_URL, NEXTAUTH_SECRET, etc.) | ✅ |
 | `README.md` | Project overview, quickstart, architecture diagram, AOP-CORE agent pipeline | ✅ |
 
@@ -425,15 +455,27 @@ These files exist in the repository but are **NOT relevant to the GhostCart appl
 | File | Purpose | Production Readiness |
 |---|---|---|
 | `Dockerfile` | (missing — root) Production multi-stage build | 🔴 Missing — referenced for Stage 3+ |
-| `Dockerfile.dev` | (missing — root) Development build | 🔴 Missing — referenced by docker-compose.yml |
+| `Dockerfile.dev` | Development build | ✅ Created (node:20-alpine dev image) |
 | CI workflows | `.github/workflows/` (missing) GitHub Actions pipelines | 🔴 Missing |
 
 ### 12.3 Database Layer
 
 | File | Purpose | Production Readiness |
 |---|---|---|
-| `src/db/migrations/0001_init.sql` | Initial schema: tenants, users, suppliers, products, product_sources, listing_drafts, marketplace_connections, jobs, audit_events | 🟡 (RLS, constraints, indexes, encryption marked as TODO for @agent:archivist) |
-| `src/lib/db/index.ts` | PostgreSQL connection pool (`pg` Pool); throws if `DATABASE_URL` missing; graceful SIGTERM drain | 🟡 (migration runner TODO; tenant-scoped query helper TODO) |
+| `src/db/migrations/0001_init.sql` | Initial schema: 9 core tables | ✅ |
+| `src/db/migrations/0002_harden.sql` | Constraints, indexes, canonical product columns, audit guarantees | ✅ |
+| `src/db/migrations/0003_rls_seed.sql` | App role, tenant-scoped RLS, dev seed | ✅ |
+| `src/db/migrations/0004_user_corrections.sql` | User corrections tracking, idempotency enforcement | ✅ |
+| `src/db/migrations/0005_ai_insights.sql` | AI analysis results, cache tables | ✅ |
+| `src/db/migrations/0005_import_alpha.sql` | Import alpha features | ✅ |
+| `src/db/migrations/0006_ebay_integration.sql` | eBay-specific tables | ✅ |
+| `src/db/migrations/0007_job_management.sql` | Enhanced job tracking | ✅ |
+| `src/db/migrations/0008_feature_flags.sql` | Feature flag system | ✅ |
+| `src/db/migrations/0009_stock_price_refresh.sql` | Stock/price refresh with change detection | ✅ |
+| `src/db/migrations/0010_margin_calculation.sql` | Margin calculation system | ✅ |
+| `src/db/migrations/0011_repricing_system.sql` | Repricing with guardrails | ✅ |
+| `src/db/migrate.ts` | Migration runner; applies 11 migrations in order | ✅ |
+| `src/lib/db/index.ts` | PG pool; RLS helpers; DEV_TENANT_ID; SIGTERM drain | ✅ |
 
 ## 12. Critical File Inventory — Application Layers
 
@@ -454,19 +496,104 @@ These files exist in the repository but are **NOT relevant to the GhostCart appl
 
 ✅ **Resolved** (see §11 #1): `src/app/api/products/route.ts` now imports `mockProduct` from `@/lib/adapters/mock.adapter` and the fixture export exists in `mock.adapter.ts`.
 
+### 12.5.1 API Helpers
+
+| File | Purpose | Production Readiness |
+|---|---|---|
+| `src/lib/api/response.ts` | API response helpers: `apiSuccess`, `apiError` | ✅ |
+| `src/lib/api/idempotency.ts` | Idempotency helpers: `checkDuplicateSourceUrl` (DB query with tenant scoping), `generateIdempotencyKey` (SHA-256 hash) — Hybrid duplicate detection (API layer 409 Conflict + DB UNIQUE constraint) | ✅ |
+
+## 13. Known Issues & Technical Debt (Stage 2 Investigation)
+
+The following issues were identified during the Stage 2 investigation (2026-08-09) and documented in [`.logs/errors.md`](.logs/errors.md).
+
+### 13.1 Critical Security Vulnerabilities (ERR-008)
+
+**Severity:** Critical (3 critical, 10 high, 5 moderate, 1 low vulnerabilities)
+
+Current dependency audit identified 19 vulnerabilities:
+- **Critical:** Vitest RCE vulnerabilities (GHSA-9crc-q9x8-hgqq, GHSA-5xrq-8626-4rwp)
+- **High:** PostCSS XSS/path traversal (GHSA-qx2v-qp2m-jg93, GHSA-6g55-p6wh-862q, GHSA-r28c-9q8g-f849)
+- **High:** Vite path traversal (GHSA-4w7w-66w2-5vf9, GHSA-fx2h-pf6j-xcff)
+- **Moderate:** UUID buffer bounds check (GHSA-w5hq-g745-h8pq)
+
+**Remediation:**
+```bash
+npm audit fix
+# Manual updates required for major versions:
+npm install vitest@4.1.10 next@14.2.35 bullmq@5.81.3 @playwright/test@1.62.1
+```
+
+### 13.2 TODO Debt Accumulation (ERR-009)
+
+**Severity:** Medium
+
+168 TODO markers found across 34 files in src/. Key areas:
+- ProductCorrectionForm (6 TODOs)
+- CorrectionField (6 TODOs)
+- UI components (Button, Input, etc.)
+- API routes (health, jobs, products)
+- Worker (concurrency tuning)
+- Multiple page placeholders
+
+**Impact:** Technical debt accumulation. Unimplemented features may be mistaken for completed work. TODOs in production code create uncertainty about system completeness.
+
+### 13.3 Logging Inconsistencies (ERR-010)
+
+**Severity:** Medium
+
+50+ console.log/error/warn calls across src/. No structured logging framework. Worker uses console.warn for lifecycle events. API routes use console.error without correlation IDs.
+
+**Impact:** Violates Production Blueprint §3.3 requirement for "structured logs, error tracking, health checks, and correlation IDs." Production debugging becomes difficult.
+
+### 13.4 Configuration Security (ERR-011)
+
+**Severity:** Medium
+
+.env.example uses weak default passwords (ghostcart_dev). No explicit warnings about required secure values (NEXTAUTH_SECRET, DEV_SEED_PASSWORD). No secrets rotation process documented.
+
+**Impact:** Development configuration may accidentally be used in production.
+
+### 13.5 Migration TODO Uncertainty (ERR-012)
+
+**Severity:** Low
+
+Migration 0001_init.sql contains TODO comments for RLS policies, billing_plan/settings, UNIQUE constraints, config encryption, identifiers/additional_image_urls/confidence. Some addressed in later migrations but not tracked.
+
+**Impact:** TODO markers in production migrations create uncertainty about schema completeness. Risk of missing security constraints.
+
+### 13.6 Test Coverage Gaps (ERR-013)
+
+**Severity:** Medium
+
+Only 11 test files for 49 TypeScript files and 18 TSX files. No integration tests for worker processes. Many API routes lack test coverage.
+
+**Impact:** Test gate may not catch regressions. Production Blueprint §Stage 1 Test Gate requirements not fully met.
+
+### 13.7 Patterns Discovered
+
+The investigation identified 5 new architectural patterns documented in [`.logs/patterns.md`](.logs/patterns.md):
+
+- **Pattern 10:** TODO Debt Accumulation Pattern
+- **Pattern 11:** Console Logging Anti-Pattern
+- **Pattern 12:** Dependency Vulnerability Drift
+- **Pattern 13:** Migration TODO Uncertainty
+- **Pattern 14:** Test Coverage Gap Pattern
+
 ### 12.6 API Layer
 
 | File | Route | HTTP Methods | Purpose | Production Readiness |
 |---|---|---|---|---|
 | `src/app/api/health/route.ts` | `/api/health` | GET | Health check: Returns `{ status: 'ok' }` | ✅ |
-| `src/app/api/products/route.ts` | `/api/products` | GET, POST | GET: fixture product list (mock). POST: enqueues BullMQ `product.import` job (202) with graceful fallback if Redis is unavailable. | 🟡 (GET still returns fixture — Stage 2 DB read; POST enqueue ✅) |
-| `src/app/api/listings/route.ts` | `/api/listings` | GET, POST | GET: paginated listing drafts (mock). POST: create draft (201). | ✅ |
+| `src/app/api/products/route.ts` | `/api/products` | GET, POST | GET: real DB read with pagination and filtering (category, supplierId). POST: duplicate detection (409 Conflict) + enqueues BullMQ `product.import` job (202) with graceful fallback if Redis is unavailable. | ✅ |
+| `src/app/api/products/[id]/route.ts` | `/api/products/[id]` | GET | Retrieve single product by ID with tenant isolation; returns 404 if not found or wrong tenant. | ✅ |
+| `src/app/api/products/[id]/corrections/route.ts` | `/api/products/[id]/corrections` | PATCH | Record merchant manual corrections for product fields; preserves original values in `user_corrections` JSONB; emits audit events; tenant-scoped with RLS. | ✅ |
+| `src/app/api/listings/route.ts` | `/api/listings` | GET, POST | GET: paginated listing drafts (mock). POST: create draft (201). | 🟡 (GET still returns mock — Stage 2+ DB read) |
+| `src/app/api/listings/[id]/route.ts` | `/api/listings/[id]` | GET, PUT | GET: retrieve single listing draft by ID with tenant isolation. PUT: partial updates (title, description, price, attributes, shipping, images) with audit events. | ✅ |
 
 **Missing API routes (planned):**
-- `src/app/api/products/[id]/route.ts` — GET single product
-- `src/app/api/listings/[id]/route.ts` — GET/PUT listing draft
 - `src/app/api/listings/[id]/submit/route.ts` — Submit draft (Stage 3+)
-- `src/app/api/auth/[...nextauth]/route.ts` — NextAuth handler (deps installed, not configured)
+- `src/app/api/auth/[...nextauth]/route.ts` — NextAuth handler (deps installed, configured with CredentialsProvider)
 
 ### 12.7 Queue / Worker Layer
 
@@ -491,6 +618,8 @@ These files exist in the repository but are **NOT relevant to the GhostCart appl
 | `src/components/ui/ErrorState.tsx` | Error state with title, message, optional retry | 🟡 (stub — icon, retry styling TODO) |
 | `src/components/ui/PageHeader.tsx` | Standard page header with title, subtitle, optional action | 🟡 (stub — breadcrumbs, layout TODO) |
 | `src/components/ui/StatusBadge.tsx` | Renders listing state as labeled badge; `STATE_LABELS` map | 🟡 (stub — color tokens, icons TODO) |
+| `src/components/import/ProductCorrectionForm.tsx` | Product correction form for manual data edits while preserving original values — Stage 2 scaffold | 🟡 (@agent:forge TODO items pending) |
+| `src/components/import/CorrectionField.tsx` | Individual field correction component with original value display, confidence scores, and revert functionality — Stage 2 scaffold | 🟡 (@agent:forge TODO items pending) |
 
 ### 12.10 App Router (Pages & Layouts)
 
@@ -510,10 +639,12 @@ These files exist in the repository but are **NOT relevant to the GhostCart appl
 
 | File | Purpose | Production Readiness |
 |---|---|---|
-| `src/__tests__/setup.ts` | Vitest setup; imports `@testing-library/jest-dom` | 🟡 (test DB setup/teardown TODO for Stage 2) |
-| `src/__tests__/health.test.ts` | Unit test: GET /api/health returns 200 + `{ status: 'ok' }` | ✅ (satisfies Stage 1 Test Gate) |
+| `src/__tests__/setup.ts` | Vitest setup: imports `@testing-library/jest-dom` | 🟡 (global test DB setup/teardown TODO) |
+| `src/__tests__/health.test.ts` | Unit test: GET /api/health → 200 + JSON | ✅ |
+| `src/__tests__/api/products-idempotency.test.ts` | Idempotency tests: duplicate detection, DB constraint enforcement, tenant isolation — Stage 2 scaffold | 🟡 (@agent:atlas TODO items pending) |
 | `src/__tests__/api/products.test.ts` | 4 tests: valid list, invalid query, valid import, invalid URL | ✅ |
 | `src/__tests__/api/listings.test.ts` | 4 tests: valid list, invalid state filter, valid draft creation, missing fields | ✅ |
+| `src/__tests__/components/ProductCorrectionForm.test.tsx` | Product correction form tests: field editing, save/cancel callbacks, confidence display — Stage 2 scaffold | 🟡 (@agent:forge TODO items pending) |
 | `e2e/smoke.test.ts` | Playwright smoke: sign-in page renders + `/api/health` returns 200 | ✅ |
 
 ### 12.12 Environment
@@ -548,7 +679,7 @@ These files exist in the repository but are **NOT relevant to the GhostCart appl
 7. **Lint:** `npm run lint` (zero warnings enforced)
 8. **Type check:** `npx tsc --noEmit` (strict mode)
 
-> **Note:** `npm run db:migrate` is not yet implemented. To apply the initial schema manually: `psql $DATABASE_URL -f src/db/migrations/0001_init.sql`
+> **Note:** Apply the schema with `npm run db:migrate` (runner in `src/db/migrate.ts`). Requires `DATABASE_URL`; applies migrations `0001 → 0003` in order, each in a transaction.
 
 <!-- END_OF_WIKI -->
 

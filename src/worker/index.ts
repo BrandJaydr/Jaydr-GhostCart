@@ -1,24 +1,26 @@
 /**
- * Worker Process Entrypoint — Stage 1 Stub
+ * Worker Process Entrypoint — Stage 2
  *
  * Registers BullMQ workers that process async jobs from the queue.
  * Runs as a separate process: `npm run worker`
  *
- * Stage 1: Registers the `product.import` worker; the processor resolves the
- *          supplier adapter, normalizes the product, and persists it with
- *          graceful degradation (logs + completes instead of retry-looping).
- * Stage 2: @agent:atlas Tighten retry-on-transient-error + dead-letter queue.
+ * Stage 1: Registered `product.import`; processor resolved the supplier adapter,
+ *          normalized the product, and persisted it with graceful degradation.
+ * Stage 2: Added `product_sources` traceability, review-before-use gate +
+ *          import instrumentation on persisting products, dead-letter queue
+ *          dispatch on final failure, and a `product.refresh` worker.
  * Stage 3: @agent:atlas Add listingQueue worker for marketplace submission.
  *
  * Reference: Production Blueprint §3.1 — "single worker process and durable queue"
  */
 
 import { Worker, type Job } from 'bullmq';
-import { redis } from '@/lib/queue';
-import { db } from '@/lib/db';
-import { getSupplierAdapter } from '@/lib/adapters/factory';
-import type { CanonicalProduct } from '@/lib/types/canonical';
+import { redis } from '../lib/queue/index.js';
+import { db, setTenantContextOn } from '../lib/db/index.js';
+import { getSupplierAdapter } from '../lib/adapters/factory.js';
+import type { CanonicalProduct } from '../lib/types/canonical.js';
 import { randomUUID } from 'node:crypto';
+
 
 console.warn('[Worker] Starting GhostCart worker process...');
 
@@ -35,6 +37,14 @@ interface PersistContext {
   jobId?: string | undefined;
   tenantId: string;
   idempotencyKey: string;
+  durationMs?: number | undefined;
+}
+
+/** Average per-field normalization confidence → 0..1 completeness score. */
+function computeCompleteness(product: CanonicalProduct): number {
+  if (!product.confidence || product.confidence.length === 0) return 0;
+  const sum = product.confidence.reduce((acc, c) => acc + (c.score ?? 0), 0);
+  return Math.round((sum / product.confidence.length) * 100) / 100;
 }
 
 /** Persist a normalized CanonicalProduct to PostgreSQL within a transaction. */
@@ -46,13 +56,31 @@ async function persistImport(
   const client = await db.connect();
   try {
     await client.query('BEGIN');
+    await setTenantContextOn(client, product.tenantId);
 
-    // Core product record (canonical fields → existing migration columns).
+    // Core product record (canonical fields → migrated columns, incl. 0002 additions).
+    // `user_corrections` is initialized empty so the correction workflow has a stable base.
     await client.query(
       `INSERT INTO products
          (id, tenant_id, title, description, supplier_price_cents, currency,
-          availability, primary_image_url, imported_at, last_refreshed_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+          availability, primary_image_url, identifiers, additional_image_urls,
+          confidence, imported_at, last_refreshed_at, source_url, user_corrections,
+          review_status, import_duration_ms, normalization_completeness)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10, $11::jsonb, $12, $13, $14,
+               '{}'::jsonb, 'needs_review', $15, $16)
+       ON CONFLICT (source_url) DO UPDATE
+         SET title = EXCLUDED.title,
+             description = EXCLUDED.description,
+             supplier_price_cents = EXCLUDED.supplier_price_cents,
+             currency = EXCLUDED.currency,
+             availability = EXCLUDED.availability,
+             primary_image_url = EXCLUDED.primary_image_url,
+             identifiers = EXCLUDED.identifiers,
+             additional_image_urls = EXCLUDED.additional_image_urls,
+             confidence = EXCLUDED.confidence,
+             last_refreshed_at = now(),
+             import_duration_ms = EXCLUDED.import_duration_ms,
+             normalization_completeness = EXCLUDED.normalization_completeness`,
       [
         productId,
         product.tenantId,
@@ -62,16 +90,49 @@ async function persistImport(
         product.currency,
         product.availability,
         product.primaryImageUrl,
+        JSON.stringify(product.identifiers),
+        product.additionalImageUrls,
+        JSON.stringify(product.confidence),
         product.importedAt,
         product.lastRefreshedAt,
+        product.sourceUrl,
+        ctx.durationMs ?? null,
+        computeCompleteness(product),
       ],
     );
 
-    // TODO: @agent:archivist product_sources insert is deferred until the
-    // suppliers registry is seeded. The canonical `supplierId` is the adapterId
-    // (text), but `product_sources.supplier_id` is a UUID FK → `suppliers.id`.
-    // Mapping a supplier adapter to a suppliers row belongs in Stage 2 once the
-    // tenant's supplier accounts are configured.
+    // Traceability: link the persisted product to its suppliers row via
+    // product_sources (raw_source_metadata preserved). The canonical supplierId
+    // is the adapterId (text); resolve the UUID suppliers row by adapter_id.
+    // Never fail the whole import for traceability.
+    const supplierRes = await client.query(
+      `SELECT id FROM suppliers WHERE tenant_id = $1 AND adapter_id = $2 LIMIT 1`,
+      [product.tenantId, product.supplierId],
+    );
+    const supplierId = supplierRes.rows[0]?.id ?? null;
+
+    // ON CONFLICT (source_url) updates the existing row and keeps its original
+    // id; read back the true id so product_sources references the right product.
+    const productRow = await client.query(
+      `SELECT id FROM products WHERE source_url = $1 LIMIT 1`,
+      [product.sourceUrl],
+    );
+    const persistedProductId = productRow.rows[0]?.id ?? productId;
+
+    if (supplierId) {
+      await client.query(
+        `INSERT INTO product_sources
+           (product_id, tenant_id, supplier_id, source_url, raw_source_metadata, created_at)
+         VALUES ($1, $2, $3, $4, $5, now())`,
+        [
+          persistedProductId,
+          product.tenantId,
+          supplierId,
+          product.sourceUrl,
+          JSON.stringify(product.rawSourceMetadata),
+        ],
+      );
+    }
 
     // Jobs table: upsert by idempotency_key (dedup).
     await client.query(
@@ -181,15 +242,17 @@ const importWorker = new Worker(
       throw new Error(`Unknown supplier adapter: ${supplierId}`);
     }
 
-    // 2. Import & normalize to a CanonicalProduct.
+    // 2. Import & normalize to a CanonicalProduct (instrument duration).
+    const startedAt = Date.now();
     const product = await adapter.importProduct(url, tenantId);
+    const durationMs = Date.now() - startedAt;
 
     // 3. Persist — graceful degradation (Option C). If Postgres is unavailable
     //    or @agent:archivist's schema TODOs aren't complete yet, the import
     //    result is still returned so the job doesn't retry-loop.
     let persisted = true;
     try {
-      await persistImport(product, { jobId: job.id, tenantId, idempotencyKey });
+      await persistImport(product, { jobId: job.id, tenantId, idempotencyKey, durationMs });
     } catch (err) {
       persisted = false;
       const msg = `DB persistence failed for import ${job.id ?? '?'}: ${(err as Error).message}`;
@@ -220,14 +283,145 @@ importWorker.on('completed', (job) => {
   console.warn(`[Worker] Import job ${job.id} completed`);
 });
 
+/** Move an exhausted job to the durable dead-letter queue (best-effort). */
+async function dispatchToDeadLetter(
+  job: Job,
+  errorMessage: string,
+): Promise<void> {
+  const { tenantId, supplierId, url, idempotencyKey } = job.data ?? {};
+  try {
+    await db.query(
+      `INSERT INTO dead_letter_queue
+         (tenant_id, queue, bull_job_id, payload, error, attempts, created_at)
+       VALUES ($1, 'product.import', $2, $3, $4, $5, now())`,
+      [
+        tenantId,
+        job.id,
+        JSON.stringify({ supplierId, url, idempotencyKey }),
+        errorMessage,
+        job.attemptsMade ?? 0,
+      ],
+    );
+  } catch (err) {
+    console.error('[Worker] Could not write dead-letter entry:', (err as Error).message);
+  }
+}
+
 importWorker.on('failed', (job, err) => {
   console.error(`[Worker] Import job ${job?.id} failed:`, err.message);
   void recordJobFailure(job, err.message);
+  if (job && job.attemptsMade >= (job.opts?.attempts ?? 3)) {
+    void dispatchToDeadLetter(job, err.message).then(() =>
+      console.warn(`[Worker] Import job ${job.id} moved to dead-letter queue`),
+    );
+  }
+});
+
+// ─── Product Refresh Worker ───────────────────────────────────────────────────
+// Stage 2: refreshes an already-imported product from its supplier feed by
+// re-running the adapter's fetchProduct and re-persisting (upsert).
+// Stage 4: Extended to handle stock/price refresh with change detection and logging.
+const refreshWorker = new Worker(
+  'product.refresh',
+  async (job) => {
+    const { productId, tenantId, supplierId, idempotencyKey, refreshType = 'both' } = job.data;
+
+    const adapter = getSupplierAdapter(supplierId);
+    if (!adapter) {
+      throw new Error(`Unknown supplier adapter: ${supplierId}`);
+    }
+
+    // Get current product data for change detection
+    const currentProduct = await db.query(
+      'SELECT supplier_price_cents, current_stock FROM products WHERE id = $1',
+      [productId],
+    );
+
+    const oldPrice = (currentProduct.rowCount ?? 0) > 0 ? currentProduct.rows[0].supplier_price_cents : null;
+    const oldStock = (currentProduct.rowCount ?? 0) > 0 ? currentProduct.rows[0].current_stock : null;
+
+    const product = await adapter.fetchProduct(productId, tenantId);
+
+    let persisted = true;
+    let priceChanged = false;
+    let stockChanged = false;
+
+    try {
+      await persistImport(product, { jobId: job.id, tenantId, idempotencyKey });
+
+      // Log price change if different
+      if (refreshType === 'price' || refreshType === 'both') {
+        const priceHistoryId = await db.query(
+          'SELECT products.log_price_change($1, $2, $3, $4, $5) as history_id',
+          [productId, oldPrice, product.supplierPriceCents, 'scheduled', null],
+        );
+        priceChanged = (priceHistoryId.rowCount ?? 0) > 0 && priceHistoryId.rows[0].history_id !== null;
+      }
+
+      // Log stock change if different
+      if (refreshType === 'stock' || refreshType === 'both') {
+        const stockChangedResult = await db.query(
+          'SELECT products.log_stock_change($1, $2, $3, $4, $5) as changed',
+          [productId, oldStock, product.availability === 'in_stock' ? 100 : 0, 'scheduled', null],
+        );
+        stockChanged = (stockChangedResult.rowCount ?? 0) > 0 && stockChangedResult.rows[0].changed;
+      }
+
+      await db.query(
+        `UPDATE products SET last_refreshed_at = now(), review_status = review_status
+          WHERE id = $1`,
+        [productId],
+      );
+
+      // Audit event for refresh
+      await db.query(
+        `INSERT INTO audit_events
+           (tenant_id, user_id, action, entity_type, entity_id, metadata, created_at)
+         VALUES ($1, NULL, 'product.refreshed', 'products', $2, $3, now())`,
+        [
+          tenantId,
+          productId,
+          JSON.stringify({
+            refreshType,
+            priceChanged,
+            stockChanged,
+            oldPrice,
+            newPrice: product.supplierPriceCents,
+          }),
+        ],
+      );
+    } catch (err) {
+      persisted = false;
+      console.error(`[Worker] Refresh persist failed for ${job.id}:`, (err as Error).message);
+    }
+
+    return { productId, persisted, priceChanged, stockChanged };
+  },
+  { connection: redis, concurrency: 5 },
+);
+
+refreshWorker.on('failed', (job, err) => {
+  console.error(`[Worker] Refresh job ${job?.id} failed:`, err.message);
+  if (job && job.attemptsMade >= (job.opts?.attempts ?? 3)) {
+    void (async () => {
+      const { tenantId, supplierId, productId } = job.data ?? {};
+      try {
+        await db.query(
+          `INSERT INTO dead_letter_queue
+             (tenant_id, queue, bull_job_id, payload, error, attempts, created_at)
+           VALUES ($1, 'product.refresh', $2, $3, $4, $5, now())`,
+          [tenantId, job.id, JSON.stringify({ supplierId, productId }), err.message, job.attemptsMade],
+        );
+      } catch (e) {
+        console.error('[Worker] Could not write DLQ for refresh:', (e as Error).message);
+      }
+    })();
+  }
 });
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   console.warn('[Worker] Shutting down...');
-  await importWorker.close();
+  await Promise.allSettled([importWorker.close(), refreshWorker.close()]);
   process.exit(0);
 });

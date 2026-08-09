@@ -1,0 +1,18 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+[7m[1m[36m RUN [39m[22m[27m [36mv2.0.3[39m [90mC:/Users/jayst/Documents/GitHub/Jaydr GhostCart[39m
+
+ [32m✓[39m src/__tests__/health.test.ts [2m ([22m[2m2 tests[22m[2m)[22m[90m 17[2mms[22m[39m
+ [32m✓[39m src/__tests__/adapters/csv.adapter.test.ts [2m ([22m[2m11 tests[22m[2m)[22m[90m 22[2mms[22m[39m
+ [32m✓[39m src/__tests__/api/jobs.test.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 54[2mms[22m[39m
+ [32m✓[39m src/__tests__/api/products-idempotency.test.ts [2m ([22m[2m5 tests[22m[2m)[22m[90m 44[2mms[22m[39m
+ [32m✓[39m src/__tests__/api/products-stage2.test.ts [2m ([22m[2m5 tests[22m[2m)[22m[90m 51[2mms[22m[39m
+ [32m✓[39m src/__tests__/api/listings.test.ts [2m ([22m[2m4 tests[22m[2m)[22m[90m 71[2mms[22m[39m
+ [32m✓[39m src/__tests__/api/products.test.ts [2m ([22m[2m8 tests[22m[2m)[22m[90m 93[2mms[22m[39m
+ [32m✓[39m src/__tests__/components/ProductCorrectionForm.test.tsx [2m ([22m[2m7 tests[22m [2m|[22m [33m3 skipped[39m[2m)[22m[33m 362[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m8 passed[39m[22m[90m (8)[39m
+[2m      Tests [22m [1m[32m42 passed[39m[22m[2m | [22m[33m3 skipped[39m[90m (45)[39m
+[2m   Start at [22m 14:22:15
+[2m   Duration [22m 5.01s[2m (transform 1.23s, setup 4.55s, collect 3.40s, tests 714ms, environment 18.47s, prepare 5.00s)[22m
+

@@ -1,0 +1,147 @@
+{
+  "v": 1,
+  "project": {
+    "key": "jaydr-ghostcart-99c056d7cf416a6c",
+    "name": "Jaydr GhostCart",
+    "rootPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart",
+    "canonical": "https://github.com/BrandJaydr/Jaydr-GhostCart.git",
+    "createdAt": "2026-08-09T02:06:53.066Z",
+    "updatedAt": "2026-08-09T02:44:01.991Z"
+  },
+  "updatedAt": "2026-08-09T02:51:07.233Z",
+  "totalEntries": 16,
+  "byKind": {
+    "conversation": 15,
+    "rule": 1
+  },
+  "latestEntries": [
+    {
+      "id": "20260524071221-29e96b0e0a4e",
+      "kind": "conversation",
+      "title": "Windsurf Cascade: Plugin Security and Renaming",
+      "source": "windsurf-cascade-meta:996ae3ca-70a6-4f44-b473-2d1ec3bf9264",
+      "createdAt": "2026-05-24T07:12:21.226Z",
+      "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
+    },
+    {
+      "id": "20260414190356-7ae93f29439f",
+      "kind": "conversation",
+      "title": "Windsurf Cascade: Expand Security Diagnostics",
+      "source": "windsurf-cascade-meta:6d009c30-a980-486d-b93e-ae7486a641c2",
+      "createdAt": "2026-04-14T19:03:56.333Z",
+      "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
+    },
+    {
+      "id": "20260809020653-d02b10904cbb",
+      "kind": "rule",
+      "title": "trigger: manual",
+      "source": ".windsurf/rules/project objective alignment.md",
+      "createdAt": "2026-08-09T02:06:53.380Z",
+      "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
+    },
+    {
+      "id": "20260523012545-5916647c5118",
+      "kind": "conversation",
+      "title": "Windsurf Cascade: Migrate Windsurf MCP Config",
+      "source": "windsurf-cascade-meta:517a5cfd-033f-46d7-bfd2-5efc684a55f2",
+      "createdAt": "2026-05-23T01:25:45.021Z",
+      "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
+    },
+    {
+      "id": "20260523005518-d2a6e0690f22",
+      "kind": "conversation",
+      "title": "Windsurf Cascade: Understanding AI Tools",
+      "source": "windsurf-cascade-meta:f43d17a1-4526-4524-a7f4-7bdfb2753b14",
+      "createdAt": "2026-05-23T00:55:18.094Z",
+      "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
+    },
+    {
+      "id": "20260509122933-0b4e1f35d517",
+      "kind": "conversation",
+      "title": "Windsurf Cascade: Analyze Workflow Document",
+      "source": "windsurf-cascade-meta:ad00c36f-24ac-4fd4-996b-6ed272aa9cb0",
+      "createdAt": "2026-05-09T12:29:33.026Z",
+      "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
+    },
+    {
+      "id": "20260509122318-0679f113abf9",
+      "kind": "conversation",
+      "title": "Windsurf Cascade: GhostCart Project Analysis",
+      "source": "windsurf-cascade-meta:fc79ec81-e982-42db-a07c-e8ce0c7b3227",
+      "createdAt": "2026-05-09T12:23:18.704Z",
+      "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
+    },
+    {
+      "id": "20260508053018-bb994a5bbfec",
+      "kind": "conversation",
+      "title": "Windsurf Cascade: Investigate Gizmo Control Center",
+      "source": "windsurf-cascade-meta:b905611d-18a1-4bd3-8be0-1453ed204935",
+      "createdAt": "2026-05-08T05:30:18.835Z",
+      "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
+    },
+    {
+      "id": "20260508052731-1e7ca3fcb471",
+      "kind": "conversation",
+      "title": "Windsurf Cascade: WordPress Plugin Refactor",
+      "source": "windsurf-cascade-meta:600a6ba7-cde8-41ae-ba4c-ca67a81a430b",
+      "createdAt": "2026-05-08T05:27:31.019Z",
+      "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
+    },
+    {
+      "id": "20260508052146-5829f1dbbd6e",
+      "kind": "conversation",
+      "title": "Windsurf Cascade: Analyze Project and Extract Memories",
+      "source": "windsurf-cascade-meta:857e73ce-a4e8-4635-a7c8-d6e48631d191",
+      "createdAt": "2026-05-08T05:21:46.438Z",
+      "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
+    },
+    {
+      "id": "20260423001422-7e3e5ac205c1",
+      "kind": "conversation",
+      "title": "Windsurf Cascade: Deploying RSS Reader App",
+      "source": "windsurf-cascade-meta:661b8cb4-ca40-495b-9159-58de4ffba918",
+      "createdAt": "2026-04-23T00:14:22.364Z",
+      "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
+    },
+    {
+      "id": "20260423000016-01ed343dd0f4",
+      "kind": "conversation",
+      "title": "Windsurf Cascade: Documentation Review and Update",
+      "source": "windsurf-cascade-meta:2386c663-dd8d-47b5-b481-5817ad6fc6eb",
+      "createdAt": "2026-04-23T00:00:16.487Z",
+      "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
+    },
+    {
+      "id": "20260416233138-02169751c9d3",
+      "kind": "conversation",
+      "title": "Windsurf Cascade: WordPress Forum Page Layout",
+      "source": "windsurf-cascade-meta:1b72a5a2-7956-45fb-901e-3cca307e918a",
+      "createdAt": "2026-04-16T23:31:38.436Z",
+      "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
+    },
+    {
+      "id": "20260416204850-b75ee29ba9b0",
+      "kind": "conversation",
+      "title": "Windsurf Cascade: Analyze JSON File",
+      "source": "windsurf-cascade-meta:d3a65a4f-e358-4929-a3ec-50b86961bd31",
+      "createdAt": "2026-04-16T20:48:50.806Z",
+      "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
+    },
+    {
+      "id": "20260415202046-8b4fa1be47e5",
+      "kind": "conversation",
+      "title": "Windsurf Cascade: Implementing Audius User ID",
+      "source": "windsurf-cascade-meta:a44897c6-31b3-4f9f-9f0a-277c9a170940",
+      "createdAt": "2026-04-15T20:20:46.715Z",
+      "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
+    },
+    {
+      "id": "20260414190435-50d246b2ae74",
+      "kind": "conversation",
+      "title": "Windsurf Cascade: Identify Documentation Inconsistencies",
+      "source": "windsurf-cascade-meta:26cba51b-0cb2-4db0-964c-fea347112f78",
+      "createdAt": "2026-04-14T19:04:35.869Z",
+      "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
+    }
+  ]
+}
