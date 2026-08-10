@@ -1,6 +1,6 @@
 import type { ISupplierAdapter } from './supplier.interface';
 import type { CanonicalProduct } from '@/lib/types/canonical';
-import { parseCsv, normalizeCsvRow, REQUIRED_CSV_KEYS } from './normalize';
+import { parseCsv, normalizeCsvRow, REQUIRED_CSV_KEYS, validateCsv } from './normalize';
 
 /**
  * CsvSupplierAdapter — Stage 2 real, authorized supplier adapter
@@ -38,22 +38,38 @@ export class CsvSupplierAdapter implements ISupplierAdapter {
     return this.fetcher(url);
   }
 
-  async validateConnection(): Promise<{ valid: boolean; reason?: string }> {
+  async validateConnection(): Promise<{ valid: boolean; reason?: string; details?: any }> {
     const feedUrl = process.env.CSV_FEED_URL;
     if (!feedUrl) {
       return { valid: false, reason: 'CSV_FEED_URL is not configured' };
     }
     try {
       const text = await this.loadCsv(feedUrl);
-      const rows = parseCsv(text);
-      if (rows.length === 0) {
-        return { valid: false, reason: 'CSV feed is empty' };
+      const validation = validateCsv(text, REQUIRED_CSV_KEYS);
+      
+      if (!validation.isValid) {
+        const errorMessages = validation.errors.map(e => 
+          e.line ? `Line ${e.line}: ${e.message}` : e.message
+        ).join('; ');
+        return { 
+          valid: false, 
+          reason: `CSV validation failed: ${errorMessages}`,
+          details: validation
+        };
       }
-      const missing = REQUIRED_CSV_KEYS.filter((k) => !(k in rows[0]));
-      if (missing.length > 0) {
-        return { valid: false, reason: `CSV missing required columns: ${missing.join(', ')}` };
+      
+      if (validation.warnings.length > 0) {
+        const warningMessages = validation.warnings.map(w => 
+          w.line ? `Line ${w.line}: ${w.message}` : w.message
+        ).join('; ');
+        return { 
+          valid: true, 
+          reason: `CSV validated with warnings: ${warningMessages}`,
+          details: validation
+        };
       }
-      return { valid: true };
+      
+      return { valid: true, reason: 'CSV feed is valid' };
     } catch (err) {
       return { valid: false, reason: (err as Error).message };
     }

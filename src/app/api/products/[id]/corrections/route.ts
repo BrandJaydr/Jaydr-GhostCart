@@ -1,6 +1,7 @@
-import type { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
-import { db } from '@/lib/db/index.js';
+import { withTenant, DEV_TENANT_ID } from '@/lib/db/index.js';
+import type { CorrectionEntry } from '@/lib/types/canonical';
 
 /**
  * PATCH /api/products/[id]/corrections

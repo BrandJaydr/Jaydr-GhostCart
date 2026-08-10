@@ -78,3 +78,10 @@ This file captures recurring design patterns, integration gotchas, database guid
 - **Rationale:** Stage 1-2 focused on feature delivery over test coverage. No systematic test coverage requirements enforced.
 - **Risk:** Regressions may not be caught. Production Blueprint §Stage 1 Test Gate requirements not fully met.
 - **Discovered by:** Investigator 🕵️ — 2026-08-09 (ERR-013)
+
+### 15. Double Query Anti-Pattern
+- **Pattern:** Database queries that fetch data and count/related information are executed as separate round trips instead of combined CTEs. Found in products route (GET /api/products) and usage-limits.ts (checkUsageLimit).
+- **Rationale:** Developers write sequential queries for readability without considering performance impact of multiple DB round trips.
+- **Risk:** Unnecessary network latency (2x DB calls), increased connection pool pressure, slower API response times, especially under load.
+- **Solution:** Combine separate queries into single PostgreSQL Common Table Expression (CTE) to reduce round trips from 2 to 1.
+- **Discovered by:** Bolt ⚡ — 2026-08-09 (ERR-014)

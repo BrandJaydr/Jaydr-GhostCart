@@ -579,6 +579,7 @@ The investigation identified 5 new architectural patterns documented in [`.logs/
 - **Pattern 12:** Dependency Vulnerability Drift
 - **Pattern 13:** Migration TODO Uncertainty
 - **Pattern 14:** Test Coverage Gap Pattern
+- **Pattern 15:** Double Query Anti-Pattern
 
 ### 12.6 API Layer
 

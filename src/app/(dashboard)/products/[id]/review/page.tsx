@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { ProductReviewClient } from './client';
 
 export const metadata: Metadata = {
   title: 'Review Product',
@@ -9,33 +10,18 @@ interface ProductReviewPageProps {
 }
 
 /**
- * Product Review Screen — Stage 1 Stub
+ * Product Review Screen — Stage 2 Implementation
  *
  * Screen 3 of the thin vertical slice.
  * Merchant reviews normalized product data and pricing before generating a listing draft.
  *
- * Data flow (to be implemented):
+ * Data flow:
  *   GET /api/products/[id] → display CanonicalProduct fields + confidence/errors
+ *   PATCH /api/products/[id]/corrections → save manual corrections
+ *   PATCH /api/products/[id]/review-status → approve/reject product
  *
- * TODO: @agent:forge Implement <ProductReview> component:
- *   - Display: title, images, identifiers, price, availability, source URL, timestamp
- *   - Display: normalization confidence score and field-level errors (per Blueprint §6.2)
- *   - Action: "Edit field" inline correction (review-before-use state)
- *   - Action: "Generate Draft" CTA → POST /api/listings
- *   - Loading state, empty state, error state (if product not found)
- *
- * TODO: @agent:atlas Wire GET /api/products/[id] API route
- * TODO: @agent:forge Use fixture data (mock adapter) for Stage 1 rendering
- *
- * Blueprint reference: Stage 1 — "product review" screen with "fixture data and mock adapter"
+ * Reference: Production Blueprint §6.2 (review-before-use state)
  */
 export default function ProductReviewPage({ params }: ProductReviewPageProps) {
-  return (
-    <main aria-label={`Review product ${params.id}`}>
-      <h1>Review Product</h1>
-      <p style={{ color: 'gray' }}>Product ID: {params.id}</p>
-      {/* TODO: @agent:forge Replace with <ProductReview productId={params.id} /> */}
-      <p style={{ color: 'gray' }}>[ProductReview placeholder — Stage 1 scaffold]</p>
-    </main>
-  );
+  return <ProductReviewClient productId={params.id} />;
 }

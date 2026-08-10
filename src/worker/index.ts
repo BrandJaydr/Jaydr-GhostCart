@@ -67,7 +67,7 @@ async function persistImport(
           confidence, imported_at, last_refreshed_at, source_url, user_corrections,
           review_status, import_duration_ms, normalization_completeness)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10, $11::jsonb, $12, $13, $14,
-               '{}'::jsonb, 'needs_review', $15, $16)
+               '{}'::jsonb, 'pending_review', $15, $16)
        ON CONFLICT (source_url) DO UPDATE
          SET title = EXCLUDED.title,
              description = EXCLUDED.description,
@@ -80,7 +80,8 @@ async function persistImport(
              confidence = EXCLUDED.confidence,
              last_refreshed_at = now(),
              import_duration_ms = EXCLUDED.import_duration_ms,
-             normalization_completeness = EXCLUDED.normalization_completeness`,
+             normalization_completeness = EXCLUDED.normalization_completeness,
+             review_status = 'pending_review'`,
       [
         productId,
         product.tenantId,

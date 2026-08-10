@@ -23,29 +23,33 @@ export async function checkUsageLimit(
   increment: number = 1,
 ): Promise<{ allowed: boolean; remaining: number; resetAt: Date }> {
   try {
+    // Performance optimization: Combine check_limit call and usage fetch into single CTE
+    // to reduce database round trips from 2 to 1
     const result = await db.query(
-      'SELECT usage_limits.check_limit($1, $2, $3) as allowed',
+      `WITH limit_check AS (
+        SELECT usage_limits.check_limit($1, $2, $3) as allowed
+      ),
+      current_usage AS (
+        SELECT limit_value, current_value, reset_at
+        FROM usage_limits
+        WHERE tenant_id = $1 AND limit_type = $2
+        LIMIT 1
+      )
+      SELECT lc.allowed, cu.limit_value, cu.current_value, cu.reset_at
+      FROM limit_check lc
+      LEFT JOIN current_usage cu ON true`,
       [tenantId, limitType, increment],
     );
 
-    const allowed = result.rows[0].allowed as boolean;
-
-    // Get current usage
-    const limitResult = await db.query(
-      `SELECT limit_value, current_value, reset_at
-       FROM usage_limits
-       WHERE tenant_id = $1 AND limit_type = $2
-       LIMIT 1`,
-      [tenantId, limitType],
-    );
+    const allowed = (result.rows[0]?.allowed as boolean) ?? true;
+    const limitRow = result.rows[0];
 
     let remaining = 0;
     let resetAt = new Date();
 
-    if (limitResult.rowCount && limitResult.rowCount > 0) {
-      const limit = limitResult.rows[0];
-      remaining = Math.max(0, limit.limit_value - limit.current_value - (allowed ? increment : 0));
-      resetAt = limit.reset_at;
+    if (limitRow && limitRow.limit_value !== null) {
+      remaining = Math.max(0, limitRow.limit_value - limitRow.current_value - (allowed ? increment : 0));
+      resetAt = limitRow.reset_at;
     }
 
     return { allowed, remaining, resetAt };

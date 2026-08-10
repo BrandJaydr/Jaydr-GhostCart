@@ -1,4 +1,4 @@
-import type { NextRequest } from 'next/server';
+﻿import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { withTenant, DEV_TENANT_ID } from '@/lib/db';
 import type { ProductReviewStatus } from '@/lib/types/canonical';
@@ -6,9 +6,9 @@ import type { ProductReviewStatus } from '@/lib/types/canonical';
 /**
  * POST /api/products/[id]/approve
  *
- * Move an imported product through the review-before-use gate: `needs_review` → `ready`.
+ * Move an imported product through the review-before-use gate: `needs_review` â†’ `ready`.
  * This is an explicit merchant approval before a product may be used to create
- * listings (Production Blueprint §Stage 2 — review-first).
+ * listings (Production Blueprint Â§Stage 2 â€” review-first).
  *
  * 404 if the product is missing; 409 if the idempotency key already approved (idempotent).
  */
@@ -54,7 +54,8 @@ export async function POST(
       return apiError('Product not found', null, 404);
     }
 
-    return apiSuccess({ id: productId, reviewStatus: 'ready', approved: result.approved });
+    const reviewStatus: ProductReviewStatus = 'ready';
+    return apiSuccess({ id: productId, reviewStatus, approved: result.approved });
   } catch (err) {
     console.error('[API] POST /api/products/[id]/approve error:', (err as Error).message);
     return apiError('Failed to approve product', null, 500);
