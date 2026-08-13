@@ -1,6 +1,6 @@
-import type { NextRequest } from 'next/server';
+﻿import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
-import { withTenant, DEV_TENANT_ID } from '@/lib/db/index.js';
+import { withTenant, DEV_TENANT_ID } from '@/lib/db/index';
 import type { CorrectionEntry } from '@/lib/types/canonical';
 
 /**
@@ -15,7 +15,7 @@ import type { CorrectionEntry } from '@/lib/types/canonical';
  * - Updates the corresponding product column.
  * - Emits an `product.corrected` audit event.
  *
- * Reference: Production Blueprint §6.1 (audit trail)
+ * Reference: Production Blueprint Â§6.1 (audit trail)
  */
 
 type CorrectionBody = Record<string, unknown>;
@@ -31,25 +31,10 @@ const EDITABLE_FIELDS = new Set([
   'identifiers',
 ]);
 
-function productColumnFor(field: string): string | null {
-  switch (field) {
-    case 'supplier_price_cents':
-      return 'supplier_price_cents';
-    case 'primary_image_url':
-      return 'primary_image_url';
-    case 'additional_image_urls':
-      return 'additional_image_urls';
-    case 'identifiers':
-      return 'identifiers';
-    default:
-      return field;
-  }
-}
-
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } },
-): Promise<NextResponse> {
+) {
   const productId = params.id;
 
   let body: CorrectionBody;
@@ -73,96 +58,94 @@ export async function PATCH(
     );
   }
 
-  // @agent:forge Replace with authenticated tenantId from session.
-  const tenantId = '00000000-0000-0000-0000-000000000001';
-
-  const client = await db.connect();
+  let result;
   try {
-    await client.query('BEGIN');
-    await client.query("SELECT set_config('ghostcart.tenant_id', $1, true)", [
-      tenantId,
-    ]);
+    result = await withTenant<{ corrected: boolean; fields: string[] }>(
+      DEV_TENANT_ID,
+      async (client) => {
+        await client.query('BEGIN');
 
-    // Fetch current product within tenant scope.
-    const productRes = await client.query(
-      'SELECT id, user_corrections FROM products WHERE id = $1 LIMIT 1',
-      [productId],
-    );
-    if (productRes.rowCount === 0) {
-      await client.query('ROLLBACK');
-      return apiError('Product not found', null, 404);
-    }
-
-    const currentCorrections = (productRes.rows[0].user_corrections ?? {}) as Record<
-      string,
-      { original: unknown; corrected: unknown; correctedAt: string; correctedBy: string }
-    >;
-
-    // Build dynamic UPDATE for changed columns + JSONB accumulator for corrections.
-    const setClauses: string[] = [];
-    const values: unknown[] = [productId];
-    let idx = 2;
-
-    const auditMetadata: Record<string, { original: unknown; corrected: unknown }> = {};
-
-    for (const field of fields) {
-      const column = productColumnFor(field);
-      if (!column) continue;
-
-      const newValue = body[field];
-
-      // Preserve original if not already corrected.
-      if (!(field in currentCorrections)) {
-        const originalRes = await client.query(
-          `SELECT ${column} AS original FROM products WHERE id = $1`,
+        // Fetch current product within tenant scope.
+        const productRes = await client.query(
+          'SELECT id, user_corrections FROM products WHERE id = $1 LIMIT 1',
           [productId],
         );
-        currentCorrections[field] = {
-          original: originalRes.rows[0]?.original,
-          corrected: newValue,
-          correctedAt: new Date().toISOString(),
-          correctedBy: tenantId,
-        };
-        auditMetadata[field] = {
-          original: originalRes.rows[0]?.original,
-          corrected: newValue,
-        };
-      } else {
-        auditMetadata[field] = {
-          original: currentCorrections[field].original,
-          corrected: newValue,
-        };
-        currentCorrections[field].corrected = newValue;
-        currentCorrections[field].correctedAt = new Date().toISOString();
-      }
+        if (productRes.rowCount === 0) {
+          await client.query('ROLLBACK');
+          throw new Error('NOT_FOUND');
+        }
 
-      setClauses.push(`${column} = $${idx}`);
-      values.push(newValue);
-      idx += 1;
-    }
+        const currentCorrections = (productRes.rows[0].user_corrections ?? {}) as Record<
+          string,
+          CorrectionEntry
+        >;
 
-    setClauses.push(`user_corrections = $${idx}`);
-    values.push(JSON.stringify(currentCorrections));
-    idx += 1;
+        const setClauses: string[] = [];
+        const values: unknown[] = [productId];
+        let idx = 2;
 
-    const sql = `UPDATE products SET ${setClauses.join(', ')} WHERE id = $1 RETURNING *`;
-    const updated = await client.query(sql, values);
+        const auditMetadata: Record<string, { original: unknown; corrected: unknown }> = {};
 
-    // Audit event.
-    await client.query(
-      `INSERT INTO audit_events
-        (tenant_id, user_id, action, entity_type, entity_id, metadata, created_at)
-       VALUES ($1, NULL, 'product.corrected', 'products', $2, $3, now())`,
-      [tenantId, productId, JSON.stringify(auditMetadata)],
+        for (const field of fields) {
+          const column = field;
+          const newValue = body[field];
+
+          // Preserve original if not already corrected.
+          if (!(field in currentCorrections)) {
+            const originalRes = await client.query(
+              `SELECT ${column} AS original FROM products WHERE id = $1`,
+              [productId],
+            );
+            currentCorrections[field] = {
+              original: originalRes.rows[0]?.original,
+              corrected: newValue,
+              correctedAt: new Date().toISOString(),
+              correctedBy: DEV_TENANT_ID,
+            };
+            auditMetadata[field] = {
+              original: originalRes.rows[0]?.original,
+              corrected: newValue,
+            };
+          } else {
+            auditMetadata[field] = {
+              original: currentCorrections[field].original,
+              corrected: newValue,
+            };
+            currentCorrections[field].corrected = newValue;
+            currentCorrections[field].correctedAt = new Date().toISOString();
+          }
+
+          setClauses.push(`${column} = $${idx}`);
+          values.push(newValue);
+          idx += 1;
+        }
+
+        setClauses.push(`user_corrections = $${idx}`);
+        values.push(JSON.stringify(currentCorrections));
+        idx += 1;
+
+        const sql = `UPDATE products SET ${setClauses.join(', ')} WHERE id = $1 RETURNING *`;
+        await client.query(sql, values);
+
+        // Audit event.
+        await client.query(
+          `INSERT INTO audit_events
+              (tenant_id, user_id, action, entity_type, entity_id, metadata, created_at)
+            VALUES ($1, NULL, 'product.corrected', 'products', $2, $3, now())`,
+          [DEV_TENANT_ID, productId, JSON.stringify(auditMetadata)],
+        );
+
+        await client.query('COMMIT');
+        return { corrected: true, fields };
+      },
     );
-
-    await client.query('COMMIT');
-    return apiSuccess(updated.rows[0], undefined, 200);
   } catch (err) {
-    await client.query('ROLLBACK').catch(() => undefined);
+    if ((err as Error).message === 'NOT_FOUND') {
+      return apiError('Product not found', null, 404);
+    }
     console.error('[api/products/corrections]', err);
     return apiError('Failed to apply corrections', null, 500);
-  } finally {
-    client.release();
   }
+
+    return apiSuccess(result, undefined, 200);
 }

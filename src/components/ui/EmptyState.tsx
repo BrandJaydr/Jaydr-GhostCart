@@ -1,27 +1,20 @@
-// TODO: @agent:forge (Stage 2) Add illustration or icon support
-// Reference: Blueprint §5.3 — "Treat empty, loading, degraded, and failed states as first-class screens"
+import { Card, CardBody } from '@heroui/react';
 
 export interface EmptyStateProps {
-  /** Main heading text */
   title: string;
-  /** Supporting description */
   description?: string;
-  /** Optional CTA element (e.g. <Button>) */
   action?: React.ReactNode;
 }
 
-/**
- * EmptyState — Stage 1 Stub
- * Used when a list or view has no content yet.
- * Every list screen must render this when data is empty (Blueprint §Stage 1).
- */
 export function EmptyState({ title, description, action }: EmptyStateProps) {
   return (
-    <div role="status" aria-label={title}>
-      {/* TODO: @agent:forge Add illustration / icon */}
-      <h2>{title}</h2>
-      {description && <p>{description}</p>}
-      {action && <div>{action}</div>}
-    </div>
+    <Card className="max-w-md mx-auto">
+      <CardBody className="text-center py-12">
+        <div className="text-6xl mb-4">📭</div>
+        <h3 className="text-xl font-semibold mb-2">{title}</h3>
+        {description && <p className="text-gray-600 mb-4">{description}</p>}
+        {action && <div>{action}</div>}
+      </CardBody>
+    </Card>
   );
 }

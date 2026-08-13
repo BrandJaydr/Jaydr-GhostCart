@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { apiError } from '@/lib/api/response';
-import { db, DEV_TENANT_ID } from '@/lib/db/index.js';
+import { db, DEV_TENANT_ID } from '@/lib/db/index';
 
 /**
  * GET /api/ebay/export/csv

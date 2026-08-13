@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { z } from 'zod';
-import { db, DEV_TENANT_ID } from '@/lib/db/index.js';
+import { db } from '@/lib/db/index';
 
 /**
  * Schema for feature flag update

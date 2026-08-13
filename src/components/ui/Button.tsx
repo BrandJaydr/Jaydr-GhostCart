@@ -1,31 +1,61 @@
-import type { ButtonHTMLAttributes } from 'react';
+import { Button as HeroUIButton } from '@heroui/react';
+import type { ButtonProps as HeroUIButtonProps } from '@heroui/react';
 
-// TODO: @agent:forge (Stage 2) Implement full Button variants: primary, secondary, ghost, danger
-// TODO: @agent:forge (Stage 2) Add loading spinner state and disabled visual treatment
-// TODO: @agent:forge (Stage 2) Apply design system color tokens — not hardcoded values
-// Reference: Production Blueprint §5.2 internal component layer
-
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  /** Visual variant — determines color and emphasis */
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
-  /** Show loading spinner and disable interaction */
+export interface ButtonProps extends Omit<HeroUIButtonProps, 'color' | 'size' | 'onPress' | 'variant'> {
+  variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
+  size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
+  disabled?: boolean;
+  onClick?: () => void;
+  children: React.ReactNode;
+  type?: 'button' | 'submit' | 'reset';
+  name?: string;
+  value?: string;
+  form?: string;
 }
 
-/**
- * Button — Stage 1 Stub
- * Renders a native <button> element. Implement styles and loading state in Stage 2.
- */
-export function Button({ children, variant = 'primary', isLoading = false, disabled, ...props }: ButtonProps) {
+export function Button({
+  variant = 'primary',
+  size = 'md',
+  isLoading = false,
+  disabled = false,
+  onClick,
+  children,
+  type = 'button',
+  name,
+  value,
+  form,
+  ...rest
+}: ButtonProps) {
+  const colorMap = {
+    primary: 'primary',
+    secondary: 'secondary',
+    danger: 'danger',
+    ghost: 'default',
+  };
+
+  const variantMap = {
+    primary: 'solid',
+    secondary: 'solid',
+    danger: 'solid',
+    ghost: 'ghost',
+  };
+
   return (
-    <button
-      {...props}
-      disabled={disabled || isLoading}
-      data-variant={variant}
-      aria-busy={isLoading}
-      // TODO: @agent:forge Apply className from design tokens (not inline style)
+    <HeroUIButton
+      color={colorMap[variant] as 'primary' | 'secondary' | 'danger' | 'default'}
+      variant={variantMap[variant] as 'solid' | 'ghost'}
+      size={size}
+      isLoading={isLoading}
+      isDisabled={disabled}
+      onPress={onClick}
+      type={type}
+      name={name}
+      value={value}
+      form={form}
+      {...rest}
     >
-      {isLoading ? '...' : children}
-    </button>
+      {children}
+    </HeroUIButton>
   );
 }

@@ -1,6 +1,6 @@
 import type { NextRequest, NextResponse } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
-import { db, DEV_TENANT_ID } from '@/lib/db/index.js';
+import { db, DEV_TENANT_ID } from '@/lib/db/index';
 
 /**
  * PATCH /api/products/[id]/review-status

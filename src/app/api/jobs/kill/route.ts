@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
-import { db, DEV_TENANT_ID } from '@/lib/db/index.js';
+import { db, DEV_TENANT_ID } from '@/lib/db/index';
 
 /**
  * POST /api/jobs/kill

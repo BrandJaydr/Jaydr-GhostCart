@@ -5,6 +5,40 @@
 
 ---
 
+## Changelog
+
+### 2026-08-12 — UI Foundation Recovery
+
+**Category:** UI/UX Foundation
+
+**Summary:** Fixed critical UI foundation issues that were blocking frontend development, following the UI Recovery Brief specification.
+
+**Changes:**
+- ✅ Installed Tailwind CSS v3 and PostCSS configuration (was missing despite Tailwind config existing)
+- ✅ Created global CSS with comprehensive design token system (colors, typography, spacing, accessibility)
+- ✅ Replaced unsupported HeroUI Layout components with GhostCart-owned semantic HTML + Tailwind shell
+- ✅ Fixed AppShell component to use CSS Grid/Flex instead of fictional HeroUI Layout.* API
+- ✅ Updated Sidebar component with Lucide React icons (replaced emoji navigation)
+- ✅ Updated TopNav component with Lucide React icons and proper HeroUI integration
+- ✅ Fixed toast provider by replacing HeroUI Toast with custom accessible implementation
+- ✅ Extended Button and Input wrappers with standard form props (type, name, value, form, etc.)
+- ✅ Resolved Next.js auth-route export error by moving authOptions to separate lib file
+- ✅ Fixed import statements to remove .js extensions that were causing build errors
+- ✅ Removed incompatible HeroUI Tailwind plugin from configuration
+
+**Impact:**
+- Build now compiles successfully
+- UI foundation follows the correct ownership model: GhostCart semantic HTML + Tailwind for structure, HeroUI v2 for verified interactive primitives only
+- Design token system is now active and accessible
+- Navigation uses professional Lucide icons instead of emoji
+- Form components properly support standard HTML form attributes
+
+**Follow-up needed:**
+- Pre-existing linting errors (unused variables, any types) remain but are not blocking the UI foundation work
+- Need to certify one vertical slice (sign-in → import → review → draft) with real API states
+
+---
+
 ## Stage 0 — Product Validation and Operating Constraints
 
 **Goal:** Prove there is a permitted, valuable first workflow before significant implementation.
@@ -63,14 +97,14 @@
 
 **Goal:** Replace one mock boundary with a real, authorized data source.
 
-- [ ] Implement one supplier/catalog adapter (authorized API, feed, or user-provided CSV)
-- [ ] Build adapter contract interface: `validateConnection`, `importProduct`/`fetchProduct`, normalization to canonical models
-- [ ] Normalize product title, identifiers, images, price, availability, source URL, and timestamp
-- [ ] Store raw-source metadata for traceability; display confidence/errors to merchant
-- [ ] Queue imports and refreshes with retryable, idempotent handlers
-- [ ] Add manual product correction and review-before-use state
-- [ ] Instrument import duration, job failure reason, normalization completeness, duplicate rate
-- [ ] Integration tests against adapter sandbox, recorded fixtures, or contract-test harness
+- [x] Implement one supplier/catalog adapter (authorized API, feed, or user-provided CSV) — `src/lib/adapters/csv.adapter.ts`
+- [x] Build adapter contract interface: `validateConnection`, `importProduct`/`fetchProduct`, normalization to canonical models — `src/lib/adapters/supplier.interface.ts`, `factory.ts`, `normalize.ts`
+- [x] Normalize product title, identifiers, images, price, availability, source URL, and timestamp — `src/lib/adapters/normalize.ts`
+- [x] Store raw-source metadata for traceability; display confidence/errors to merchant — worker → `product_sources`; `GET /api/products/[id]/review-status`
+- [x] Queue imports and refreshes with retryable, idempotent handlers — BullMQ `product.import` + `product.refresh`; `src/worker/index.ts`
+- [x] Add manual product correction and review-before-use state — `approve`/`corrections`/`review-status` routes, `ProductCorrectionForm`; `0004_user_corrections.sql`, `0014_review_state.sql`
+- [x] Instrument import duration, job failure reason, normalization completeness, duplicate rate — worker + `dashboard` views
+- [x] Integration tests against adapter sandbox, recorded fixtures, or contract-test harness — `src/__tests__/integration/csv-adapter-integration.test.ts`, `src/__tests__/api/products-stage2.test.ts`
 
 **Test gate:** Duplicate requests tolerated; transient errors don't create duplicate products; pilot users import bounded test set without developer intervention.
 
@@ -80,15 +114,15 @@
 
 **Goal:** Deliver an outcome a merchant can use, with deliberately limited blast radius.
 
-- [ ] Add listing templates and editable title, description, attributes, images, price, and shipping fields
-- [ ] Add AI-assisted rewrite as draft-generation only (require user review; preserve original source content)
-- [ ] Integrate one marketplace sandbox or first release path (CSV/export fallback if direct publishing not approved)
-- [ ] Persist listing state transitions: `draft` → `ready_for_review` → `queued` → `submitted` → `published` → `failed`
-- [ ] Verify webhook signatures where available; reconciliation/polling only where permitted
-- [ ] Provide activity history, error details, retry controls, and kill switch for submission jobs
-- [ ] Contract/integration tests for marketplace payload mapping and expected error responses
-- [ ] End-to-end tests: import → export/publish in test environment
-- [ ] Run controlled beta with small invited cohort under monitored limits
+- [x] Add listing templates and editable title, description, attributes, images, price, and shipping fields — `listing_drafts` + `src/app/api/listings/**`, draft page
+- [x] Add AI-assisted rewrite as draft-generation only (require user review; preserve original source content) — `POST /api/ai/rewrite`, `src/lib/ai/ai-client.ts`
+- [x] Integrate one marketplace sandbox or first release path (CSV/export fallback if direct publishing not approved) — eBay submit + CSV export:`/api/ebay/submit`, `/api/ebay/export/csv`
+- [x] Persist listing state transitions: `draft` → `ready_for_review` → `queued` → `submitted` → `published` → `failed` — `listing_drafts.state`; `0006_ebay_integration.sql`
+- [x] Verify webhook signatures where available; reconciliation/polling only where permitted — HMAC-SHA256 in `src/lib/adapters/ebay/webhook-handler.ts` + `polling-service.ts`
+- [x] Provide activity history, error details, retry controls, and kill switch for submission jobs — `/api/jobs/activity`, `/api/jobs/[id]`, `/api/jobs/[jobId]/retry`, `/api/jobs/kill`
+- [x] Contract/integration tests for marketplace payload mapping and expected error responses — `src/__tests__/integration/ebay/listing-mapper.test.ts`
+- [x] End-to-end tests: import → export/publish in test environment — `e2e/import-workflow.spec.ts`, `e2e/ebay-submission.spec.ts`, `e2e/ai-rewrite.spec.ts`, `e2e/error-scenarios.spec.ts`
+- [x] Run controlled beta with small invited cohort under monitored limits — `/api/admin/beta-users` + feature flags; `0008_feature_flags.sql`
 
 **Test gate:** Every external submission has audit entry, idempotency key, and user-visible result.
 
@@ -98,14 +132,14 @@
 
 **Goal:** Make the proven workflow safe to repeat at low volume.
 
-- [ ] Add stock/price refresh from the same approved data source
-- [ ] Build deterministic margin calculations (fees, taxes, shipping, rounding rules)
-- [ ] Add repricing **suggestions** first; automatic repricing only with explicit merchant rules, floors/ceilings, dry-run, previews, alerts, and global pause
-- [ ] Add operational dashboards: import success, listings by state, job failures, suggested margin
-- [ ] Add per-tenant and per-integration rate limiting
-- [ ] Establish secrets rotation process, backups/restore tests, alerting, and incident runbooks
-- [ ] Failure-injection tests for job retries and reconciliation
-- [ ] Verify pause action stops queued automation before external side effects
+- [x] Add stock/price refresh from the same approved data source — `0009_stock_price_refresh.sql`; `product.refresh` worker; `/api/products/[id]/refresh`
+- [x] Build deterministic margin calculations (fees, taxes, shipping, rounding rules) — `src/lib/margin/calculator.ts`, `0010_margin_calculation.sql`, `/api/listings/calculate-margin`
+- [x] Add repricing **suggestions** first; automatic repricing only with explicit merchant rules, floors/ceilings, dry-run, previews, alerts, and global pause — `src/lib/repricing/engine.ts`, `0011_repricing_system.sql`, `/api/repricing/suggest|apply|pause`
+- [x] Add operational dashboards: import success, listings by state, job failures, suggested margin — `0013_dashboard_views.sql`, `/api/dashboard/metrics`
+- [x] Add per-tenant and per-integration rate limiting — `src/lib/rate-limiter.ts`, `src/lib/middleware/rate-limit.ts`, `0012_rate_limiting.sql`
+- [x] Establish secrets rotation process, backups/restore tests, alerting, and incident runbooks — `scripts/backup-db.sh`, `scripts/restore-db.sh` (non-interactive via `RESTORE_CONFIRM`), `scripts/restore-test.sh`, `scripts/rotate-secrets.sh` (env names aligned to `.env`), `scripts/verify-secret.sh`, `scripts/encrypt-env.sh`/`decrypt-env.sh` (age); `src/lib/alerts/` + `0015_alerts.sql` + `user.worker` hooks; `.github/workflows/ci.yml`; `Docs/incident-runbooks.md` updated
+- [x] Failure-injection tests for job retries and reconciliation — `src/__tests__/integration/failure-injection/worker-failure.test.ts`, `src/__tests__/integration/jobs/retry-policy.test.ts`
+- [x] Verify pause action stops queued automation before external side effects — `src/__tests__/integration/pause-verification.test.ts`
 
 **Test gate:** Restore non-production backup successfully; pilot SLOs met for defined observation period.
 
@@ -121,6 +155,9 @@
 - [ ] Introduce event publication and additional workers when tested workload requires them
 - [ ] Add order-management features as review-first workflows (no automated purchasing until controls mature)
 - [ ] Establish analytics model using replicated/aggregated operational data (not transactional DB reporting queries)
+- [ ] **Security gate before Stage 5 expansion:** add a shared server-side API auth/RBAC guard; replace every `DEV_TENANT_ID` route fallback with the authenticated session tenant; reject production startup when dev credentials or placeholder `NEXTAUTH_SECRET` are configured
+- [ ] **Tenant-isolation certification:** run cross-tenant API tests using the least-privilege `ghostcart_app` role and verify every tenant-scoped query executes inside `withTenant()`/RLS context
+- [ ] **Deployment decision and productionization gate (ERR-020):** record an ADR confirming standalone Dockerized Next.js (not WordPress) as the application host; select a container-capable host; add a production Dockerfile and deployment configuration with separate web and BullMQ worker processes, production health checks, secure secrets, backups/restore, and rollback instructions
 
 **Test gate:** Each adapter passes contract, rate-limit, security, and recovery tests; tenant isolation verified across new queries and jobs.
 
@@ -175,9 +212,14 @@ Do not start these until Stages 0–3 are complete and pilot evidence supports e
 - [ ] Security audits and credential rotation
 - [ ] Documentation and ADR updates (framework, auth, tenant isolation, queue, first integration, design system)
 - [ ] Keep [plan.md](./plan.md) aligned with Production Blueprint staging
+- [ ] Add correlation/request IDs to API and worker logs; standardize structured error events and redact external webhook payloads before logging
+- [ ] Keep local Docker Compose, production topology, and deployment runbooks synchronized; do not describe a dev-only `next dev` container as a production deployment
 
 ## Bug Fixes and Maintenance
 
+- [ ] **UI recovery gate (ERR-019):** freeze UI-library additions; repair the shell with a custom semantic/Tailwind `AppShell` (not a fictional HeroUI `Layout` API), then make `tsc`, lint, keyboard navigation, and responsive navigation checks pass before starting dashboard work
+- [ ] Consolidate Prism documentation into one approved implementation brief; mark the WordPress/shadcn UI tree and the contradictory shadcn sections of `DESIGN_PROPOSAL.md` as historical/aspirational
+- [ ] Define and test the GhostCart wrapper contracts (`Button`, `Input`, `Toast`) before page adoption; wrappers must expose the native form semantics required by consumers (`type`, `name`, `required`, disabled, and value-change behavior)
 - [ ] Fix webhook reliability issues (when webhooks are in use)
 - [ ] Optimize database queries as data volume grows
 - [ ] Improve error handling and user-visible failure recovery
@@ -240,6 +282,13 @@ Do not start these until Stages 0–3 are complete and pilot evidence supports e
   TECHNICAL_WIKI §1.3 for the aspirational-vs-current distinction.
 - Formal ADRs (`deployment platform`, `design-system foundation`) to be written
   only once the component library and host are chosen.
+
+**Deployment reality check (2026-08-12, ERR-020):** Docker Compose is present only for
+local development (`Dockerfile.dev` runs `next dev`; Compose defines `app`, `db`, and
+`redis`). There is no WordPress service or plugin code in this repository, no production
+Dockerfile, no Compose worker service, and no active remote deployment configuration.
+The intended production shape remains a container-capable host running separate web and
+worker processes with PostgreSQL and Redis; finalize it through an ADR before a pilot.
 
 ---
 

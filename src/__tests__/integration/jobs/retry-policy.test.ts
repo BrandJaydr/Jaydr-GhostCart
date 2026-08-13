@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { db } from '@/lib/db/index.js';
+import { db } from '@/lib/db/index';
 
 describe('Job Management', () => {
   beforeEach(async () => {

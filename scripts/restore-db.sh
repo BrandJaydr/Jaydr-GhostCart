@@ -11,7 +11,7 @@ set -e
 DB_HOST="${DB_HOST:-localhost}"
 DB_PORT="${DB_PORT:-5432}"
 DB_NAME="${DB_NAME:-ghostcart}"
-DB_USER="${DB_USER:-postgres}"
+DB_USER="${DB_USER:-ghostcart}"
 BACKUP_DIR="${BACKUP_DIR:-./backups}"
 
 # Check if backup file is provided
@@ -44,14 +44,12 @@ else
   echo "Warning: No checksum file found, skipping verification"
 fi
 
-# Confirm restore
-echo "WARNING: This will restore the database from backup: $BACKUP_FILE"
-echo "This will overwrite all existing data in database: $DB_NAME"
-read -p "Are you sure you want to continue? (yes/no): " confirm
-
-if [ "$confirm" != "yes" ]; then
-  echo "Restore cancelled"
-  exit 0
+# Confirm restore (non-interactive for CI/automation — set RESTORE_CONFIRM=yes)
+if [ "${RESTORE_CONFIRM:-no}" != "yes" ]; then
+  echo "WARNING: This will overwrite all existing data in database: $DB_NAME"
+  echo "To proceed non-interactively, set RESTORE_CONFIRM=yes."
+  echo "Aborting (RESTORE_CONFIRM != yes)."
+  exit 3
 fi
 
 # Decompress and restore

@@ -31,7 +31,7 @@ export const ListingCreateSchema = z.object({
   idempotencyKey: z.string().optional(),
 });
 
-/** Approve a reviewed product (review-before-use gate → 'ready'). Body may be empty. */
+/** Approve a reviewed product (review-before-use gate → 'approved'). Body may be empty. */
 export const ProductApproveSchema = z.object({
   idempotencyKey: z.string().optional(),
 });

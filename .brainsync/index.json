@@ -6,15 +6,40 @@
     "rootPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart",
     "canonical": "https://github.com/BrandJaydr/Jaydr-GhostCart.git",
     "createdAt": "2026-08-09T02:06:53.066Z",
-    "updatedAt": "2026-08-09T02:44:01.991Z"
+    "updatedAt": "2026-08-13T03:08:58.579Z"
   },
-  "updatedAt": "2026-08-09T02:51:07.233Z",
-  "totalEntries": 16,
+  "updatedAt": "2026-08-13T04:07:50.602Z",
+  "totalEntries": 19,
   "byKind": {
+    "note": 3,
     "conversation": 15,
     "rule": 1
   },
   "latestEntries": [
+    {
+      "id": "20260810-pgcorrection",
+      "kind": "note",
+      "title": "Postgres IS active (correction)",
+      "source": "cline:postgres-check",
+      "createdAt": "2026-08-12T09:23:54.458Z",
+      "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
+    },
+    {
+      "id": "20260810-stage4-opsdone",
+      "kind": "note",
+      "title": "Stage 4 ops hardening complete (2026-08)",
+      "source": "cline:stage4-ops",
+      "createdAt": "2026-08-12T04:58:32.052Z",
+      "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
+    },
+    {
+      "id": "20260810-docinfra",
+      "kind": "note",
+      "title": "Infrastructure & DB Stack + Stage 2-5 Verification (2026-08)",
+      "source": "cline-doc-handoff:2026-08-10",
+      "createdAt": "2026-08-11T04:42:51.779Z",
+      "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
+    },
     {
       "id": "20260524071221-29e96b0e0a4e",
       "kind": "conversation",

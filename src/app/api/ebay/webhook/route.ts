@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { verifyWebhookSignature, storeWebhookEvent, markWebhookEventProcessed } from '@/lib/adapters/ebay/webhook-handler';
-import { db, DEV_TENANT_ID } from '@/lib/db/index.js';
+import { db, DEV_TENANT_ID } from '@/lib/db/index';
 
 /**
  * POST /api/ebay/webhook

@@ -1,31 +1,88 @@
-import type { InputHTMLAttributes } from 'react';
+import { Input as HeroUIInput } from '@heroui/react';
+import type { InputProps as HeroUIInputProps } from '@heroui/react';
 
-// TODO: @agent:forge (Stage 2) Implement full Input with label, error message, and helper text
-// TODO: @agent:forge (Stage 2) Support controlled + uncontrolled usage patterns
-// TODO: @agent:forge (Stage 2) Apply design system focus ring and error color tokens
-
-export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps extends Omit<HeroUIInputProps, 'label' | 'errorMessage' | 'description' | 'isInvalid'> {
   /** Accessible label text */
-  label: string;
+  label?: string;
   /** Error message shown below input */
   error?: string;
   /** Helper text shown below input (hidden when error is present) */
   helperText?: string;
+  /** Input value for controlled usage */
+  value?: string
+  /** Input change handler for controlled usage */
+  onValueChange?: (value: string) => void
+  /** Input placeholder */
+  placeholder?: string
+  /** Input size */
+  size?: 'sm' | 'md' | 'lg'
+  /** Disable the input */
+  disabled?: boolean
+  /** Input type */
+  type?: 'text' | 'email' | 'password' | 'number'
+  /** Input ID */
+  id?: string
+  /** Form name attribute */
+  name?: string
+  /** Required field */
+  required?: boolean
+  /** Autocomplete attribute */
+  autoComplete?: string
+  /** Minimum value (for number inputs) */
+  min?: number | string
+  /** Maximum value (for number inputs) */
+  max?: number | string
+  /** Step value (for number inputs) */
+  step?: number | string
+  /** Form attribute */
+  form?: string
 }
 
 /**
- * Input — Stage 1 Stub
- * Renders a labeled <input> element. Implement full styling in Stage 2.
+ * Input — Hero UI implementation
+ * Renders an input with label, error message, and helper text support.
  */
-export function Input({ label, error, helperText, id, ...props }: InputProps) {
-  const inputId = id ?? `input-${label.toLowerCase().replace(/\s+/g, '-')}`;
+export function Input({
+  label,
+  error,
+  helperText,
+  value,
+  onValueChange,
+  placeholder,
+  size = 'md',
+  disabled = false,
+  type = 'text',
+  id,
+  name,
+  required,
+  autoComplete,
+  min,
+  max,
+  step,
+  form,
+  ...rest
+}: InputProps) {
   return (
-    <div>
-      <label htmlFor={inputId}>{label}</label>
-      <input id={inputId} aria-invalid={!!error} aria-describedby={error ? `${inputId}-error` : undefined} {...props} />
-      {/* TODO: @agent:forge Apply error/helper text styling */}
-      {error && <p id={`${inputId}-error`} role="alert">{error}</p>}
-      {!error && helperText && <p>{helperText}</p>}
-    </div>
+    <HeroUIInput
+      label={label}
+      errorMessage={error}
+      description={helperText}
+      value={value}
+      onValueChange={onValueChange}
+      placeholder={placeholder}
+      size={size}
+      isDisabled={disabled}
+      type={type}
+      id={id}
+      isInvalid={!!error}
+      name={name}
+      isRequired={required}
+      autoComplete={autoComplete}
+      min={min}
+      max={max}
+      step={step}
+      form={form}
+      {...rest}
+    />
   );
 }

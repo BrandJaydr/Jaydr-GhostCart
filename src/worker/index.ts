@@ -20,6 +20,7 @@ import { db, setTenantContextOn } from '../lib/db/index.js';
 import { getSupplierAdapter } from '../lib/adapters/factory.js';
 import type { CanonicalProduct } from '../lib/types/canonical.js';
 import { randomUUID } from 'node:crypto';
+import { notify } from '../lib/alerts/index.js';
 
 
 console.warn('[Worker] Starting GhostCart worker process...');
@@ -315,6 +316,18 @@ importWorker.on('failed', (job, err) => {
     void dispatchToDeadLetter(job, err.message).then(() =>
       console.warn(`[Worker] Import job ${job.id} moved to dead-letter queue`),
     );
+    void notify({
+      tenantId: job.data?.tenantId ?? null,
+      alertType: 'job.failed_final',
+      severity: 'critical',
+      message: `Import job ${job.id} failed after ${job.attemptsMade} attempts; moved to DLQ`,
+      payload: {
+        queue: 'product.import',
+        jobId: job.id,
+        error: err.message,
+        attempts: job.attemptsMade,
+      },
+    });
   }
 });
 
@@ -416,6 +429,19 @@ refreshWorker.on('failed', (job, err) => {
       } catch (e) {
         console.error('[Worker] Could not write DLQ for refresh:', (e as Error).message);
       }
+      await notify({
+        tenantId: tenantId ?? null,
+        alertType: 'job.failed_final',
+        severity: 'critical',
+        message: `Refresh job ${job.id} failed after ${job.attemptsMade} attempts; moved to DLQ`,
+        payload: {
+          queue: 'product.refresh',
+          jobId: job.id,
+          productId: productId ?? null,
+          error: err.message,
+          attempts: job.attemptsMade,
+        },
+      });
     })();
   }
 });

@@ -4,7 +4,7 @@
  * Enforces per-tenant usage limits for listings, AI calls, and storage.
  */
 
-import { db } from '@/lib/db/index.js';
+import { db } from '@/lib/db/index';
 
 export type LimitType = 'listings_per_day' | 'ai_calls_per_day' | 'storage_mb';
 

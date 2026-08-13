@@ -7,7 +7,7 @@
  * @agent:oracle Add tests for margin calculations
  */
 
-import { db } from '@/lib/db/index.js';
+import { db } from '@/lib/db/index';
 
 export type RoundingRule = 'nearest' | 'up' | 'down';
 

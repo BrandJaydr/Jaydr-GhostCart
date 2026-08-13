@@ -85,3 +85,21 @@ This file captures recurring design patterns, integration gotchas, database guid
 - **Risk:** Unnecessary network latency (2x DB calls), increased connection pool pressure, slower API response times, especially under load.
 - **Solution:** Combine separate queries into single PostgreSQL Common Table Expression (CTE) to reduce round trips from 2 to 1.
 - **Discovered by:** Bolt ⚡ — 2026-08-09 (ERR-014)
+
+### 16. Page-Only Authentication Pattern
+- **Pattern:** The dashboard layout calls `getServerSession`, but API handlers generally use `DEV_TENANT_ID` and do not call a shared session/RBAC guard.
+- **Risk:** Direct API callers can reach operational/admin behavior without the same authorization boundary as the UI; caller-supplied tenant/user IDs in admin routes amplify the risk.
+- **Required control:** Resolve user, tenant, and role once per request on the server; fail closed outside development; execute tenant-scoped work inside the RLS transaction wrapper.
+- **Discovered by:** Senior Architect + RANGER — 2026-08-12 (ERR-016)
+
+### 17. Uncorrelated Error Logging Pattern
+- **Pattern:** Raw `console.log/error/warn` calls remain across API routes, workers, and libraries, with inconsistent error shapes and no request/job correlation ID. Webhook code also logs complete payloads.
+- **Risk:** Repeated failures cannot be traced across HTTP → queue → worker boundaries, and payload logging can leak merchant/order data.
+- **Required control:** Add one structured logging boundary, propagate correlation IDs, classify retryable errors, and redact payloads before emission.
+- **Discovered by:** Investigator — 2026-08-12 (ERR-017)
+
+### 18. Environment-Dependent Verification Pattern
+- **Pattern:** The repository documents a local test gate, but the configured Vitest runner currently fails during startup under the active sandbox before collecting tests.
+- **Risk:** CI/local verification can be falsely reported as complete when only a toolchain startup error was observed.
+- **Required control:** Keep a recorded test command/result matrix and verify the runner loads before interpreting pass/fail counts.
+- **Discovered by:** Investigator — 2026-08-12 (ERR-018)

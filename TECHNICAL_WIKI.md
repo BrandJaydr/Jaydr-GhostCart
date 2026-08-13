@@ -10,6 +10,10 @@
 > (open-source release, sale, or outsourcing). Treat documentation like code: version
 > it, review it, and keep `main` green.
 
+> **Frontend compatibility notice (verified 2026-08-12):** Actual package versions are **Next.js 14.2.5, React 18.3.1, and HeroUI v2.8.10**. `tailwind.config.ts` reflects an intended Tailwind v3 setup, but `tailwindcss` is absent from the root manifest and lockfile. Treat Tailwind as an incomplete integration, not an installed runtime, until ERR-019 is resolved. The implementation authority is [UI Recovery Brief](Prism%20Working/UI_RECOVERY_BRIEF.md).
+
+> **Deployment notice (verified 2026-08-12):** GhostCart is a standalone Docker-first modular monolith, not a WordPress plugin. The checked-in Compose file is for local development only and runs `app`, PostgreSQL, and Redis; production hosting is not configured. See ERR-020 and `tasks/todo.md` for the productionization gate.
+
 ---
 
 ## 1. Project Overview & Goals
@@ -20,10 +24,10 @@ supplier catalog management with major online marketplaces (eBay, Amazon SP-API,
 Marketplace, Etsy, Shopify). Core capabilities: multi-tenant catalog management,
 AI-assisted listing generation/optimization, real-time repricing guardrails, and audit logging.
 
-### Current Implementation Status: Stage 2 — Real Import Pipeline & Enterprise Features
+### Current Implementation Status: Stages 2–4 Verified Complete; Stage 5 Open
 Per the [Production Blueprint and Delivery Guide](Docs/Production%20Blueprint%20and%20Delivery%20Guide.md),
 GhostCart follows a **Modular Monolith** delivery model, not an early microservices rollout.
-The current repository is in **Stage 2**, having progressed beyond the initial scaffold to implement:
+The current repository is in **Stages 2–4** (verified complete 2026-08; Stage 5 open). See §14/§15 for the verification log. Implemented:
 
 - Real supplier adapter implementations (CSV, eBay)
 - Stock/price refresh system with change detection (migration 0009)
@@ -31,7 +35,7 @@ The current repository is in **Stage 2**, having progressed beyond the initial s
 - Repricing system with guardrails (migration 0011)
 - AI-powered listing analysis and optimization
 - Enhanced RLS policies and audit trails
-- 11 database migrations (0001-0011)
+- 14 database migrations (0001–0014)
 
 The Stage 1 thin vertical slice remains the foundation:
 > A signed-in merchant imports an approved supplier product, reviews normalized data and
@@ -61,9 +65,11 @@ implemented**. See `tasks/todo.md` for the staged delivery path.
 |---|---|---|
 | 0 | Product validation & operating constraints | — |
 | 1 | Foundation + clickable workflow | Scaffold, Docker Compose, schema, 4 screens, mock adapter, health test |
-| 2 | Real supplier import & enhanced features (**current state**) | Stage 1 complete; CSV/EBay adapters, AI analysis, stock/price refresh, margin calculation |
-| 3 | Marketplace submission + audit history | Stage 2 stable |
-| 4 | Scale & enterprise options | Sustained measured load, bounded services |
+| 2 | Real supplier import & enhanced features (✅ verified 2026-08) | Stage 1 complete; CSV/eBay adapters, normalization, review-before-use, refresh |
+| 3 | Marketplace submission + audit history (✅ verified 2026-08) | Stage 2 stable; eBay submit/CSV export, webhooks, job activity/retry/kill |
+| 4 | Reliability & controlled automation (**current state**: 7/8 — 1 hardening item open) | Stage 3 stable; refresh, margin, repricing, dashboards, rate limiting |
+| 5 | Expand integrations & team capabilities (open) | Stage 4 stable; second marketplace, roles/invitations, orders, analytics |
+| 6 | Scale & enterprise options (future) | Sustained measured load, bounded services |
 
 ## 2. Architecture Overview (Current)
 
@@ -73,7 +79,7 @@ Browser (React / Next.js, TS)
   ▼
 Next.js Web + API Server (src/app/)
   │
-  ├─► PostgreSQL  (src/db/migrations/0001-0011.sql) — source of truth
+  ├─► PostgreSQL  (src/db/migrations/0001-0015.sql) — source of truth
   │
   ├─► BullMQ ←→ Redis  (src/lib/queue/index.ts, src/worker/index.ts) — async import + refresh pipeline
   │
@@ -84,7 +90,7 @@ Next.js Web + API Server (src/app/)
 
 **Stack:**
 - **Frontend & API:** React 18.3 / Next.js 14.2 (App Router, TypeScript)
-- **Database:** PostgreSQL 16 (multi-tenant, tenant_id columns, RLS implemented, 11 migrations)
+- **Database:** PostgreSQL 16 (multi-tenant, tenant_id columns, RLS implemented, 15 migrations)
 - **Queue:** BullMQ backed by Redis 7 (import + refresh workers)
 - **Background worker:** separate Node process (`npm run worker`) using `ts-node --esm`
 - **AI Services:** Ollama/VLLM integration with cache management
@@ -474,7 +480,7 @@ These files exist in the repository but are **NOT relevant to the GhostCart appl
 | `src/db/migrations/0009_stock_price_refresh.sql` | Stock/price refresh with change detection | ✅ |
 | `src/db/migrations/0010_margin_calculation.sql` | Margin calculation system | ✅ |
 | `src/db/migrations/0011_repricing_system.sql` | Repricing with guardrails | ✅ |
-| `src/db/migrate.ts` | Migration runner; applies 11 migrations in order | ✅ |
+| `src/db/migrate.ts` | Migration runner; applies 14 migrations in order (0001–0014) | ✅ |
 | `src/lib/db/index.ts` | PG pool; RLS helpers; DEV_TENANT_ID; SIGTERM drain | ✅ |
 
 ## 12. Critical File Inventory — Application Layers
@@ -583,18 +589,43 @@ The investigation identified 5 new architectural patterns documented in [`.logs/
 
 ### 12.6 API Layer
 
-| File | Route | HTTP Methods | Purpose | Production Readiness |
-|---|---|---|---|---|
-| `src/app/api/health/route.ts` | `/api/health` | GET | Health check: Returns `{ status: 'ok' }` | ✅ |
-| `src/app/api/products/route.ts` | `/api/products` | GET, POST | GET: real DB read with pagination and filtering (category, supplierId). POST: duplicate detection (409 Conflict) + enqueues BullMQ `product.import` job (202) with graceful fallback if Redis is unavailable. | ✅ |
-| `src/app/api/products/[id]/route.ts` | `/api/products/[id]` | GET | Retrieve single product by ID with tenant isolation; returns 404 if not found or wrong tenant. | ✅ |
-| `src/app/api/products/[id]/corrections/route.ts` | `/api/products/[id]/corrections` | PATCH | Record merchant manual corrections for product fields; preserves original values in `user_corrections` JSONB; emits audit events; tenant-scoped with RLS. | ✅ |
-| `src/app/api/listings/route.ts` | `/api/listings` | GET, POST | GET: paginated listing drafts (mock). POST: create draft (201). | 🟡 (GET still returns mock — Stage 2+ DB read) |
-| `src/app/api/listings/[id]/route.ts` | `/api/listings/[id]` | GET, PUT | GET: retrieve single listing draft by ID with tenant isolation. PUT: partial updates (title, description, price, attributes, shipping, images) with audit events. | ✅ |
+**Total:** 28 route files, 37+ endpoints across 9 functional areas
 
-**Missing API routes (planned):**
-- `src/app/api/listings/[id]/submit/route.ts` — Submit draft (Stage 3+)
-- `src/app/api/auth/[...nextauth]/route.ts` — NextAuth handler (deps installed, configured with CredentialsProvider)
+| Functional Area | Route | HTTP Methods | Purpose | Production Readiness |
+|---|---|---|---|---|
+| **Health** | `/api/health` | GET | System health check for Docker monitoring and uptime tracking | ✅ |
+| **Products** | `/api/products` | GET, POST | List products with pagination, filtering (category, supplierId); initiate import via BullMQ job | ✅ |
+| | `/api/products/[id]` | GET | Retrieve single product with tenant isolation | ✅ |
+| | `/api/products/[id]/corrections` | PATCH | Apply manual field corrections with audit trail and original value preservation | ✅ |
+| | `/api/products/[id]/approve` | POST | Approve product for listing use (review-before-use gate) | ✅ |
+| | `/api/products/[id]/refresh` | POST | Enqueue background product refresh job | ✅ |
+| | `/api/products/[id]/review-status` | PATCH | Update review status (approved/rejected) with audit logging | ✅ |
+| **Listings** | `/api/listings` | GET, POST | List listing drafts with pagination and state filtering; create new draft from product | ✅ |
+| | `/api/listings/[id]` | GET, PUT | Retrieve single listing draft; update with partial changes and audit events | ✅ |
+| | `/api/listings/calculate-margin` | GET, POST | Calculate margin with full cost breakdown; list fee structures for marketplace | ✅ |
+| **Jobs** | `/api/jobs/[id]` | GET | Fetch single background job record for status polling | ✅ |
+| | `/api/jobs/[jobId]/retry` | POST | Manually retry a failed job | ✅ |
+| | `/api/jobs/activity` | GET | Retrieve activity history (audit_events + jobs) with filtering | ✅ |
+| | `/api/jobs/kill` | POST | Kill all queued jobs for tenant (emergency stop) | ✅ |
+| **AI Services** | `/api/ai/analyze` | GET, POST | Analyze product for materials, quality, market potential; retrieve cached analysis | ✅ |
+| | `/api/ai/rewrite` | GET, POST | Generate AI-assisted listing rewrite with style options; retrieve cached rewrite | ✅ |
+| **Auth** | `/api/auth/[...nextauth]` | GET, POST | NextAuth session handler and credentials provider | ✅ |
+| **Dashboard** | `/api/dashboard/metrics` | GET | Get dashboard metrics (imports, listings, jobs, margin analysis) | ✅ |
+| **eBay** | `/api/ebay/authorize` | GET, POST | Initiate eBay OAuth 2.0 authorization flow; handle OAuth callback | ✅ |
+| | `/api/ebay/export/csv` | GET | Export listings to eBay-compatible CSV format | ✅ |
+| | `/api/ebay/submit` | POST | Submit listing draft to eBay marketplace | ✅ |
+| | `/api/ebay/webhook` | POST | Handle eBay webhook events with signature verification | ✅ |
+| **Feedback** | `/api/feedback` | GET, POST | Submit feedback (bug, feature, improvement); list feedback with filtering | ✅ |
+| **Admin** | `/api/admin/beta-users` | GET, POST, PATCH | Beta user management: list, invite, update status | ✅ |
+| | `/api/admin/feature-flags` | GET, PATCH | Feature flag management: list all, update configuration | ✅ |
+| **Repricing** | `/api/repricing/suggest` | GET, POST | Generate repricing suggestion; get pending suggestions | ✅ |
+| | `/api/repricing/apply` | POST, PATCH | Apply approved suggestion (with dry-run); approve or reject suggestion | ✅ |
+| | `/api/repricing/pause` | GET, POST | Set global or tenant-specific pause state; get current pause state | ✅ |
+
+**Notes:**
+- All endpoints currently use DEV_TENANT_ID placeholder (marked with @agent:forge TODO comments for session integration)
+- Most endpoints have proper Zod validation, error handling, and audit logging
+- Several endpoints have @agent:oracle TODO comments for test coverage
 
 ### 12.7 Queue / Worker Layer
 
@@ -669,6 +700,48 @@ The investigation identified 5 new architectural patterns documented in [`.logs/
 
 ---
 
+## 14. Verified Infrastructure & Database Stack (2026-08)
+
+> Findings confirmed by direct inspection of the repository (2026-08). Source of truth for
+> DB tooling decisions shared with agents and IDEs.
+
+### Database
+- **PostgreSQL 16** (self-hosted or local via Docker Compose) is the source of truth.
+- Connection: node-postgres `pg` `Pool` from `DATABASE_URL` (`src/lib/db/index.ts`).
+- **No Supabase** - no `supabase/` folder, no `supabase` dependency, no Supabase MCP project wired.
+- **No ORM** (no Prisma/Knex/TypeORM) - migrations are hand-written `.sql` files applied by a custom runner: `npm run db:migrate` -> `src/db/migrate.ts`.
+- Migrations: `src/db/migrations/0001_init.sql` ... `0015_alerts.sql` (15 total).
+- RLS: tenant scoping via `set_config('ghostcart.tenant_id', ..., true)` + `withTenant()` inside a txn.
+
+### Queue / Workers
+- Redis 7 + BullMQ (`src/lib/queue/index.ts`, `src/worker/index.ts`) - import + refresh workers, dead-letter queue on final failure.
+- Separate worker process: `npm run worker` (`ts-node --esm`).
+
+### Environment / local run
+- `docker-compose up -d db redis`, then `npm run db:migrate`.
+- Dev defaults (`.env.example`): `postgresql://ghostcart:ghostcart_dev@localhost:5432/ghostcart`, `redis://localhost:6379`.
+- **The live stack is RUNNING (2026-08):** `ghostcart_db` (postgres:16-alpine, healthy) + `ghostcart_redis` (redis:7); ports 5432/6379 mapped; `.env` is present and populated. Superuser role is `ghostcart` (not `postgres`).
+- **Schema-state caveat:** the live `ghostcart` DB was observed at `schema_migrations` = 3 (only 0001-0003 applied). Run `npm run db:migrate` to sync to 0001-0015 (includes the alerting table).
+- **Host client tools:** `psql`/`pg_dump` are NOT installed on the Windows host - run backup/restore scripts where they exist (container/WSL/CI).
+
+### Implications
+- Any DB work (backups, restore tests, new tables such as notifications) targets **local Postgres** via `.sql` migrations - the Supabase MCP tooling is NOT in use.
+- Stage 4 backup/restore work should use `pg_dump` / `pg_restore` against the `ghostcart` DB (Docker volume `ghostcart_pgdata`).
+
+## 15. Stage 2-5 Verification Log (2026-08)
+
+`tasks/todo.md` was stale (Stages 2-4 implemented but unchecked). Verified against code and synced:
+
+| Stage | Status | Notes |
+|---|---|---|
+| 2 - Real import | Complete (8/8) | CSV + eBay adapters, normalization, traceability, queue/refresh workers, corrections/review, instrumentation, integration tests |
+| 3 - Listing and publish | Complete (9/9) | Drafts, AI rewrite, eBay submit + CSV export, state machine, webhook verification, job activity/retry/kill, contract + E2E tests, beta |
+| 4 - Reliability/automation | Complete (8/8) | Refresh, margin, repricing, dashboards, rate limiting, failure-injection, pause verification + ops hardening (backup/restore-test, secrets rotation, alerting via `src/lib/alerts` + `0015`, runbooks) |
+| 5 - Expand | Open (0/6) | No second marketplace, roles/invitations, event publication, orders, or analytics yet |
+
+**Stage 4 is now complete.** Stage-4 ops hardening shipped: `scripts/backup-db.sh` / `restore-db.sh` / `restore-test.sh`, `rotate-secrets.sh` / `verify-secret.sh` / `encrypt-env.sh` / `decrypt-env.sh`, alerting (`src/lib/alerts` + migration 0015 + worker DLQ hooks + `/api/alerts`), runbook sections, and a GitHub Actions CI workflow running `db:restore:test`. Notifications (in-app / browser / SMS / Messenger) remain a separate track. **Next: Stage 5** (adapter contract + certification checklist, second marketplace, roles/invitations, etc.).
+
+
 ## 13. Quick Reference: Development Setup
 
 1. **Clone & install:** `git clone` → `cd Jaydr-GhostCart` → `npm install`
@@ -680,7 +753,7 @@ The investigation identified 5 new architectural patterns documented in [`.logs/
 7. **Lint:** `npm run lint` (zero warnings enforced)
 8. **Type check:** `npx tsc --noEmit` (strict mode)
 
-> **Note:** Apply the schema with `npm run db:migrate` (runner in `src/db/migrate.ts`). Requires `DATABASE_URL`; applies migrations `0001 → 0003` in order, each in a transaction.
+> **Note:** Apply the schema with `npm run db:migrate` (runner in `src/db/migrate.ts`). Requires `DATABASE_URL`; applies migrations `0001 → 0014` in order, each in a transaction.
 
 <!-- END_OF_WIKI -->
 

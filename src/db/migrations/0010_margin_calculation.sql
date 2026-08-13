@@ -1,10 +1,10 @@
--- ─────────────────────────────────────────────────────────────────────────────
--- Jaydr GhostCart — Migration 0010: Margin Calculation Engine
--- Stage: Stage 4 — Reliability and Controlled Automation
--- Reference: Stage 4 Plan — Task 2: Margin Calculation Engine
--- ─────────────────────────────────────────────────────────────────────────────
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- Jaydr GhostCart â€” Migration 0010: Margin Calculation Engine
+-- Stage: Stage 4 â€” Reliability and Controlled Automation
+-- Reference: Stage 4 Plan â€” Task 2: Margin Calculation Engine
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
--- ─── Enhance Listings Table ─────────────────────────────────────────────────────
+-- â”€â”€â”€ Enhance Listings Table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 -- Add margin calculation fields
 
 ALTER TABLE listings
@@ -15,7 +15,7 @@ ADD COLUMN IF NOT EXISTS cost_breakdown JSONB DEFAULT '{}';
 -- Index for margin-based queries
 CREATE INDEX IF NOT EXISTS listings_margin_idx ON listings(calculated_margin_percent) WHERE calculated_margin_percent IS NOT NULL;
 
--- ─── Fee Structures Table ───────────────────────────────────────────────────────
+-- â”€â”€â”€ Fee Structures Table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 -- Store marketplace fee structures for margin calculations
 
 CREATE TABLE IF NOT EXISTS fee_structures (
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS fee_structures (
   fee_type            TEXT NOT NULL CHECK (fee_type IN ('listing', 'final_value', 'payment', 'subscription', 'other')),
   fee_name            TEXT NOT NULL,
   fee_formula         TEXT NOT NULL, -- JSON formula or percentage
-  fixed_amount_cents  INTEGER默认 0,
+  fixed_amount_cents  INTEGER DEFAULT 0,
   percentage_rate      NUMERIC(5, 4) DEFAULT 0,
   min_fee_cents       INTEGER DEFAULT NULL,
   max_fee_cents       INTEGER DEFAULT NULL,
@@ -45,7 +45,7 @@ ALTER TABLE fee_structures ENABLE ROW LEVEL SECURITY;
 CREATE POLICY fee_structures_admin_only ON fee_structures
   FOR ALL USING (true); -- Admin manages fee structures
 
--- ─── Tax Jurisdictions Table ───────────────────────────────────────────────────
+-- â”€â”€â”€ Tax Jurisdictions Table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 -- Store tax rates by jurisdiction for margin calculations
 
 CREATE TABLE IF NOT EXISTS tax_jurisdictions (
@@ -70,7 +70,7 @@ ALTER TABLE tax_jurisdictions ENABLE ROW LEVEL SECURITY;
 CREATE POLICY tax_jurisdictions_admin_only ON tax_jurisdictions
   FOR ALL USING (true);
 
--- ─── Shipping Cost Rules Table ───────────────────────────────────────────────────
+-- â”€â”€â”€ Shipping Cost Rules Table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 -- Store shipping cost calculation rules
 
 CREATE TABLE IF NOT EXISTS shipping_cost_rules (
@@ -100,10 +100,10 @@ ALTER TABLE shipping_cost_rules ENABLE ROW LEVEL SECURITY;
 CREATE POLICY shipping_cost_rules_tenant_isolation ON shipping_cost_rules
   FOR ALL USING (tenant_id = current_setting('ghostcart.tenant_id', true)::uuid);
 
--- ─── Functions for Margin Calculation ───────────────────────────────────────────
+-- â”€â”€â”€ Functions for Margin Calculation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 -- Function to calculate marketplace fees
-CREATE OR REPLACE FUNCTION margin.calculate_marketplace_fees(
+CREATE OR REPLACE FUNCTION calculate_marketplace_fees(
   p_marketplace TEXT,
   p_selling_price_cents INTEGER,
   p_category TEXT DEFAULT NULL
@@ -143,10 +143,10 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Function to calculate tax
-CREATE OR REPLACE FUNCTION margin.calculate_tax(
+CREATE OR REPLACE FUNCTION calculate_tax(
   p_country_code TEXT,
-  p_state_code TEXT DEFAULT NULL,
-  p_price_cents INTEGER
+  p_price_cents INTEGER,
+  p_state_code TEXT DEFAULT NULL
 )
 RETURNS INTEGER AS $$
 DECLARE
@@ -174,7 +174,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Function to calculate shipping cost
-CREATE OR REPLACE FUNCTION margin.calculate_shipping_cost(
+CREATE OR REPLACE FUNCTION calculate_shipping_cost(
   p_tenant_id UUID,
   p_carrier TEXT DEFAULT NULL,
   p_weight_grams INTEGER DEFAULT NULL
@@ -209,7 +209,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Function to calculate margin
-CREATE OR REPLACE FUNCTION margin.calculate_margin(
+CREATE OR REPLACE FUNCTION calculate_margin(
   p_selling_price_cents INTEGER,
   p_cost_cents INTEGER,
   p_marketplace TEXT,
@@ -229,14 +229,14 @@ DECLARE
   v_margin_percent NUMERIC(5, 2);
 BEGIN
   -- Calculate fees
-  v_fees := margin.calculate_marketplace_fees(p_marketplace, p_selling_price_cents);
+    v_fees := calculate_marketplace_fees(p_marketplace, p_selling_price_cents);
 
   -- Calculate tax
-  v_tax := margin.calculate_tax(p_country_code, p_state_code, p_selling_price_cents);
+    v_tax := calculate_tax(p_country_code, p_price_cents, p_state_code);
 
   -- Calculate shipping
   IF p_tenant_id IS NOT NULL THEN
-    v_shipping := margin.calculate_shipping_cost(p_tenant_id, p_carrier, p_weight_grams);
+        v_shipping := calculate_shipping_cost(p_tenant_id, p_carrier, p_weight_grams);
   END IF;
 
   -- Total cost = cost + fees + tax + shipping
@@ -256,7 +256,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- ─── Seed Default Fee Structures ───────────────────────────────────────────────
+-- â”€â”€â”€ Seed Default Fee Structures â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 INSERT INTO fee_structures (marketplace, fee_type, fee_name, fee_formula, fixed_amount_cents, percentage_rate)
 VALUES

@@ -15,7 +15,7 @@
  */
 
 import { createHash } from 'crypto';
-import { db } from '@/lib/db/index.js';
+import { db } from '@/lib/db/index';
 
 export interface CacheEntry<T> {
   data: T;

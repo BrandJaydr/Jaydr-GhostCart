@@ -1,10 +1,10 @@
--- ─────────────────────────────────────────────────────────────────────────────
--- Jaydr GhostCart — Migration 0012: Rate Limiting
--- Stage: Stage 4 — Reliability and Controlled Automation
--- Reference: Stage 4 Plan — Task 5: Rate Limiting
--- ─────────────────────────────────────────────────────────────────────────────
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- Jaydr GhostCart â€” Migration 0012: Rate Limiting
+-- Stage: Stage 4 â€” Reliability and Controlled Automation
+-- Reference: Stage 4 Plan â€” Task 5: Rate Limiting
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
--- ─── Rate Limits Table ───────────────────────────────────────────────────────
+-- â”€â”€â”€ Rate Limits Table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 -- Store per-tenant rate limits
 
 CREATE TABLE IF NOT EXISTS rate_limits (
@@ -29,7 +29,7 @@ ALTER TABLE rate_limits ENABLE ROW LEVEL SECURITY;
 CREATE POLICY rate_limits_tenant_isolation ON rate_limits
   FOR ALL USING (tenant_id = current_setting('ghostcart.tenant_id', true)::uuid);
 
--- ─── Rate Limit Violations Table ───────────────────────────────────────────────
+-- â”€â”€â”€ Rate Limit Violations Table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 -- Audit log for rate limit violations
 
 CREATE TABLE IF NOT EXISTS rate_limit_violations (
@@ -53,7 +53,7 @@ ALTER TABLE rate_limit_violations ENABLE ROW LEVEL SECURITY;
 CREATE POLICY rate_limit_violations_tenant_isolation ON rate_limit_violations
   FOR ALL USING (tenant_id = current_setting('ghostcart.tenant_id', true)::uuid);
 
--- ─── Integration-Specific Rate Limits Table ───────────────────────────────────────
+-- â”€â”€â”€ Integration-Specific Rate Limits Table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 -- Store per-integration rate limits (eBay, Amazon, etc.)
 
 CREATE TABLE IF NOT EXISTS integration_rate_limits (
@@ -79,10 +79,13 @@ ALTER TABLE integration_rate_limits ENABLE ROW LEVEL SECURITY;
 CREATE POLICY integration_rate_limits_tenant_isolation ON integration_rate_limits
   FOR ALL USING (tenant_id = current_setting('ghostcart.tenant_id', true)::uuid);
 
--- ─── Functions for Rate Limiting ─────────────────────────────────────────────────
+-- â”€â”€â”€ Functions for Rate Limiting â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 -- Function to check if rate limit is exceeded
-CREATE OR REPLACE FUNCTION rate_limits.check_limit(
+-- Renamed from check_limit to avoid colliding with usage_limits.check_limit (0008),
+-- which resolves to public.check_limit since usage_limits is a TABLE (not a schema) and
+-- both were stripped to the public schema. Keeps the two domain APIs distinct.
+CREATE OR REPLACE FUNCTION check_rate_limit(
   p_tenant_id UUID,
   p_limit_type TEXT,
   p_increment INTEGER DEFAULT 1
@@ -120,7 +123,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Function to log rate limit violation
-CREATE OR REPLACE FUNCTION rate_limits.log_violation(
+CREATE OR REPLACE FUNCTION log_violation(
   p_tenant_id UUID,
   p_limit_type TEXT,
   p_endpoint TEXT DEFAULT NULL,
@@ -139,7 +142,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- ─── Seed Default Rate Limits ───────────────────────────────────────────────────
+-- â”€â”€â”€ Seed Default Rate Limits â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 INSERT INTO rate_limits (tenant_id, limit_type, limit_value, window_seconds)
 SELECT id, 'api_calls', 1000, 3600 FROM tenants

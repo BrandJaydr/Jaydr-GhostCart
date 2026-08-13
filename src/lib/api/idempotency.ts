@@ -8,7 +8,7 @@
  * Reference: Production Blueprint §6.1 (idempotency keys)
  */
 
-import { db } from '@/lib/db/index.js';
+import { db } from '@/lib/db/index';
 import { createHash } from 'node:crypto';
 
 /**

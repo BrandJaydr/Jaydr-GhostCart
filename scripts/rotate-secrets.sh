@@ -25,21 +25,17 @@ echo "Backed up current secrets to: $BACKUP_FILE"
 # Generate new secrets
 echo "Generating new secrets..."
 
-# Generate new JWT secret
-NEW_JWT_SECRET=$(openssl rand -base64 32)
-echo "Generated new JWT secret"
+# Generate new NEXTAUTH secret (used for JWT/hashing)
+NEW_NEXTAUTH_SECRET=$(openssl rand -base64 32)
+echo "Generated new NEXTAUTH_SECRET"
 
-# Generate new database password (if using managed DB)
+# Generate new database password (managed DB only)
 NEW_DB_PASSWORD=$(openssl rand -base64 24)
 echo "Generated new database password"
 
-# Generate new Redis password (if using managed Redis)
-NEW_REDIS_PASSWORD=$(openssl rand -base64 24)
-echo "Generated new Redis password"
-
-# Generate new eBay client secret
-NEW_EBAY_CLIENT_SECRET=$(openssl rand -hex 32)
-echo "Generated new eBay client secret"
+# Generate new eBay cert/secret (EBAY_CERT_ID)
+NEW_EBAY_CERT_ID=$(openssl rand -hex 32)
+echo "Generated new EBAY_CERT_ID"
 
 # Update .env file (using sed)
 echo "Updating .env file with new secrets..."
@@ -48,11 +44,10 @@ echo "Updating .env file with new secrets..."
 TEMP_ENV=$(mktemp)
 trap "rm -f $TEMP_ENV" EXIT
 
-# Copy existing .env and replace secrets
-sed "s/^JWT_SECRET=.*/JWT_SECRET=$NEW_JWT_SECRET/" "$ENV_FILE" > "$TEMP_ENV"
-sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=$NEW_DB_PASSWORD/" "$TEMP_ENV"
-sed -i "s/^REDIS_PASSWORD=.*/REDIS_PASSWORD=$NEW_REDIS_PASSWORD/" "$TEMP_ENV"
-sed -i "s/^EBAY_CLIENT_SECRET=.*/EBAY_CLIENT_SECRET=$NEW_EBAY_CLIENT_SECRET/" "$TEMP_ENV"
+# Copy existing .env and replace secrets (env names match .env.example)
+sed "s/^NEXTAUTH_SECRET=.*/NEXTAUTH_SECRET=$NEW_NEXTAUTH_SECRET/" "$ENV_FILE" > "$TEMP_ENV"
+sed -i "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$NEW_DB_PASSWORD/" "$TEMP_ENV"
+sed -i "s/^EBAY_CERT_ID=.*/EBAY_CERT_ID=$NEW_EBAY_CERT_ID/" "$TEMP_ENV"
 
 # Replace original file
 mv "$TEMP_ENV" "$ENV_FILE"
@@ -71,20 +66,15 @@ if [ -n "$DB_HOST" ] && [ "$DB_HOST" != "localhost" ]; then
   echo "Database password updated"
 fi
 
-# If using managed Redis, update Redis password
-if [ -n "$REDIS_HOST" ] && [ "$REDIS_HOST" != "localhost" ]; then
-  echo "Updating Redis password..."
-  redis-cli -h "$REDIS_HOST" -p "${REDIS_PORT:-6379}" -a "$REDIS_PASSWORD" CONFIG SET requirepass "$NEW_REDIS_PASSWORD"
-  echo "Redis password updated"
-fi
+# Note: local Redis uses REDIS_URL with no password. For managed Redis, set
+# REDIS_PASSWORD manually in .env and rotate via the provider console.
 
 # Log rotation
 echo "Logging secrets rotation..."
 echo "Secrets rotated at $(date)" >> "$BACKUP_DIR/rotation_history.log"
-echo "JWT_SECRET rotated" >> "$BACKUP_DIR/rotation_history.log"
-echo "DB_PASSWORD rotated" >> "$BACKUP_DIR/rotation_history.log"
-echo "REDIS_PASSWORD rotated" >> "$BACKUP_DIR/rotation_history.log"
-echo "EBAY_CLIENT_SECRET rotated" >> "$BACKUP_DIR/rotation_history.log"
+echo "NEXTAUTH_SECRET rotated" >> "$BACKUP_DIR/rotation_history.log"
+echo "POSTGRES_PASSWORD rotated" >> "$BACKUP_DIR/rotation_history.log"
+echo "EBAY_CERT_ID rotated" >> "$BACKUP_DIR/rotation_history.log"
 
 echo "Secrets rotation completed successfully at $(date)"
 echo "Backup saved to: $BACKUP_FILE"

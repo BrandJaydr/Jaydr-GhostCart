@@ -6,7 +6,7 @@ import type { ProductReviewStatus } from '@/lib/types/canonical';
 /**
  * POST /api/products/[id]/approve
  *
- * Move an imported product through the review-before-use gate: `needs_review` â†’ `ready`.
+ * Move an imported product through the review-before-use gate: `pending_review` â†’ `approved`.
  * This is an explicit merchant approval before a product may be used to create
  * listings (Production Blueprint Â§Stage 2 â€” review-first).
  *
@@ -27,8 +27,8 @@ export async function POST(
       DEV_TENANT_ID,
       async (client) => {
         const row = await client.query(
-          `UPDATE products SET review_status = 'ready'
-            WHERE id = $1 AND review_status = 'needs_review'
+          `UPDATE products SET review_status = 'approved'
+            WHERE id = $1 AND review_status = 'pending_review'
             RETURNING id`,
           [productId],
         );
@@ -54,7 +54,7 @@ export async function POST(
       return apiError('Product not found', null, 404);
     }
 
-    const reviewStatus: ProductReviewStatus = 'ready';
+    const reviewStatus: ProductReviewStatus = 'approved';
     return apiSuccess({ id: productId, reviewStatus, approved: result.approved });
   } catch (err) {
     console.error('[API] POST /api/products/[id]/approve error:', (err as Error).message);

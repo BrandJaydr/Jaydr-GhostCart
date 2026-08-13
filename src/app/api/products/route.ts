@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { ProductListQuerySchema, ProductImportSchema } from '@/lib/validation/schemas';
-import { db, DEV_TENANT_ID } from '@/lib/db/index.js';
+import { db, DEV_TENANT_ID } from '@/lib/db/index';
 import { checkDuplicateSourceUrl } from '@/lib/api/idempotency';
 
 /**

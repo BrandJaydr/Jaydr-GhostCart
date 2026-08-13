@@ -5,6 +5,87 @@ This document contains incident response runbooks for common operational issues 
 
 ---
 
+## Backup, Restore & Restore Test
+
+### Purpose
+Prove we can recover the database (Postgres = source of truth) and that a restored copy is sane (migrations, tables, RLS/tenant isolation).
+
+### Commands
+```bash
+# Take a backup
+npm run db:backup            # -> ./backups/ghostcart_backup_<ts>.sql.gz (+ .sha256)
+
+# Verify required secrets / connectivity (non-destructive)
+npm run secrets:verify
+
+# Restore a specific backup (non-interactive; overwrites DB_NAME)
+RESTORE_CONFIRM=yes ./scripts/restore-db.sh <backup.sql.gz>
+
+# Stage 4 gate: backup -> restore into scratch DB -> smoke checks -> cleanup
+npm run db:restore:test
+```
+
+### Restore Test Checks
+- `schema_migrations` count matches the number of migration files in `src/db/migrations/` (computed at runtime)
+- `products`, `listings`, `jobs`, `audit_events` tables present (row counts informational)
+- RLS policies present on `products`
+- Scratch DB dropped on completion; exit non-zero on any failure
+
+### See Also
+- Implementation: `scripts/restore-test.sh`, `scripts/backup-db.sh`
+- Run `npm run db:restore:test` on a cadence (see CI workflow).
+
+---
+
+## Secrets Rotation
+
+### Purpose
+Rotate credentials with minimal disruption (overlap old + new during cutover). Local `.env` is the current store; a secrets manager is deferred to the host-deployment decision.
+
+### Per-secret runbook
+| Secret | Env var | Generate | Verify | Revoke old |
+|---|---|---|---|---|
+| NextAuth | NEXTAUTH_SECRET | `openssl rand -base64 32` | app boot / sign-in | after cutover |
+| DB password | POSTGRES_PASSWORD | `openssl rand -base64 24` | `npm run secrets:verify` / health | after services restarted |
+| eBay cert | EBAY_CERT_ID | `openssl rand -hex 32` | `/api/ebay/authorize` + a submit test | after token refresh |
+
+### Commands
+```bash
+npm run secrets:rotate    # backs up .env, regenerates secrets, updates .env, logs
+npm run secrets:verify    # non-destructive health check
+./scripts/encrypt-env.sh  # age-encrypt .env -> .env.age (at-rest)
+./scripts/decrypt-env.sh  # decrypt .env.age -> .env
+```
+
+> After rotating, restart services: `docker-compose down && docker-compose up -d`.
+
+---
+
+## Alerting (DLQ / Job Failure)
+
+### Purpose
+Notify on terminal/actionable background-job signals (final failure / DLQ, stalled job), not on every retry.
+
+### Signals
+- `job.failed_final` — import/refresh moved to dead-letter queue
+- `queue.stalled` / backlog thresholds (future)
+
+### Channels
+- `console` (default): logs + persisted `alert_events` rows
+- `webhook`: POST JSON to `ALERTS_WEBHOOK_URL` (Slack/Gotify-compatible)
+- SMS / Messenger: future adapters behind the same `AlertProvider` interface
+
+### Commands / API
+```bash
+# List alerts (backend; UI by Prism)
+GET /api/alerts
+# Acknowledge
+POST /api/alerts/[id]/ack
+```
+- Implementation: `src/lib/alerts/index.ts`, table `alert_events` (migration 0015), worker hooks in `src/worker/index.ts`.
+
+---
+
 ## Database Connection Failure
 
 ### Symptoms

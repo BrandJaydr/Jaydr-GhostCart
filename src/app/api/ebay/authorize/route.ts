@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { z } from 'zod';
 import { getEBayClient, type eBayConfig, eBayClient } from '@/lib/adapters/ebay/ebay-client';
-import { db, DEV_TENANT_ID } from '@/lib/db/index.js';
+import { db, DEV_TENANT_ID } from '@/lib/db/index';
 
 /**
  * Schema for eBay authorization request

@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
+import './globals.css';
 
 // @agent:scribe Update metadata when brand tokens and SEO strategy are confirmed (Stage 3+)
 import AuthProvider from './AuthProvider';
+import { Providers } from './providers';
 
 // @agent:scribe Update metadata when brand tokens and SEO strategy are confirmed (Stage 3+)
 export const metadata: Metadata = {
@@ -26,7 +28,9 @@ export default function RootLayout({ children }: { readonly children: React.Reac
   return (
     <html lang="en">
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <Providers>
+          <AuthProvider>{children}</AuthProvider>
+        </Providers>
       </body>
     </html>
   );

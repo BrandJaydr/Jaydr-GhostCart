@@ -1,6 +1,8 @@
 import { getServerSession } from 'next-auth/next';
 import { redirect } from 'next/navigation';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth/config';
+import { AppShell } from '@/components/layout/AppShell';
+import { ToastProvider } from '@/components/layout/ToastProvider';
 
 export default async function DashboardLayout({ children }: { readonly children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
@@ -10,11 +12,10 @@ export default async function DashboardLayout({ children }: { readonly children:
   }
 
   return (
-    <div>
-      <nav aria-label="Main navigation">
-        <p style={{ color: 'gray' }}>[Navigation placeholder — Stage 1 scaffold]</p>
-      </nav>
-      <main>{children}</main>
-    </div>
+    <ToastProvider>
+      <AppShell>
+        {children}
+      </AppShell>
+    </ToastProvider>
   );
 }
