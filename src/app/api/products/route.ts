@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { ProductListQuerySchema, ProductImportSchema } from '@/lib/validation/schemas';
-import { db, DEV_TENANT_ID } from '@/lib/db/index.js';
+import { db, DEV_TENANT_ID } from '@/lib/db/index';
 import { checkDuplicateSourceUrl } from '@/lib/api/idempotency';
 
 /**
@@ -39,33 +39,33 @@ export async function GET(req: NextRequest) {
 
     const whereClause = conditions.join(' AND ');
 
-    // Query products with tenant-scoped RLS. Supplier linkage comes from
-    // product_sources (products has no supplier_id column).
+    // Performance optimization: Combine data query and count query into single CTE
+    // to reduce database round trips from 2 to 1
     const result = await db.query(
-      `SELECT
-        p.id, p.tenant_id, p.title, p.description, p.identifiers, p.primary_image_url,
-        p.additional_image_urls, p.supplier_price_cents, p.currency, p.availability,
-        p.source_url, ps.supplier_id, p.confidence, p.imported_at, p.last_refreshed_at,
-        p.review_status, p.import_duration_ms, p.normalization_completeness,
-        p.user_corrections
-       FROM products p
-       LEFT JOIN product_sources ps ON ps.product_id = p.id
-       WHERE ${whereClause}
-       ORDER BY p.imported_at DESC
-       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
+      `WITH product_data AS (
+        SELECT
+          p.id, p.tenant_id, p.title, p.description, p.identifiers, p.primary_image_url,
+          p.additional_image_urls, p.supplier_price_cents, p.currency, p.availability,
+          p.source_url, ps.supplier_id, p.confidence, p.imported_at, p.last_refreshed_at,
+          p.review_status, p.import_duration_ms, p.normalization_completeness,
+          p.user_corrections
+         FROM products p
+         LEFT JOIN product_sources ps ON ps.product_id = p.id
+         WHERE ${whereClause}
+         ORDER BY p.imported_at DESC
+         LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+      ),
+      total_count AS (
+        SELECT COUNT(*) as total
+        FROM products p
+        LEFT JOIN product_sources ps ON ps.product_id = p.id
+        WHERE ${whereClause}
+      )
+      SELECT * FROM product_data, total_count`,
       [...values, limit, offset],
     );
 
-    // Get total count for pagination
-    const countResult = await db.query(
-      `SELECT COUNT(*) as total
-         FROM products p
-         LEFT JOIN product_sources ps ON ps.product_id = p.id
-        WHERE ${whereClause}`,
-      values,
-    );
-
-    const total = parseInt(countResult.rows[0].total as string, 10);
+    const total = parseInt(result.rows[0].total as string, 10);
 
     const products = result.rows.map((row) => ({
       id: row.id,

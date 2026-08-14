@@ -90,7 +90,10 @@ CREATE POLICY polling_state_tenant_isolation ON polling_state
 -- ─── Functions for Token Management ───────────────────────────────────────────
 
 -- Function to check if access token needs refresh
-CREATE OR REPLACE FUNCTION marketplace_connections.needs_token_refresh(connection_id UUID)
+-- NOTE: marketplace_connections is the TABLE (created in 0001); do NOT schema-qualify
+-- the function name as marketplace_connections.<fn> — PG then treats it as a schema and
+-- fails with "schema marketplace_connections does not exist".
+CREATE OR REPLACE FUNCTION needs_token_refresh(connection_id UUID)
 RETURNS BOOLEAN AS $$
 DECLARE
   expires_at TIMESTAMPTZ;
@@ -104,7 +107,8 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Function to update access token
-CREATE OR REPLACE FUNCTION marketplace_connections.update_access_token(
+-- (see NOTE above on marketplace_connections: table, not schema)
+CREATE OR REPLACE FUNCTION update_access_token(
   connection_id UUID,
   access_token TEXT,
   refresh_token TEXT,

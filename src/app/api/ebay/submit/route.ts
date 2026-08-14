@@ -3,7 +3,7 @@ import { apiSuccess, apiError } from '@/lib/api/response';
 import { z } from 'zod';
 import { getEBayClient, type ListingItem } from '@/lib/adapters/ebay/ebay-client';
 import { mapListingDraftToEBayListing, validateEBayListing } from '@/lib/adapters/ebay/listing-mapper';
-import { db, DEV_TENANT_ID, withTenant } from '@/lib/db/index.js';
+import { db, DEV_TENANT_ID, withTenant } from '@/lib/db/index';
 
 /**
  * Schema for eBay listing submission

@@ -1,9 +1,9 @@
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
-import { db, DEV_TENANT_ID, withTenant } from '@/lib/db/index.js';
+import { db, DEV_TENANT_ID, withTenant } from '@/lib/db/index';
 
 /**
- * POST /api/jobs/[jobId]/retry
+ * POST /api/jobs/[id]/retry
  * Manually retry a failed job
  *
  * Resets job status to pending and attempt counter.
@@ -12,9 +12,9 @@ import { db, DEV_TENANT_ID, withTenant } from '@/lib/db/index.js';
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { jobId: string } },
+  { params }: { params: { id: string } },
 ) {
-  const jobId = params.jobId;
+  const jobId = params.id;
 
   // Validate UUID format
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -72,7 +72,7 @@ export async function POST(
       message: 'Job queued for retry',
     });
   } catch (err) {
-    console.error('[api/jobs/[jobId]/retry] Error:', err);
+    console.error('[api/jobs/[id]/retry] Error:', err);
 
     if ((err as Error).message === 'Job not found') {
       return apiError('Job not found', null, 404);

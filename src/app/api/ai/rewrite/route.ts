@@ -3,7 +3,7 @@ import { apiSuccess, apiError } from '@/lib/api/response';
 import { z } from 'zod';
 import { getAIClient, type RewriteRequest } from '@/lib/ai/ai-client';
 import { getCacheManager, CacheManager } from '@/lib/ai/cache-manager';
-import { DEV_TENANT_ID } from '@/lib/db/index.js';
+import { DEV_TENANT_ID } from '@/lib/db/index';
 
 /**
  * Schema for AI rewrite request

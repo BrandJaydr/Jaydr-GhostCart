@@ -6,8 +6,8 @@
 - Project key: jaydr-ghostcart-99c056d7cf416a6c
 - Full workspace path: c:\Users\jayst\Documents\GitHub\Jaydr GhostCart
 - Canonical source: https://github.com/BrandJaydr/Jaydr-GhostCart.git
-- Generated at: 2026-08-09T02:51:06.192Z
-- Memory entries available: 16
+- Generated at: 2026-08-13T13:54:38.701Z
+- Memory entries available: 19
 
 ## Resume Brief
 
@@ -210,7 +210,20 @@ Use this context to resume the project from another IDE. Preserve the full paths
 
 ## Project Notes
 
-- No entries yet.
+1. Postgres IS active (correction) (postgres, database, correction, infrastructure)
+   Kind: note | Source: cline:postgres-check | Time: 2026-08-12T09:23:54.458Z
+   Project path: c:\Users\jayst\Documents\GitHub\Jaydr GhostCart
+   CORRECTION (2026-08): A live Postgres IS running - `ghostcart_db` (postgres:16-alpine, Docker, healthy) + `ghostcart_redis` (redis:7); ports 5432/6379 mapped. `.env` is present and populated (DATABASE_URL etc.). Superuser role is `ghostcart`, NOT `postgres` (ops scripts default updated to DB_USER=ghostcart). The live `ghostcart` DB was under-migrated at schema_migrations=3 (only 0001-0003); it needs `npm run db:migrate` to sync to 0001-0015 (adds the 0015_alerts alert_events table) - which likely fixes the crash-looping `ghostcart_app` container. Windows host lacks psql/pg_dump (run backup/restore scripts in container/WSL/CI). This supersedes the earlier note that said no .env / no live DB.
+
+2. Stage 4 ops hardening complete (2026-08) (stage4, ops, backup, restore)
+   Kind: note | Source: cline:stage4-ops | Time: 2026-08-12T04:58:32.052Z
+   Project path: c:\Users\jayst\Documents\GitHub\Jaydr GhostCart
+   Stage 4 ops hardening (last Stage 4 item) is COMPLETE (2026-08). Shipped: scripts/backup-db.sh (existing), scripts/restore-db.sh (now non-interactive via RESTORE_CONFIRM=yes), scripts/restore-test.sh (new Stage-4 gate: backup -> restore to scratch DB -> verify 14 migrations + RLS on products + key tables present), scripts/rotate-secrets.sh (fixed to real .env names NEXTAUTH_SECRET/POSTGRES_PASSWORD/EBAY_CERT_ID), scripts/verify-secret.sh, scripts/encrypt-env.sh/decodev-decrypt-env.sh (age at-rest encryption, graceful skip if age absent); alerting: src/lib/alerts/index.ts (ConsoleAlertProvider + WebhookAlertProvider + persist to alert_events) + migration 0015_alerts.sql + worker DLQ hooks (import+refresh on final failure -> notify) + API GET /api/alerts and POST /api/alerts/[id]/ack + .env.example ALERTS_* vars; .github/workflows/ci.yml (lint/tsc/build/test + scheduled restore-test against Postgres 16 service); README ops tooling section; .gitignore backups/.age-key.txt/.env.age. tasks/todo.md Stage 4 item marked done; TECHNICAL_WIKI §15 Stage 4 -> Complete (8/8). Validation: tsc clean for new files; vitest 77 passed / 3 skipped, failures all pre-existing (DB-dependent integration tests need DATABASE_URL which is absent here, plus pre-existing CSV validateConnection and AI-client/Ollama flakiness). No UI/shadcn changes; Prism owns frontend. Next: Stage 5 (adapter contract + certification checklist, second marketplace, roles/invitations, etc.).
+
+3. Infrastructure & DB Stack + Stage 2-5 Verification (2026-08) (infrastructure, database, stage-verification, docs)
+   Kind: note | Source: cline-doc-handoff:2026-08-10 | Time: 2026-08-11T04:42:51.779Z
+   Project path: c:\Users\jayst\Documents\GitHub\Jaydr GhostCart
+   Jaydr GhostCart uses PostgreSQL 16 (self-hosted/local via Docker Compose) as the source of truth, with Redis 7 + BullMQ for the durable job queue (import/refresh workers, dead-letter queue on final failure). There is NO Supabase and NO ORM: the app uses raw pg (node-postgres Pool from DATABASE_URL) and a custom .sql migration runner (npm run db:migrate -> src/db/migrate.ts) with 14 migrations (0001_init .. 0014_review_state). Tenant isolation is via RLS using set_config(ghostcart.tenant_id,...) + withTenant(). Dev defaults are in .env.example; NO .env is present and DATABASE_URL is not set in this environment, so any DB work (backups, restore tests, new tables such as notifications) targets local Postgres via .sql migrations, NOT the Supabase MCP tooling. Stage 2-4 are implemented and verified complete (tasks/todo.md was synced 2026-08 from stale to current); Stage 4 still needs secrets-rotation, backups/restore tests, alerting automation; Stage 5 (second marketplace, roles/invitations, event publication, orders, analytics) is open. Next proposed work is Priority 1, ops-focused: backup+restore test, secrets-rotation procedure, alerting hooks on DLQ/job-failure, wired into docs/incident-runbooks.md + CI. Notifications (in-app/browser/SMS/Messenger) are a separate track; Priority 1 stays ops-only. Docs updated: TECHNICAL_WIKI.md sections 14 (Verified Infrastructure & Database Stack) and 15 (Stage 2-5 Verification Log), plus README status.
 
 ## Agent Handoff
 

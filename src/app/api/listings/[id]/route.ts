@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { ListingUpdateSchema } from '@/lib/validation/schemas';
-import { db, DEV_TENANT_ID, withTenant } from '@/lib/db/index.js';
+import { db, DEV_TENANT_ID, withTenant } from '@/lib/db/index';
 
 /**
  * GET /api/listings/[id]

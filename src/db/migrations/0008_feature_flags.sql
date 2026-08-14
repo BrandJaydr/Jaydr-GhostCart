@@ -1,10 +1,10 @@
--- ─────────────────────────────────────────────────────────────────────────────
--- Jaydr GhostCart — Migration 0008: Feature Flags System
--- Stage: Stage 3 — Controlled Beta Rollout
--- Reference: Stage 3 Testing & Beta Plan — Task 6: Controlled Beta
--- ─────────────────────────────────────────────────────────────────────────────
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- Jaydr GhostCart â€” Migration 0008: Feature Flags System
+-- Stage: Stage 3 â€” Controlled Beta Rollout
+-- Reference: Stage 3 Testing & Beta Plan â€” Task 6: Controlled Beta
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
--- ─── Feature Flags Table ─────────────────────────────────────────────────────
+-- â”€â”€â”€ Feature Flags Table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 -- Stores feature flags for gradual rollout
 
 CREATE TABLE IF NOT EXISTS feature_flags (
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS feature_flags (
 -- Index for flag lookups
 CREATE INDEX IF NOT EXISTS feature_flags_key_idx ON feature_flags(key);
 
--- ─── Beta Users Table ───────────────────────────────────────────────────────
+-- â”€â”€â”€ Beta Users Table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 -- Tracks beta program participants
 
 CREATE TABLE IF NOT EXISTS beta_users (
@@ -45,7 +45,7 @@ CREATE INDEX IF NOT EXISTS beta_users_tenant_idx ON beta_users(tenant_id);
 CREATE INDEX IF NOT EXISTS beta_users_status_idx ON beta_users(status);
 CREATE INDEX IF NOT EXISTS beta_users_phase_idx ON beta_users(phase);
 
--- ─── Usage Limits Table ───────────────────────────────────────────────────────
+-- â”€â”€â”€ Usage Limits Table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 -- Tracks per-tenant usage limits
 
 CREATE TABLE IF NOT EXISTS usage_limits (
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS usage_limits (
 CREATE INDEX IF NOT EXISTS usage_limits_tenant_idx ON usage_limits(tenant_id);
 CREATE INDEX IF NOT EXISTS usage_limits_reset_idx ON usage_limits(reset_at);
 
--- ─── Feedback Table ─────────────────────────────────────────────────────────
+-- â”€â”€â”€ Feedback Table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 -- Stores beta user feedback
 
 CREATE TABLE IF NOT EXISTS feedback (
@@ -85,7 +85,7 @@ CREATE INDEX IF NOT EXISTS feedback_category_idx ON feedback(category);
 CREATE INDEX IF NOT EXISTS feedback_status_idx ON feedback(status);
 CREATE INDEX IF NOT EXISTS feedback_tenant_idx ON feedback(tenant_id);
 
--- ─── Row-Level Security Policies ─────────────────────────────────────────────
+-- â”€â”€â”€ Row-Level Security Policies â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 ALTER TABLE feature_flags ENABLE ROW LEVEL SECURITY;
 ALTER TABLE beta_users ENABLE ROW LEVEL SECURITY;
@@ -108,10 +108,10 @@ CREATE POLICY usage_limits_tenant_isolation ON usage_limits
 CREATE POLICY feedback_tenant_isolation ON feedback
   FOR ALL USING (tenant_id = current_setting('ghostcart.tenant_id', true)::uuid);
 
--- ─── Functions for Feature Flags ───────────────────────────────────────────
+-- â”€â”€â”€ Functions for Feature Flags â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 -- Function to check if a flag is enabled for a tenant/user
-CREATE OR REPLACE FUNCTION feature_flags.is_enabled(
+CREATE OR REPLACE FUNCTION is_enabled(
   flag_key TEXT,
   tenant_id UUID,
   user_id UUID DEFAULT NULL
@@ -158,7 +158,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Function to check usage limit
-CREATE OR REPLACE FUNCTION usage_limits.check_limit(
+CREATE OR REPLACE FUNCTION check_limit(
   tenant_id UUID,
   limit_type TEXT,
   increment INTEGER DEFAULT 1
@@ -214,7 +214,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- ─── Seed Default Feature Flags ───────────────────────────────────────────
+-- â”€â”€â”€ Seed Default Feature Flags â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 INSERT INTO feature_flags (key, name, description, enabled, rollout_percentage)
 VALUES

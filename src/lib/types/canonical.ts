@@ -22,9 +22,11 @@ export type ListingState =
 
 /**
  * Product review status — the review-before-use gate (Production Blueprint §6.2).
- * New imports start as `needs_review`; an explicit merchant approval promotes to `ready`.
+ * Every imported product enters `pending_review`; an explicit merchant approval
+ * promotes it to `approved`, or `rejected` if unsuitable for listing generation.
+ * Values align with migration 0014 (`review_status_enum`).
  */
-export type ProductReviewStatus = 'needs_review' | 'ready';
+export type ProductReviewStatus = 'pending_review' | 'approved' | 'rejected';
 
 /** Normalization confidence for a specific field */
 export interface FieldConfidence {

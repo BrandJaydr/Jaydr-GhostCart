@@ -3,7 +3,7 @@ import { apiSuccess, apiError } from '@/lib/api/response';
 import { z } from 'zod';
 import { getAIClient, type AnalysisRequest, type AnalysisResponse } from '@/lib/ai/ai-client';
 import { getCacheManager, CacheManager } from '@/lib/ai/cache-manager';
-import { db, DEV_TENANT_ID } from '@/lib/db/index.js';
+import { db, DEV_TENANT_ID } from '@/lib/db/index';
 
 /**
  * Schema for AI analysis request

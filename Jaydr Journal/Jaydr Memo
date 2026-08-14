@@ -111,3 +111,16 @@ Stage 4 operations):
 4.  **Route Protection:** Secured the `(dashboard)` route group by adding a server-side session check in `src/app/(dashboard)/layout.tsx`. Unauthenticated users are now redirected to the `/sign-in` page.
 
 **Outcome:** Stage 1 is now functionally complete. The application supports a basic sign-in flow for a developer user, and the main application routes are protected. This unblocks the project to move to Stage 2: Functional Alpha.
+
+---
+
+## 🔎 REVIEW MEMO — Three-Agent Gap Review (2026-08-12)
+
+Three focused passes were performed using the Senior Software Architect, Investigator, and RANGER prompts.
+
+- **Architecture:** the current auth boundary is page-level, not API-level. Most route handlers still resolve `DEV_TENANT_ID`; the `.env.example` tenant value is also not the UUID used by `src/lib/db/index.ts`, so session-derived tenancy is not yet a safe drop-in.
+- **Investigator:** the recurring reliability weakness is uncorrelated `console.*` logging across API, worker, and library boundaries. The eBay webhook route also logs a full payload. Standardized correlation IDs, error classification, and redaction are required before production operations.
+- **RANGER:** the highest-risk finding is missing explicit auth/RBAC on API/admin routes, especially `/api/admin/beta-users`, which accepts tenant and user identifiers from the request. This is recorded as ERR-016; no auth logic was changed because the prompt requires approval before changing authentication behavior.
+- **Verification:** Vitest was attempted but failed during config startup with an environment access error, so test execution remains unverified in this workspace.
+
+Actions are tracked in `tasks/todo.md`; the error and pattern registers contain ERR-016 through ERR-018. The next safe implementation slice is a shared server-side authorization helper plus route-by-route migration and cross-tenant tests.

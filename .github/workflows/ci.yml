@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [ Curser-Branch, main ]
+  pull_request:
+  schedule:
+    # Daily 03:17 UTC — keep the Stage 4 restore-test gate green
+    - cron: '17 3 * * *'
+
+jobs:
+  checks:
+    name: Lint / Typecheck / Build / Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Build
+        run: npm run build
+      - name: Unit tests
+        run: npm test
+
+  restore-test:
+    name: Restore test (Stage 4 gate)
+    runs-on: ubuntu-latest
+    needs: checks
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ghostcart_dev
+          POSTGRES_DB: ghostcart
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DB_HOST: localhost
+      DB_PORT: '5432'
+      DB_USER: postgres
+      DB_PASSWORD: ghostcart_dev
+      DB_NAME: ghostcart
+      BACKUP_DIR: ./backups
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Apply migrations (build schema_migrations to 14)
+        env:
+          DATABASE_URL: postgresql://postgres:ghostcart_dev@localhost:5432/ghostcart
+        run: npm run db:migrate
+      - name: Run restore test (non-interactive)
+        run: npm run db:restore:test

@@ -9,7 +9,7 @@ import {
   applySuggestion,
   isRepricingPaused,
 } from '@/lib/repricing/engine';
-import { DEV_TENANT_ID } from '@/lib/db/index.js';
+import { DEV_TENANT_ID } from '@/lib/db/index';
 
 /**
  * Schema for generating repricing suggestion

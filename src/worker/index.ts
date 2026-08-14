@@ -20,6 +20,7 @@ import { db, setTenantContextOn } from '../lib/db/index.js';
 import { getSupplierAdapter } from '../lib/adapters/factory.js';
 import type { CanonicalProduct } from '../lib/types/canonical.js';
 import { randomUUID } from 'node:crypto';
+import { notify } from '../lib/alerts/index.js';
 
 
 console.warn('[Worker] Starting GhostCart worker process...');
@@ -67,7 +68,7 @@ async function persistImport(
           confidence, imported_at, last_refreshed_at, source_url, user_corrections,
           review_status, import_duration_ms, normalization_completeness)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10, $11::jsonb, $12, $13, $14,
-               '{}'::jsonb, 'needs_review', $15, $16)
+               '{}'::jsonb, 'pending_review', $15, $16)
        ON CONFLICT (source_url) DO UPDATE
          SET title = EXCLUDED.title,
              description = EXCLUDED.description,
@@ -80,7 +81,8 @@ async function persistImport(
              confidence = EXCLUDED.confidence,
              last_refreshed_at = now(),
              import_duration_ms = EXCLUDED.import_duration_ms,
-             normalization_completeness = EXCLUDED.normalization_completeness`,
+             normalization_completeness = EXCLUDED.normalization_completeness,
+             review_status = 'pending_review'`,
       [
         productId,
         product.tenantId,
@@ -314,6 +316,18 @@ importWorker.on('failed', (job, err) => {
     void dispatchToDeadLetter(job, err.message).then(() =>
       console.warn(`[Worker] Import job ${job.id} moved to dead-letter queue`),
     );
+    void notify({
+      tenantId: job.data?.tenantId ?? null,
+      alertType: 'job.failed_final',
+      severity: 'critical',
+      message: `Import job ${job.id} failed after ${job.attemptsMade} attempts; moved to DLQ`,
+      payload: {
+        queue: 'product.import',
+        jobId: job.id,
+        error: err.message,
+        attempts: job.attemptsMade,
+      },
+    });
   }
 });
 
@@ -415,6 +429,19 @@ refreshWorker.on('failed', (job, err) => {
       } catch (e) {
         console.error('[Worker] Could not write DLQ for refresh:', (e as Error).message);
       }
+      await notify({
+        tenantId: tenantId ?? null,
+        alertType: 'job.failed_final',
+        severity: 'critical',
+        message: `Refresh job ${job.id} failed after ${job.attemptsMade} attempts; moved to DLQ`,
+        payload: {
+          queue: 'product.refresh',
+          jobId: job.id,
+          productId: productId ?? null,
+          error: err.message,
+          attempts: job.attemptsMade,
+        },
+      });
     })();
   }
 });

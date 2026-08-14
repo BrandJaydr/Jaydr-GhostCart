@@ -3,6 +3,8 @@
 > **Architecture**: SaaS dashboard inside WordPress admin panel (Phase 1), with standalone React/Next.js app as Phase 2 target.
 > **Design System**: Component-based with shadcn/ui primitives (Radix UI + Tailwind CSS).
 
+> **HISTORICAL / ASPIRATIONAL — NOT IMPLEMENTATION AUTHORITY (2026-08-12):** This document describes a WordPress + shadcn future concept, not the current standalone application. The verified baseline is **Next.js 14.2.5, React 18.3.1, HeroUI v2.8.10**; Tailwind v3 is intended but currently missing from the root dependency set. Follow `Prism Working/UI_RECOVERY_BRIEF.md` for active UI decisions.
+
 ---
 
 ## 1. NAVIGATION ARCHITECTURE

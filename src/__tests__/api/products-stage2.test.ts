@@ -40,7 +40,7 @@ describe('POST /api/products/[id]/approve', () => {
 
     const body = await res.json();
     expect(body.status).toBe('success');
-    expect(body.data.reviewStatus).toBe('ready');
+    expect(body.data.reviewStatus).toBe('approved');
   });
 });
 

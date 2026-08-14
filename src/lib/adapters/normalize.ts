@@ -9,6 +9,19 @@
  */
 import type { CanonicalProduct, FieldConfidence } from '@/lib/types/canonical';
 
+export interface ValidationError {
+  line?: number;
+  field?: string;
+  message: string;
+  severity: 'error' | 'warning';
+}
+
+export interface ValidationResult {
+  isValid: boolean;
+  errors: ValidationError[];
+  warnings: ValidationError[];
+}
+
 /** Parse a well-formed CSV string into an array of row objects (header row → keys). */
 export function parseCsv(text: string): Record<string, string>[] {
   const rows = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
@@ -49,6 +62,29 @@ function splitCsvLine(line: string): string[] {
   return out;
 }
 
+/** Validate URL format */
+export function isValidUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+/** Validate currency code (ISO 4217) */
+export function isValidCurrency(value: string): boolean {
+  const validCurrencies = new Set(['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CNY']);
+  return validCurrencies.has(value.toUpperCase());
+}
+
+/** Validate price format */
+export function isValidPrice(value: string): boolean {
+  const cleaned = value.replace(/[^0-9.]/g, '');
+  const n = Number(cleaned);
+  return Number.isFinite(n) && n > 0 && cleaned !== '';
+}
+
 /** Coerce a parsed price string ("$29.99", "29.99", "2,999") into minor units. */
 export function priceToMinorUnits(value: string | undefined): number | null {
   if (value === undefined || value === null || value.trim() === '') return null;
@@ -67,6 +103,107 @@ export function normalizeAvailability(value: string | undefined): CanonicalProdu
   return 'unknown';
 }
 
+/** Validate CSV structure and content */
+export function validateCsv(text: string, requiredKeys: string[]): ValidationResult {
+  const errors: ValidationError[] = [];
+  const warnings: ValidationError[] = [];
+
+  const lines = text.split(/\r?\n/).map((l) => l.trim());
+  if (lines.length === 0) {
+    errors.push({ message: 'CSV file is empty', severity: 'error' });
+    return { isValid: false, errors, warnings };
+  }
+
+  const [header, ...body] = lines;
+  const keys = splitCsvLine(header).map((k) => k.trim());
+
+  // Check for required columns
+  const missingKeys = requiredKeys.filter((k) => !keys.includes(k));
+  if (missingKeys.length > 0) {
+    errors.push({
+      line: 1,
+      message: `Missing required columns: ${missingKeys.join(', ')}`,
+      severity: 'error',
+    });
+  }
+
+  // Validate each row
+  body.forEach((line, idx) => {
+    const lineNum = idx + 2; // +2 because header is line 1
+    const values = splitCsvLine(line);
+
+    if (values.length !== keys.length) {
+      warnings.push({
+        line: lineNum,
+        message: `Column count mismatch: expected ${keys.length}, got ${values.length}`,
+        severity: 'warning',
+      });
+    }
+
+    const row: Record<string, string> = {};
+    keys.forEach((key, i) => {
+      row[key] = values[i] ?? '';
+    });
+
+    // Validate URL fields
+    if (row.source_url && !isValidUrl(row.source_url)) {
+      errors.push({
+        line: lineNum,
+        field: 'source_url',
+        message: `Invalid URL format: ${row.source_url}`,
+        severity: 'error',
+      });
+    }
+
+    if (row.primary_image_url && !isValidUrl(row.primary_image_url)) {
+      warnings.push({
+        line: lineNum,
+        field: 'primary_image_url',
+        message: `Invalid image URL format: ${row.primary_image_url}`,
+        severity: 'warning',
+      });
+    }
+
+    // Validate price
+    if (row.supplier_price_cents && !isValidPrice(row.supplier_price_cents)) {
+      errors.push({
+        line: lineNum,
+        field: 'supplier_price_cents',
+        message: `Invalid price format: ${row.supplier_price_cents}`,
+        severity: 'error',
+      });
+    }
+
+    // Validate currency
+    if (row.currency && !isValidCurrency(row.currency)) {
+      warnings.push({
+        line: lineNum,
+        field: 'currency',
+        message: `Non-standard currency code: ${row.currency}`,
+        severity: 'warning',
+      });
+    }
+
+    // Check for empty required fields
+    requiredKeys.forEach((key) => {
+      if (!row[key] || row[key].trim() === '') {
+        errors.push({
+          line: lineNum,
+          field: key,
+          message: `Required field '${key}' is empty`,
+          severity: 'error',
+        });
+      }
+    });
+  });
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings,
+  };
+}
+
 /** Score completeness of each required field → FieldConfidence with warnings. */
 export function scoreCsvRow(
   row: Record<string, string>,
@@ -76,6 +213,12 @@ export function scoreCsvRow(
     const v = (row[k] ?? '').trim();
     return v.length > 0;
   }).length;
+
+  const warnings: string[] = [];
+  if (required < requiredKeys.length) {
+    const missing = requiredKeys.filter((k) => !(row[k] ?? '').trim());
+    warnings.push(`Missing required fields: ${missing.join(', ')}`);
+  }
 
   return [
     { field: 'title', score: 1, warnings: [] },
@@ -105,7 +248,7 @@ export function scoreCsvRow(
     {
       field: 'required',
       score: required / requiredKeys.length,
-      warnings: required < requiredKeys.length ? ['Some required fields missing'] : [],
+      warnings,
     },
   ];
 }

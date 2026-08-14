@@ -36,3 +36,14 @@ yarn-error.log*
 # IDE
 .idea/
 .vscode/settings.json
+
+# UI Sandbox - Hidden from GitHub
+Prism Working/ui-sandbox/
+Prism Working/ui-sandbox/node_modules/
+Prism Working/ui-sandbox/.next/
+Prism Working/ui-sandbox/dist/
+
+# Stage 4 ops hardening
+backups/
+.age-key.txt
+.env.age

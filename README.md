@@ -2,6 +2,8 @@
 
 **Enterprise Reseller & Dropshipping Automation Platform**
 
+> **Frontend compatibility notice (verified 2026-08-12):** This repository runs **Next.js 14.2.5, React 18.3.1, and HeroUI v2.8.10**. Tailwind v3 is the intended configuration (`tailwind.config.ts`), but `tailwindcss` is not currently declared in `package.json`/the root lockfile; do not assume an active Tailwind runtime until the UI recovery gate resolves that dependency. See [UI Recovery Brief](Prism%20Working/UI_RECOVERY_BRIEF.md).
+
 Jaydr GhostCart is a high-performance e-commerce management platform designed for resellers, dropshippers, and multi-channel e-commerce brands. It streamlines product importing, data normalization, AI-assisted listing generation, pricing monitoring, and multi-marketplace listing workflows.
 
 ---
@@ -19,9 +21,9 @@ GhostCart bridges supplier catalog management with major online marketplaces:
 
 To ensure reliability, security, and policy compliance, GhostCart follows a **Modular Monolith** delivery model outlined in the [Production Blueprint & Delivery Guide](Docs/Production%20Blueprint%20and%20Delivery%20Guide.md).
 
-**Current Status: Stage 2 — Real Supplier Import & Enhanced Features**
+**Current Status: Stages 2–4 verified complete; Stage 5 open**
 
-The project has progressed beyond the initial Stage 1 scaffold to implement real supplier import pipelines, enhanced database features (11 migrations), and enterprise-grade capabilities including:
+Stages 2–4 are implemented and were verified against the code (2026-08); `tasks/todo.md` was synced to match (it was previously stale). This includes real supplier import pipelines (CSV, eBay), enhanced database features (14 migrations, 0001–0014), and enterprise-grade capabilities including:
 - Real supplier adapter implementations (CSV, eBay)
 - Stock/price refresh system with change detection
 - Margin calculation and repricing systems
@@ -82,7 +84,7 @@ Next.js Web & API Server ───► PostgreSQL (Source of Truth, Row-Level Sec
 ```
 
 - **Frontend & API:** React / Next.js (TypeScript)
-- **Database:** PostgreSQL (Multi-tenant, audit records, job state, 11 migrations)
+- **Database:** PostgreSQL (Multi-tenant, audit records, job state, 14 migrations)
 - **Asynchronous Tasks:** Durable job queue with worker process (import + refresh workers)
 - **AI Services:** Ollama/VLLM integration for listing optimization
 - **Containerization:** Docker & Docker Compose
@@ -126,6 +128,36 @@ Next.js Web & API Server ───► PostgreSQL (Source of Truth, Row-Level Sec
    npm install
    npm run dev
    ```
+
+### Ops Tooling (Stage 4)
+
+```bash
+npm run db:backup            # pg_dump -> ./backups/*.sql.gz (+ checksum) with retention
+RESTORE_CONFIRM=yes npm run db:restore -- <backup.sql.gz>   # restore (non-interactive)
+npm run db:restore:test      # backup -> restore to scratch DB -> smoke checks (Stage 4 gate)
+npm run secrets:verify       # non-destructive secret health check
+npm run secrets:rotate       # back up + regenerate secrets in .env
+./scripts/encrypt-env.sh     # age-encrypt .env -> .env.age (at-rest)
+./scripts/decrypt-env.sh     # decrypt .env.age -> .env
+```
+
+---
+
+## 🔁 CI/CD & Automated Workflows
+
+GhostCart utilizes GitHub Actions for continuous integration, regression testing, and security scanning:
+
+1. **Continuous Integration ([`ci.yml`](file:///.github/workflows/ci.yml))**
+   - **Triggers:** Push to `main`/`Curser-Branch`, Pull Requests.
+   - **Checks:** ESLint lint checks, TypeScript typechecking (`tsc`), Production build compilation, Vitest unit tests, and Database migrations + non-interactive database restore smoke checks (`db:restore:test`) against a live Postgres test service.
+
+2. **Security Scan ([`security.yml`](file:///.github/workflows/security.yml))**
+   - **Triggers:** Push to `main`/`Curser-Branch`, Pull Requests, and weekly cron schedules (Sunday at 00:00 UTC).
+   - **Checks:**
+     - **Secret Leak Detection:** Scans full commit history using `TruffleHog` to catch exposed API keys, db passwords, and credentials.
+     - **Dependency Vulnerabilities:** Runs `npm audit` and blocks pull requests if dependencies contain `high` or `critical` severity CVEs.
+     - **Static Application Security Testing (SAST):** CodeQL scanning of Javascript/Typescript files for common security flaws (XSS, path traversal, injection).
+
 
 ---
 

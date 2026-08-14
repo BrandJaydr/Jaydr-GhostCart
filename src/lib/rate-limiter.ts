@@ -7,8 +7,8 @@
  * @agent:oracle Add tests for rate limiter
  */
 
-import { redis } from '@/lib/queue/index.js';
-import { db } from '@/lib/db/index.js';
+import { redis } from '@/lib/queue/index';
+import { db } from '@/lib/db/index';
 
 export interface RateLimitConfig {
   limit: number;

@@ -7,7 +7,7 @@
  * @agent:oracle Add tests for polling service
  */
 
-import { db } from '@/lib/db/index.js';
+import { db } from '@/lib/db/index';
 import { getEBayClient } from './ebay-client.js';
 
 export interface PollingConfig {

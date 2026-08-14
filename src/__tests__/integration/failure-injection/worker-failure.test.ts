@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { db } from '@/lib/db/index.js';
+import { db } from '@/lib/db/index';
 
 describe('Worker Failure Injection Tests', () => {
   beforeEach(async () => {
