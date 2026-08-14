@@ -19,6 +19,8 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      - name: Verify Rule Compliance
+        run: node scripts/verify-rules.js
       - name: Lint
         run: npm run lint
       - name: Typecheck

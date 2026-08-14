@@ -19,7 +19,8 @@
     "db:restore": "bash scripts/restore-db.sh",
     "db:restore:test": "bash scripts/restore-test.sh",
     "secrets:verify": "bash scripts/verify-secret.sh",
-    "secrets:rotate": "bash scripts/rotate-secrets.sh"
+    "secrets:rotate": "bash scripts/rotate-secrets.sh",
+    "rules:verify": "node scripts/verify-rules.js"
   },
   "dependencies": {
     "@heroui/react": "^2.8.10",
