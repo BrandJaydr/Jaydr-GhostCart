@@ -143,6 +143,24 @@ npm run secrets:rotate       # back up + regenerate secrets in .env
 
 ---
 
+## 🔁 CI/CD & Automated Workflows
+
+GhostCart utilizes GitHub Actions for continuous integration, regression testing, and security scanning:
+
+1. **Continuous Integration ([`ci.yml`](file:///.github/workflows/ci.yml))**
+   - **Triggers:** Push to `main`/`Curser-Branch`, Pull Requests.
+   - **Checks:** ESLint lint checks, TypeScript typechecking (`tsc`), Production build compilation, Vitest unit tests, and Database migrations + non-interactive database restore smoke checks (`db:restore:test`) against a live Postgres test service.
+
+2. **Security Scan ([`security.yml`](file:///.github/workflows/security.yml))**
+   - **Triggers:** Push to `main`/`Curser-Branch`, Pull Requests, and weekly cron schedules (Sunday at 00:00 UTC).
+   - **Checks:**
+     - **Secret Leak Detection:** Scans full commit history using `TruffleHog` to catch exposed API keys, db passwords, and credentials.
+     - **Dependency Vulnerabilities:** Runs `npm audit` and blocks pull requests if dependencies contain `high` or `critical` severity CVEs.
+     - **Static Application Security Testing (SAST):** CodeQL scanning of Javascript/Typescript files for common security flaws (XSS, path traversal, injection).
+
+
+---
+
 ## 🧠 AOP-CORE Agent Pipeline & Governance
 
 Jaydr GhostCart is built and maintained following **AOP-CORE v1.0** (Agent Orchestration & Pipeline Core).
