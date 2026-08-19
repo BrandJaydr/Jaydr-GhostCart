@@ -9,7 +9,7 @@ import {
   applySuggestion,
   isRepricingPaused,
 } from '@/lib/repricing/engine';
-import { DEV_TENANT_ID } from '@/lib/db/index';
+import { requireAuth } from '@/lib/middleware/auth-guard';
 
 /**
  * Schema for generating repricing suggestion
@@ -26,6 +26,8 @@ const GenerateSuggestionSchema = z.object({
  * Generate a repricing suggestion
  */
 export async function POST(req: NextRequest) {
+  const actor = await requireAuth(req);
+
   let body: unknown;
   try {
     body = await req.json();
@@ -39,9 +41,7 @@ export async function POST(req: NextRequest) {
   }
 
   const input = parseResult.data;
-
-  // @agent:forge Replace with session tenantId
-  const tenantId = DEV_TENANT_ID;
+  const { tenantId } = actor;
 
   // Check if repricing is paused
   const paused = await isRepricingPaused(tenantId);
@@ -71,8 +71,8 @@ export async function POST(req: NextRequest) {
  * Get pending repricing suggestions
  */
 export async function GET(req: NextRequest) {
-  // @agent:forge Replace with session tenantId
-  const tenantId = DEV_TENANT_ID;
+  const actor = await requireAuth(req);
+  const { tenantId } = actor;
 
   try {
     const suggestions = await getPendingSuggestions(tenantId);

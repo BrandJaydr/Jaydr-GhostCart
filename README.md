@@ -21,14 +21,12 @@ GhostCart bridges supplier catalog management with major online marketplaces:
 
 To ensure reliability, security, and policy compliance, GhostCart follows a **Modular Monolith** delivery model outlined in the [Production Blueprint & Delivery Guide](Docs/Production%20Blueprint%20and%20Delivery%20Guide.md).
 
-**Current Status: Stages 2–4 verified complete; Stage 5 open**
+**Current Status: Stage 5 Security Gates In Progress**
 
-Stages 2–4 are implemented and were verified against the code (2026-08); `tasks/todo.md` was synced to match (it was previously stale). This includes real supplier import pipelines (CSV, eBay), enhanced database features (14 migrations, 0001–0014), and enterprise-grade capabilities including:
-- Real supplier adapter implementations (CSV, eBay)
-- Stock/price refresh system with change detection
-- Margin calculation and repricing systems
-- AI-powered listing analysis and optimization
-- Enhanced RLS policies and audit trails
+Stages 2–4 are fully implemented and verified. Stage 5 has commenced with the initial security gates:
+- Refactored `auth-guard` to throw catchable `AuthGuardException`s, resolving Next.js unhandled throw crash bugs using a unified `withAuthRoute` wrapper.
+- Migrated low-risk routes (`/api/feedback`, `/api/alerts`, `/api/dashboard/metrics`) to session-derived tenant IDs and enforced transaction-level RLS contexts in database queries.
+- Implemented robust tenancy isolation integration tests under Vitest to verify RLS enforcement.
 
 The Stage 1 thin vertical slice remains the foundation:
 > *A signed-in merchant imports an approved supplier product, reviews normalized data and pricing, generates an editable listing draft, and exports or submits that draft through one approved marketplace path.*
@@ -139,6 +137,86 @@ npm run secrets:verify       # non-destructive secret health check
 npm run secrets:rotate       # back up + regenerate secrets in .env
 ./scripts/encrypt-env.sh     # age-encrypt .env -> .env.age (at-rest)
 ./scripts/decrypt-env.sh     # decrypt .env.age -> .env
+```
+
+---
+
+## 💻 GhostCart CLI & Programmatic API Access
+
+GhostCart features a retro BBS-style terminal interface and programmatic API key authentication, allowing merchants, system operators, and AI Agents to interact with the platform natively without a browser.
+
+### Quickstart with CLI
+
+1. **Navigate to the CLI directory & install dependencies:**
+   ```bash
+   cd cli
+   npm install
+   npm run build
+   ```
+
+2. **Run the CLI tool:**
+   ```bash
+   # Show help
+   node dist/index.js --help
+
+   # Login with your credentials
+   node dist/index.js login
+
+   # List products with details
+   node dist/index.js products list
+
+   # View usage limits and metrics
+   node dist/index.js account usage
+   ```
+
+3. **Global installation:**
+   ```bash
+   npm link
+   ghostcart --help
+   ```
+
+### Agentic & Automation friendly (`--json` & API Keys)
+
+- **JSON Output:** Every CLI command supports the `--json` option to bypass human-formatted ASCII tables and output raw JSON, making it easy to pipe to tools like `jq` or consume in automation scripts:
+  ```bash
+  ghostcart products list --json
+  ```
+- **API Keys:** Generate long-lived Bearer tokens for AI agents and scripts:
+  ```bash
+  ghostcart keys create --label "My Automation Agent"
+  ```
+  Pass the generated key as `Authorization: Bearer gc_<token>` in HTTP requests.
+
+---
+
+## 📁 Repository Directory Map
+
+```text
+Jaydr-GhostCart/
+├── cli/                         # Standalone TypeScript CLI app
+│   ├── src/
+│   │   ├── commands/            # commander CLI commands (auth, products, jobs, etc.)
+│   │   ├── ui/                  # ASCII tables, borders, colors, and braille spinner
+│   │   └── api-client.ts        # Typed client wrapper for fetch requests
+│   └── package.json
+├── Docs/                        # Architecture specs & roadmaps
+├── src/                         # Main modular monolith Next.js application
+│   ├── app/                     # Page views and API routes (Next.js App Router)
+│   │   └── api/
+│   │       ├── auth/
+│   │       │   ├── login/       # State-free CLI credentials exchange endpoint
+│   │       │   └── keys/        # API key management endpoints (create/list/revoke)
+│   │       └── ...
+│   ├── db/
+│   │   └── migrations/          # Pure SQL migrations (0001_init.sql to 0016_api_keys.sql)
+│   ├── lib/
+│   │   ├── auth/                # NextAuth options & timing-safe API key validator
+│   │   ├── middleware/          # Unified resolveActor and rate-limit middleware
+│   │   └── db/                  # pool connection and multi-tenant isolation (withTenant)
+│   └── worker/                  # background workers for imports & refreshes (BullMQ)
+├── tasks/                       # TODO logs and changelogs
+├── docker-compose.yml           # Dev environment containing Postgres 16 & Redis 7
+└── package.json                 # Next.js app dependencies & scripts
 ```
 
 ---

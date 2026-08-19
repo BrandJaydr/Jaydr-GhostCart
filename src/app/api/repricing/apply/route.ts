@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { z } from 'zod';
 import { applySuggestion, approveSuggestion, rejectSuggestion } from '@/lib/repricing/engine';
+import { requireAuth } from '@/lib/middleware/auth-guard';
 
 /**
  * Schema for applying repricing suggestion
@@ -16,6 +17,8 @@ const ApplySuggestionSchema = z.object({
  * Apply an approved repricing suggestion
  */
 export async function POST(req: NextRequest) {
+  const actor = await requireAuth(req);
+
   let body: unknown;
   try {
     body = await req.json();
@@ -29,9 +32,7 @@ export async function POST(req: NextRequest) {
   }
 
   const { suggestionId, dryRun } = parseResult.data;
-
-  // @agent:forge Replace with session userId
-  const userId = '00000000-0000-0000-0000-000000000001';
+  const { userId } = actor;
 
   try {
     if (dryRun) {
@@ -61,6 +62,8 @@ export async function POST(req: NextRequest) {
  * Approve or reject a suggestion
  */
 export async function PATCH(req: NextRequest) {
+  const actor = await requireAuth(req);
+
   let body: unknown;
   try {
     body = await req.json();

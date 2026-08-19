@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GhostCart - Safety Center</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-container": "#00a572",
+                        "surface": "#0b1326",
+                        "on-tertiary-container": "#ffd4a4",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "error": "#ffb4ab",
+                        "primary-container": "#4f46e5",
+                        "error-container": "#93000a",
+                        "on-secondary-fixed-variant": "#005236",
+                        "on-primary-container": "#dad7ff",
+                        "info": "#0EA5E9",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "on-secondary": "#003824",
+                        "surface-tint": "#c3c0ff",
+                        "secondary": "#4edea3",
+                        "glow-indigo": "rgba(79, 70, 229, 0.15)",
+                        "on-tertiary-fixed": "#2a1700",
+                        "surface-container-highest": "#2d3449",
+                        "surface-container": "#171f33",
+                        "danger": "#EF4444",
+                        "inverse-surface": "#dae2fd",
+                        "surface-dim": "#0b1326",
+                        "surface-card": "#1E293B",
+                        "glass-stroke": "rgba(255, 255, 255, 0.1)",
+                        "on-background": "#dae2fd",
+                        "background": "#0b1326",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary": "#472a00",
+                        "outline-variant": "#464555",
+                        "secondary-fixed": "#6ffbbe",
+                        "tertiary-container": "#885500",
+                        "surface-container-lowest": "#060e20",
+                        "surface-container-low": "#131b2e",
+                        "on-secondary-container": "#00311f",
+                        "on-primary-fixed-variant": "#3323cc",
+                        "tertiary-fixed": "#ffddb8",
+                        "outline": "#918fa1",
+                        "primary-fixed-dim": "#c3c0ff",
+                        "on-primary-fixed": "#0f0069",
+                        "secondary-fixed-dim": "#4edea3",
+                        "inverse-primary": "#4d44e3",
+                        "on-secondary-fixed": "#002113",
+                        "on-surface-variant": "#c7c4d8",
+                        "on-error": "#690005",
+                        "primary-fixed": "#e2dfff",
+                        "surface-bright": "#31394d",
+                        "surface-variant": "#2d3449",
+                        "tertiary": "#ffb95f",
+                        "on-primary": "#1d00a5",
+                        "on-surface": "#dae2fd",
+                        "surface-container-high": "#222a3d",
+                        "primary": "#c3c0ff",
+                        "inverse-on-surface": "#283044"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "stack-sm": "8px",
+                        "card-padding": "16px",
+                        "stack-xs": "4px",
+                        "sidebar-width": "260px",
+                        "sidebar-collapsed": "64px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "label-mono": ["JetBrains Mono", "monospace"],
+                        "headline-lg": ["Inter", "sans-serif"],
+                        "headline-md": ["Inter", "sans-serif"],
+                        "body-md": ["Inter", "sans-serif"],
+                        "body-sm": ["Inter", "sans-serif"],
+                        "data-table": ["Inter", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "label-mono": ["12px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "body-sm": ["13px", { "lineHeight": "1.4", "fontWeight": "400" }],
+                        "data-table": ["13px", { "lineHeight": "1", "letterSpacing": "-0.01em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-card {
+            background-color: #1E293B;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+        }
+        .glow-hover:hover {
+            box-shadow: 0 0 8px 0 rgba(79, 70, 229, 0.15);
+        }
+        /* Custom scrollbar for stealth look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0F172A;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md h-screen overflow-hidden flex selection:bg-primary-container selection:text-white">
+<!-- SideNavBar -->
+<aside class="w-sidebar-width h-full fixed left-0 top-0 bg-surface-container dark:bg-surface-container border-r border-glass-stroke flex flex-col p-4 z-40 hidden md:flex">
+<!-- Header -->
+<div class="flex items-center gap-3 mb-8 px-2">
+<div class="w-8 h-8 rounded bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">GhostCart</h1>
+<p class="font-label-mono text-label-mono text-on-surface-variant uppercase mt-1">Automation Engine</p>
+</div>
+</div>
+<!-- Navigation -->
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">search</span>
+<span class="font-body-md text-body-md">Research</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">inventory_2</span>
+<span class="font-body-md text-body-md">Library</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">format_list_bulleted</span>
+<span class="font-body-md text-body-md">Listings</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">sell</span>
+<span class="font-body-md text-body-md">Pricing</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">shopping_cart</span>
+<span class="font-body-md text-body-md">Orders</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">analytics</span>
+<span class="font-body-md text-body-md">Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-surface-container-high text-primary font-bold border-r-2 border-primary group scale-95 duration-100" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
+<span class="font-body-md text-body-md">Health</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+</nav>
+<!-- CTA -->
+<div class="mt-auto pt-4">
+<button class="w-full bg-primary-container hover:bg-inverse-primary text-white font-body-md text-body-md py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors glow-hover">
+<span class="material-symbols-outlined text-[18px]">rocket_launch</span>
+                Deploy Bot
+            </button>
+</div>
+</aside>
+<!-- Main Content Area -->
+<div class="flex-1 ml-0 md:ml-sidebar-width flex flex-col h-screen overflow-hidden">
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 w-full md:w-[calc(100%-260px)] h-16 z-50 bg-surface/80 backdrop-blur-xl shadow-sm flex justify-between items-center px-gutter border-b border-glass-stroke">
+<div class="flex items-center gap-4">
+<button class="md:hidden text-on-surface-variant">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h2 class="font-headline-md text-headline-md font-black text-on-surface tracking-tight">Safety Center</h2>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden sm:flex items-center bg-surface-container rounded-lg px-3 py-1.5 border border-glass-stroke focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">search</span>
+<input class="bg-transparent border-none text-body-sm font-body-sm text-on-surface placeholder:text-on-surface-variant focus:ring-0 py-0 pl-2 pr-0 w-48" placeholder="Search safety logs..." type="text"/>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-all relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-danger rounded-full border border-surface"></span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Scrollable Canvas -->
+<main class="flex-1 mt-16 p-gutter overflow-y-auto">
+<!-- Top Stat Row -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter mb-gutter">
+<!-- Stat 1 -->
+<div class="glass-card rounded-xl p-card-padding flex flex-col gap-stack-sm glow-hover transition-all">
+<div class="flex justify-between items-center">
+<span class="font-label-mono text-label-mono text-on-surface-variant uppercase">Overall Risk Score</span>
+<span class="material-symbols-outlined text-secondary text-[20px]">shield_lock</span>
+</div>
+<div class="flex items-end gap-2 mt-1">
+<span class="font-headline-lg text-headline-lg text-on-surface">98</span>
+<span class="font-body-sm text-body-sm text-secondary-fixed mb-1">/ 100</span>
+</div>
+<div class="w-full bg-surface-container h-1.5 rounded-full mt-2 overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 98%"></div>
+</div>
+</div>
+<!-- Stat 2 -->
+<div class="glass-card rounded-xl p-card-padding flex flex-col gap-stack-sm glow-hover transition-all">
+<div class="flex justify-between items-center">
+<span class="font-label-mono text-label-mono text-on-surface-variant uppercase">Active Guardrails</span>
+<span class="material-symbols-outlined text-primary text-[20px]">policy</span>
+</div>
+<div class="flex items-end gap-2 mt-1">
+<span class="font-headline-lg text-headline-lg text-on-surface">14</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mb-1">Rules Live</span>
+</div>
+<div class="mt-2 flex gap-1">
+<span class="px-2 py-0.5 rounded text-[10px] font-label-mono bg-primary-container/20 text-primary border border-primary/20">Pricing</span>
+<span class="px-2 py-0.5 rounded text-[10px] font-label-mono bg-secondary-container/20 text-secondary border border-secondary/20">Stock</span>
+</div>
+</div>
+<!-- Stat 3 -->
+<div class="glass-card rounded-xl p-card-padding flex flex-col gap-stack-sm glow-hover transition-all">
+<div class="flex justify-between items-center">
+<span class="font-label-mono text-label-mono text-on-surface-variant uppercase">Price Checks (24h)</span>
+<span class="material-symbols-outlined text-info text-[20px]">radar</span>
+</div>
+<div class="flex items-end gap-2 mt-1">
+<span class="font-headline-lg text-headline-lg text-on-surface">42.5k</span>
+<span class="font-body-sm text-body-sm text-secondary-fixed mb-1 flex items-center"><span class="material-symbols-outlined text-[14px]">arrow_upward</span> 12%</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-2 truncate">Highest volume: Amazon US</p>
+</div>
+<!-- Stat 4 -->
+<div class="glass-card rounded-xl p-card-padding flex flex-col gap-stack-sm glow-hover transition-all relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-error-container/10 to-transparent pointer-events-none"></div>
+<div class="flex justify-between items-center relative z-10">
+<span class="font-label-mono text-label-mono text-on-surface-variant uppercase">Avoided Bans</span>
+<span class="material-symbols-outlined text-danger text-[20px]">gpp_bad</span>
+</div>
+<div class="flex items-end gap-2 mt-1 relative z-10">
+<span class="font-headline-lg text-headline-lg text-on-surface">3</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mb-1">Last 7 days</span>
+</div>
+<p class="font-body-sm text-body-sm text-error mt-2 relative z-10">2 velocity triggers blocked</p>
+</div>
+</div>
+<!-- Bento Grid Main Content -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Left Column (Safety & Risk) -->
+<div class="lg:col-span-7 flex flex-col gap-gutter">
+<!-- Account Health Monitor -->
+<div class="glass-card rounded-xl p-card-padding">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-headline-md text-headline-md text-on-surface">Account Health Monitor</h3>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<!-- eBay -->
+<div class="bg-surface-container-low rounded-lg p-4 border border-glass-stroke">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded bg-blue-600/20 flex items-center justify-center text-blue-400 font-bold text-[10px]">eB</div>
+<span class="font-body-md text-body-md font-medium">eBay Store 1</span>
+</div>
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-body-sm font-body-sm">
+<span class="text-on-surface-variant">Late Ship</span>
+<span class="text-on-surface">0.2%</span>
+</div>
+<div class="flex justify-between text-body-sm font-body-sm">
+<span class="text-on-surface-variant">Defect Rate</span>
+<span class="text-on-surface">0.1%</span>
+</div>
+</div>
+</div>
+<!-- Amazon -->
+<div class="bg-surface-container-low rounded-lg p-4 border border-glass-stroke relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-transparent"></div>
+<div class="flex items-center justify-between mb-3 relative z-10">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded bg-amber-600/20 flex items-center justify-center text-amber-400 font-bold text-[10px]">AMZ</div>
+<span class="font-body-md text-body-md font-medium">Amazon US</span>
+</div>
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+</div>
+<div class="space-y-2 relative z-10">
+<div class="flex justify-between text-body-sm font-body-sm">
+<span class="text-on-surface-variant">Cancel Rate</span>
+<span class="text-tertiary">1.8%</span>
+</div>
+<div class="flex justify-between text-body-sm font-body-sm">
+<span class="text-on-surface-variant">ODR</span>
+<span class="text-on-surface">0.3%</span>
+</div>
+</div>
+</div>
+<!-- FB -->
+<div class="bg-surface-container-low rounded-lg p-4 border border-glass-stroke">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded bg-blue-500/20 flex items-center justify-center text-blue-400 font-bold text-[10px]">FB</div>
+<span class="font-body-md text-body-md font-medium">FB Shop</span>
+</div>
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-body-sm font-body-sm">
+<span class="text-on-surface-variant">Policy Viol.</span>
+<span class="text-on-surface">0</span>
+</div>
+<div class="flex justify-between text-body-sm font-body-sm">
+<span class="text-on-surface-variant">Chargebacks</span>
+<span class="text-on-surface">0</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Risk Velocity Chart -->
+<div class="glass-card rounded-xl p-card-padding min-h-[300px] flex flex-col">
+<div class="flex justify-between items-center mb-4">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Risk Velocity</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">7-Day automated action frequency vs safe baselines.</p>
+</div>
+<div class="flex gap-2">
+<button class="px-2 py-1 rounded bg-surface-container border border-glass-stroke text-label-mono font-label-mono text-on-surface text-[10px] uppercase">7D</button>
+<button class="px-2 py-1 rounded bg-transparent border border-transparent text-label-mono font-label-mono text-on-surface-variant hover:text-on-surface text-[10px] uppercase">30D</button>
+</div>
+</div>
+<!-- Placeholder for Chart -->
+<div class="flex-1 bg-surface-container-lowest rounded-lg border border-glass-stroke relative flex items-end p-4 gap-2">
+<!-- Fake Bars -->
+<div class="w-full h-[40%] bg-primary/20 rounded-t border-t border-primary/50 relative group">
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-surface text-label-mono text-[10px] px-1 rounded border border-glass-stroke">Mon</div>
+</div>
+<div class="w-full h-[30%] bg-primary/20 rounded-t border-t border-primary/50"></div>
+<div class="w-full h-[60%] bg-primary/20 rounded-t border-t border-primary/50"></div>
+<div class="w-full h-[85%] bg-tertiary/20 rounded-t border-t border-tertiary/50 relative">
+<!-- Anomaly -->
+<div class="absolute -top-2 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-tertiary shadow-[0_0_8px_rgba(255,185,95,0.8)]"></div>
+</div>
+<div class="w-full h-[45%] bg-primary/20 rounded-t border-t border-primary/50"></div>
+<div class="w-full h-[25%] bg-primary/20 rounded-t border-t border-primary/50"></div>
+<div class="w-full h-[35%] bg-primary/20 rounded-t border-t border-primary/50"></div>
+</div>
+</div>
+</div>
+<!-- Right Column (Repricing & Logic) -->
+<div class="lg:col-span-5 flex flex-col gap-gutter">
+<!-- Automated Guardrails -->
+<div class="glass-card rounded-xl p-card-padding">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-headline-md text-headline-md text-on-surface">Automated Guardrails</h3>
+<button class="text-primary hover:text-primary-container transition-colors text-body-sm font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">add</span> New Rule
+                            </button>
+</div>
+<div class="space-y-3">
+<!-- Rule 1 -->
+<div class="bg-surface-container rounded-lg p-3 border border-glass-stroke flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-primary-container/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-[18px]">trending_down</span>
+</div>
+<div>
+<h4 class="font-body-sm text-body-sm font-medium text-on-surface">Always Undercut BB</h4>
+<p class="font-label-mono text-label-mono text-on-surface-variant mt-0.5">Margin floor: 15%</p>
+</div>
+</div>
+<!-- Toggle -->
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-9 h-5 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-on-surface after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<!-- Rule 2 -->
+<div class="bg-surface-container rounded-lg p-3 border border-glass-stroke flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-error/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-error text-[18px]">lock</span>
+</div>
+<div>
+<h4 class="font-body-sm text-body-sm font-medium text-on-surface">Emergency Stock Lock</h4>
+<p class="font-label-mono text-label-mono text-on-surface-variant mt-0.5">Trigger: Source &lt; 3 qty</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-9 h-5 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-on-surface after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<!-- Rule 3 -->
+<div class="bg-surface-container rounded-lg p-3 border border-glass-stroke flex items-center justify-between opacity-60">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-surface-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">speed</span>
+</div>
+<div>
+<h4 class="font-body-sm text-body-sm font-medium text-on-surface">Max Velocity Cap</h4>
+<p class="font-label-mono text-label-mono text-on-surface-variant mt-0.5">Orders &gt; 50/day</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-9 h-5 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-on-surface after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+</div>
+</div>
+<!-- Underground Mode Settings -->
+<div class="glass-card rounded-xl p-card-padding relative overflow-hidden border-primary/30">
+<div class="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none"></div>
+<div class="flex items-center gap-2 mb-4 relative z-10">
+<span class="material-symbols-outlined text-primary">visibility_off</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">Stealth Mode</h3>
+</div>
+<div class="space-y-4 relative z-10">
+<div class="flex justify-between items-center">
+<div>
+<span class="font-body-sm text-body-sm text-on-surface block">Residential IP Rotation</span>
+<span class="font-label-mono text-label-mono text-on-surface-variant text-[10px]">Cycle every 15 mins</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-9 h-5 bg-surface-container-highest rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-[2px] after:left-[2px] after:bg-on-surface after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<div class="flex justify-between items-center">
+<div>
+<span class="font-body-sm text-body-sm text-on-surface block">Human-Like Jitter</span>
+<span class="font-label-mono text-label-mono text-on-surface-variant text-[10px]">Add 2-15s delay to API calls</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-9 h-5 bg-surface-container-highest rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-[2px] after:left-[2px] after:bg-on-surface after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+</div>
+</div>
+<!-- Recent Safety Events -->
+<div class="glass-card rounded-xl p-card-padding flex-1 flex flex-col">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-headline-md text-headline-md text-on-surface">Event Log</h3>
+<button class="text-on-surface-variant hover:text-primary transition-colors text-[12px] font-label-mono uppercase">View All</button>
+</div>
+<div class="space-y-0 flex-1 overflow-y-auto pr-2 -mr-2">
+<!-- Log Item 1 -->
+<div class="py-3 border-b border-glass-stroke last:border-0 flex gap-3">
+<div class="mt-0.5">
+<div class="w-2 h-2 rounded-full bg-tertiary"></div>
+</div>
+<div>
+<p class="font-body-sm text-body-sm text-on-surface"><span class="font-medium text-tertiary">Price Spike Blocked</span> - SKU: AMZ-992</p>
+<p class="font-label-mono text-[10px] text-on-surface-variant mt-1">Source price jumped 45%. Item delisted temporarily. <span class="text-on-surface ml-2">10:42 AM</span></p>
+</div>
+</div>
+<!-- Log Item 2 -->
+<div class="py-3 border-b border-glass-stroke last:border-0 flex gap-3">
+<div class="mt-0.5">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+</div>
+<div>
+<p class="font-body-sm text-body-sm text-on-surface"><span class="font-medium text-secondary">Stock Restored</span> - SKU: eB-104</p>
+<p class="font-label-mono text-[10px] text-on-surface-variant mt-1">Source restocked. Listing re-activated at $24.99. <span class="text-on-surface ml-2">09:15 AM</span></p>
+</div>
+</div>
+<!-- Log Item 3 -->
+<div class="py-3 border-b border-glass-stroke last:border-0 flex gap-3">
+<div class="mt-0.5">
+<div class="w-2 h-2 rounded-full bg-error"></div>
+</div>
+<div>
+<p class="font-body-sm text-body-sm text-on-surface"><span class="font-medium text-error">IP Block Detected</span> - Proxy Node 4</p>
+<p class="font-label-mono text-[10px] text-on-surface-variant mt-1">Target: Walmart. Auto-rotated to Node 5 successfully. <span class="text-on-surface ml-2">08:03 AM</span></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

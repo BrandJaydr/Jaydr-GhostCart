@@ -1,7 +1,8 @@
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { z } from 'zod';
-import { db, DEV_TENANT_ID } from '@/lib/db/index';
+import { withTenant } from '@/lib/db/index';
+import { withAuthRoute } from '@/lib/middleware/auth-guard';
 
 /**
  * Schema for feedback submission
@@ -17,7 +18,7 @@ const FeedbackSchema = z.object({
  * POST /api/feedback
  * Submit feedback
  */
-export async function POST(req: NextRequest) {
+export const POST = withAuthRoute(async (req: NextRequest, actor) => {
   let body: unknown;
   try {
     body = await req.json();
@@ -31,27 +32,27 @@ export async function POST(req: NextRequest) {
   }
 
   const { category, title, description, priority = 'medium' } = parseResult.data;
-
-  // @agent:forge Replace this with the tenantId and userId resolved from the
-  // authenticated session once next-auth is configured.
-  const tenantId = DEV_TENANT_ID;
-  const userId = '00000000-0000-0000-0000-000000000001';
+  const { tenantId, userId } = actor;
 
   try {
-    const result = await db.query(
-      `INSERT INTO feedback (tenant_id, user_id, category, title, description, priority, status)
-       VALUES ($1, $2, $3, $4, $5, $6, 'new')
-       RETURNING id, created_at`,
-      [tenantId, userId, category, title, description, priority],
-    );
+    const result = await withTenant(tenantId, async (client) => {
+      const insertResult = await client.query(
+        `INSERT INTO feedback (tenant_id, user_id, category, title, description, priority, status)
+         VALUES ($1, $2, $3, $4, $5, $6, 'new')
+         RETURNING id, created_at`,
+        [tenantId, userId, category, title, description, priority],
+      );
 
-    // Increment feedback count for beta user
-    await db.query(
-      `UPDATE beta_users
-       SET feedback_count = feedback_count + 1
-       WHERE tenant_id = $1 AND user_id = $2`,
-      [tenantId, userId],
-    );
+      // Increment feedback count for beta user
+      await client.query(
+        `UPDATE beta_users
+         SET feedback_count = feedback_count + 1
+         WHERE tenant_id = $1 AND user_id = $2`,
+        [tenantId, userId],
+      );
+
+      return insertResult;
+    });
 
     return apiSuccess({
       id: result.rows[0].id,
@@ -65,46 +66,46 @@ export async function POST(req: NextRequest) {
     console.error('[api/feedback] POST error:', err);
     return apiError('Failed to submit feedback', null, 500);
   }
-}
+});
 
 /**
  * GET /api/feedback
  * List feedback for current tenant
  */
-export async function GET(req: NextRequest) {
+export const GET = withAuthRoute(async (req: NextRequest, actor) => {
   const url = new URL(req.url);
   const category = url.searchParams.get('category');
   const status = url.searchParams.get('status');
-
-  // @agent:forge Replace with session tenantId
-  const tenantId = DEV_TENANT_ID;
+  const { tenantId } = actor;
 
   try {
-    const conditions: string[] = ['tenant_id = $1'];
-    const values: unknown[] = [tenantId];
-    let paramIndex = 2;
+    const result = await withTenant(tenantId, async (client) => {
+      const conditions: string[] = ['tenant_id = $1'];
+      const values: unknown[] = [tenantId];
+      let paramIndex = 2;
 
-    if (category) {
-      conditions.push(`category = $${paramIndex}`);
-      values.push(category);
-      paramIndex++;
-    }
+      if (category) {
+        conditions.push(`category = $${paramIndex}`);
+        values.push(category);
+        paramIndex++;
+      }
 
-    if (status) {
-      conditions.push(`status = $${paramIndex}`);
-      values.push(status);
-      paramIndex++;
-    }
+      if (status) {
+        conditions.push(`status = $${paramIndex}`);
+        values.push(status);
+        paramIndex++;
+      }
 
-    const whereClause = conditions.join(' AND ');
+      const whereClause = conditions.join(' AND ');
 
-    const result = await db.query(
-      `SELECT id, category, title, description, priority, status, created_at, updated_at
-       FROM feedback
-       WHERE ${whereClause}
-       ORDER BY created_at DESC`,
-      values,
-    );
+      return await client.query(
+        `SELECT id, category, title, description, priority, status, created_at, updated_at
+         FROM feedback
+         WHERE ${whereClause}
+         ORDER BY created_at DESC`,
+        values,
+      );
+    });
 
     const feedback = result.rows.map((row) => ({
       id: row.id,
@@ -122,4 +123,4 @@ export async function GET(req: NextRequest) {
     console.error('[api/feedback] GET error:', err);
     return apiError('Failed to fetch feedback', null, 500);
   }
-}
+});

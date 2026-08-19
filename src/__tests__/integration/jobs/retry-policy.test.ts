@@ -16,7 +16,7 @@ describe('Job Management', () => {
   describe('error categorization', () => {
     it('should categorize transient errors', async () => {
       const result = await db.query(
-        'SELECT jobs.categorize_error($1) as category',
+        'SELECT categorize_error($1) as category',
         ['Connection timeout after 30s'],
       );
 
@@ -25,7 +25,7 @@ describe('Job Management', () => {
 
     it('should categorize rate limit errors as transient', async () => {
       const result = await db.query(
-        'SELECT jobs.categorize_error($1) as category',
+        'SELECT categorize_error($1) as category',
         ['Rate limit exceeded (429)'],
       );
 
@@ -34,7 +34,7 @@ describe('Job Management', () => {
 
     it('should categorize permanent errors', async () => {
       const result = await db.query(
-        'SELECT jobs.categorize_error($1) as category',
+        'SELECT categorize_error($1) as category',
         ['Invalid authentication credentials'],
       );
 
@@ -43,7 +43,7 @@ describe('Job Management', () => {
 
     it('should categorize validation errors as permanent', async () => {
       const result = await db.query(
-        'SELECT jobs.categorize_error($1) as category',
+        'SELECT categorize_error($1) as category',
         ['Validation failed: title is required'],
       );
 
@@ -52,7 +52,7 @@ describe('Job Management', () => {
 
     it('should categorize unknown errors', async () => {
       const result = await db.query(
-        'SELECT jobs.categorize_error($1) as category',
+        'SELECT categorize_error($1) as category',
         ['Unknown error occurred'],
       );
 
@@ -74,7 +74,7 @@ describe('Job Management', () => {
 
       // Schedule retry
       const retryResult = await db.query(
-        'SELECT jobs.schedule_retry($1) as next_retry',
+        'SELECT schedule_retry($1) as next_retry',
         [jobId],
       );
 
@@ -103,7 +103,7 @@ describe('Job Management', () => {
       const jobId = jobResult.rows[0].id;
 
       await expect(
-        db.query('SELECT jobs.schedule_retry($1) as next_retry', [jobId]),
+        db.query('SELECT schedule_retry($1) as next_retry', [jobId]),
       ).rejects.toThrow('Max retry attempts exceeded');
     });
 
@@ -118,7 +118,7 @@ describe('Job Management', () => {
       const jobId = jobResult.rows[0].id;
 
       await expect(
-        db.query('SELECT jobs.schedule_retry($1) as next_retry', [jobId]),
+        db.query('SELECT schedule_retry($1) as next_retry', [jobId]),
       ).rejects.toThrow('Job has been killed');
     });
   });
@@ -135,7 +135,7 @@ describe('Job Management', () => {
       const jobId = jobResult.rows[0].id;
 
       const result = await db.query(
-        'SELECT jobs.kill_job($1, NULL) as killed',
+        'SELECT kill_job($1, NULL) as killed',
         [jobId],
       );
 
@@ -178,7 +178,7 @@ describe('Job Management', () => {
       );
 
       const result = await db.query(
-        'SELECT jobs.kill_all_tenant_jobs($1, NULL) as killed',
+        'SELECT kill_all_tenant_jobs($1, NULL) as killed',
         ['00000000-0000-0000-0000-000000000001'],
       );
 

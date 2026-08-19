@@ -1,14 +1,17 @@
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { ProductListQuerySchema, ProductImportSchema } from '@/lib/validation/schemas';
-import { db, DEV_TENANT_ID } from '@/lib/db/index';
+import { withTenant } from '@/lib/db/index';
 import { checkDuplicateSourceUrl } from '@/lib/api/idempotency';
+import { withAuthRoute, requirePermission, Permission } from '@/lib/middleware/auth-guard';
 
 /**
  * GET /api/products
  * List products for the authenticated tenant with pagination and filtering.
  */
-export async function GET(req: NextRequest) {
+export const GET = withAuthRoute(async (req: NextRequest, actor) => {
+  await requirePermission(actor, Permission.PRODUCTS_READ);
+
   const url = new URL(req.url);
   const queryParams = Object.fromEntries(url.searchParams.entries());
 
@@ -19,10 +22,7 @@ export async function GET(req: NextRequest) {
 
   const { page, limit, supplierId } = parseResult.data;
   const offset = (page - 1) * limit;
-
-  // @agent:forge Replace this with the tenantId resolved from the
-  // authenticated session once next-auth is configured.
-  const tenantId = DEV_TENANT_ID;
+  const tenantId = actor.tenantId;
 
   try {
     // Build WHERE clause for optional filters
@@ -41,29 +41,35 @@ export async function GET(req: NextRequest) {
 
     // Performance optimization: Combine data query and count query into single CTE
     // to reduce database round trips from 2 to 1
-    const result = await db.query(
-      `WITH product_data AS (
-        SELECT
-          p.id, p.tenant_id, p.title, p.description, p.identifiers, p.primary_image_url,
-          p.additional_image_urls, p.supplier_price_cents, p.currency, p.availability,
-          p.source_url, ps.supplier_id, p.confidence, p.imported_at, p.last_refreshed_at,
-          p.review_status, p.import_duration_ms, p.normalization_completeness,
-          p.user_corrections
-         FROM products p
-         LEFT JOIN product_sources ps ON ps.product_id = p.id
-         WHERE ${whereClause}
-         ORDER BY p.imported_at DESC
-         LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
-      ),
-      total_count AS (
-        SELECT COUNT(*) as total
-        FROM products p
-        LEFT JOIN product_sources ps ON ps.product_id = p.id
-        WHERE ${whereClause}
+    const result = await withTenant(tenantId, (tx) =>
+      tx.query(
+        `WITH product_data AS (
+          SELECT
+            p.id, p.tenant_id, p.title, p.description, p.identifiers, p.primary_image_url,
+            p.additional_image_urls, p.supplier_price_cents, p.currency, p.availability,
+            p.source_url, ps.supplier_id, p.confidence, p.imported_at, p.last_refreshed_at,
+            p.review_status, p.import_duration_ms, p.normalization_completeness,
+            p.user_corrections
+           FROM products p
+           LEFT JOIN product_sources ps ON ps.product_id = p.id
+           WHERE ${whereClause}
+           ORDER BY p.imported_at DESC
+           LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+        ),
+        total_count AS (
+          SELECT COUNT(*) as total
+          FROM products p
+          LEFT JOIN product_sources ps ON ps.product_id = p.id
+          WHERE ${whereClause}
+        )
+        SELECT * FROM product_data, total_count`,
+        [...values, limit, offset],
       )
-      SELECT * FROM product_data, total_count`,
-      [...values, limit, offset],
     );
+
+    if (result.rows.length === 0) {
+      return apiSuccess([], { page, limit, total: 0 });
+    }
 
     const total = parseInt(result.rows[0].total as string, 10);
 
@@ -94,7 +100,7 @@ export async function GET(req: NextRequest) {
     console.error('[api/products] GET error:', err);
     return apiError('Failed to fetch products', null, 500);
   }
-}
+});
 
 /**
  * POST /api/products
@@ -105,7 +111,9 @@ export async function GET(req: NextRequest) {
  * worker (`npm run worker`), which resolves the supplier adapter, normalizes
  * the product to a CanonicalProduct, and persists it to PostgreSQL.
  */
-export async function POST(req: NextRequest) {
+export const POST = withAuthRoute(async (req: NextRequest, actor) => {
+  await requirePermission(actor, Permission.PRODUCTS_WRITE);
+
   let body: unknown;
   try {
     body = await req.json();
@@ -120,12 +128,7 @@ export async function POST(req: NextRequest) {
 
   const { url, supplierId, idempotencyKey } = parseResult.data;
   const fallbackJobId = `job_${Date.now()}`;
-
-  // @agent:forge (Stage 2) Replace this with the tenantId resolved from the
-  // authenticated session once next-auth is configured.
-  // @agent:archivist Seeded dev tenant UUID (migration 0003) — lets the worker
-  // persist under the tenants FK + RLS instead of the old 'tenant_demo' string.
-  const tenantId = '00000000-0000-0000-0000-000000000001';
+  const tenantId = actor.tenantId;
 
   // ── Idempotency guard (API layer) ──────────────────────────────────────────
   // Fast 409 feedback for duplicate source_url within this tenant.
@@ -166,4 +169,4 @@ export async function POST(req: NextRequest) {
     undefined,
     202,
   );
-}
+});

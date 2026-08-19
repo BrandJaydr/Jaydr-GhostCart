@@ -1,0 +1,12 @@
+node_modules
+.next
+out
+dist
+cli/node_modules
+cli/dist
+backups
+*.zip
+*.tar.gz
+.git
+.gemini
+.logs

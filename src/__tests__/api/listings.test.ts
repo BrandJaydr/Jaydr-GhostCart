@@ -14,6 +14,14 @@ vi.mock('@/lib/db/index.js', () => ({
   setTenantContextOn: vi.fn(async () => undefined),
 }));
 
+vi.mock('@/lib/middleware/resolve-actor', () => ({
+  resolveActor: vi.fn(async () => ({
+    userId: '00000000-0000-0000-0000-000000000001',
+    tenantId: '00000000-0000-0000-0000-000000000001',
+    role: 'owner',
+  })),
+}));
+
 const { GET: getListings, POST: postListings } = await import('@/app/api/listings/route');
 import { NextRequest } from 'next/server';
 

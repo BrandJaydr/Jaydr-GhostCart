@@ -24,18 +24,19 @@ supplier catalog management with major online marketplaces (eBay, Amazon SP-API,
 Marketplace, Etsy, Shopify). Core capabilities: multi-tenant catalog management,
 AI-assisted listing generation/optimization, real-time repricing guardrails, and audit logging.
 
-### Current Implementation Status: Stages 2–4 Verified Complete; Stage 5 Open
+### Current Implementation Status: Stage 5 Security Gates In Progress
 Per the [Production Blueprint and Delivery Guide](Docs/Production%20Blueprint%20and%20Delivery%20Guide.md),
 GhostCart follows a **Modular Monolith** delivery model, not an early microservices rollout.
-The current repository is in **Stages 2–4** (verified complete 2026-08; Stage 5 open). See §14/§15 for the verification log. Implemented:
+The current repository has commenced **Stage 5** security gates (Stages 2–4 verified complete 2026-08). See §14/§15 for the verification log. Implemented:
 
 - Real supplier adapter implementations (CSV, eBay)
 - Stock/price refresh system with change detection (migration 0009)
 - Margin calculation system (migration 0010)
 - Repricing system with guardrails (migration 0011)
 - AI-powered listing analysis and optimization
-- Enhanced RLS policies and audit trails
-- 14 database migrations (0001–0014)
+- Enhanced RLS policies and audit trails (including 0017 alert_events RLS)
+- 17 database migrations (0001–0017)
+- API route tenancy hardening and RBAC middleware (`withAuthRoute`, `withTenant`) for Products, Listings, and Jobs routes
 
 The Stage 1 thin vertical slice remains the foundation:
 > A signed-in merchant imports an approved supplier product, reviews normalized data and
@@ -113,6 +114,15 @@ Jaydr-GhostCart/
 ├── 📄  vitest.config.ts             Vitest config: jsdom env, setup file, v8 coverage.
 ├── 📄  README.md                    Project README (product vision, quickstart, AOP-CORE pipeline overview).
 │
+├── 📁  cli/                         Standalone TypeScript CLI app.
+│   ├── 📁  src/
+│   │   ├── 📁  commands/            Command modules (auth, products, listings, jobs, etc.).
+│   │   ├── 📁  ui/                  BBS-themed widgets (tables, borders, spinner).
+│   │   ├── 📄  api-client.ts        API fetch client with authorization bearer injection.
+│   │   ├── 📄  config.ts            Config manager for ~/.ghostcart/config.json.
+│   │   └── 📄  index.ts             Entry point mapping options to CLI commands.
+│   └── 📄  package.json             CLI dependencies & package configuration.
+│
 ├── 📁  Docs/                        Project documentation (see §10 for what is excluded).
 │   ├── 📄  Production Blueprint and Delivery Guide.md   ★ Core: architecture, stages, DoD, non-goals.
 │   ├── 📄  CHECK LIST AND FAQ.md    Marketing FAQ (NOT technical — reference only).
@@ -138,10 +148,17 @@ Jaydr-GhostCart/
 │   │   └── 📁  api/                  API route handlers (App Router endpoints).
 │   │       ├── 📁  health/
 │   │       │   └── 📄  route.ts    GET /api/health — returns {status:'ok'}, 200.
+│   │       ├── 📁  auth/
+│   │       │   ├── 📁  login/
+│   │       │   │   └── 📄  route.ts    POST /api/auth/login — credentials exchange for CLI (returns JWT token).
+│   │       │   └── 📁  keys/
+│   │       │       ├── 📄  route.ts    GET/POST /api/auth/keys — list and generate API keys.
+│   │       │       └── 📁  [id]/
+│   │       │           └── 📄  route.ts    GET/DELETE /api/auth/keys/[id] — retrieve or revoke key.
 │   │       ├── 📁  products/
-│   │       │   └── 📄  route.ts    GET/POST /api/products — stubs, return 501 (pending Atlas).
+│   │       │   └── 📄  route.ts    GET/POST /api/products — list and import products.
 │   │       └── 📁  listings/
-│   │           └── 📄  route.ts    GET/POST /api/listings — stubs, return 501 (pending Atlas).
+│   │           └── 📄  route.ts    GET/POST /api/listings — list and create listing drafts.
 │   │
 │   ├── 📁  __tests__/               Vitest unit/integration tests.
 │   │   ├── 📄  setup.ts            Test setup: imports @testing-library/jest-dom.
@@ -168,7 +185,12 @@ Jaydr-GhostCart/
 │   │       ├── 📄  0008_feature_flags.sql  Feature flag system.
 │   │       ├── 📄  0009_stock_price_refresh.sql  Stock/price refresh with change detection.
 │   │       ├── 📄  0010_margin_calculation.sql  Margin calculation system.
-│   │       └── 📄  0011_repricing_system.sql  Repricing with guardrails.
+│   │       ├── 📄  0011_repricing_system.sql  Repricing with guardrails.
+│   │       ├── 📄  0012_rate_limiting.sql  Rate limit definitions.
+│   │       ├── 📄  0013_dashboard_views.sql  Database views for dashboard metrics.
+│   │       ├── 📄  0014_review_state.sql  Manual corrections & review state workflow.
+│   │       ├── 📄  0015_alerts.sql  System health & DLQ alerts schema.
+│   │       └── 📄  0016_api_keys.sql  API keys schema for CLI & Agentic authentication.
 │   │
 │   ├── 📁  lib/                     Core application library.
 │   │   ├── 📁  db/
@@ -370,6 +392,26 @@ npx playwright test      # E2E (requires running dev server)
 
 **Note:** RLS policies, `CHECK` constraints on `listing_drafts.state`, and several indexes are marked as TODOs for @agent:archivist.
 
+### 8.5 Multi-Tenant Architecture & Authentication
+
+**Tenant ID vs User ID:**
+- **Tenant ID** (`DEV_TENANT_ID`): Represents an organization/business account (e.g., "Acme Corp"). All data is isolated by tenant using RLS policies. One tenant has multiple users.
+- **User ID**: Represents an individual person within a tenant (e.g., "john@acme.com"). Users belong to a tenant and have roles (owner, va, accountant).
+
+**DEV_TENANT_ID Purpose:**
+- Seeded development tenant from migration 0003
+- Temporary fallback until authentication is fully implemented
+- Should be replaced with session-derived tenant IDs in production
+- Currently hardcoded in 20+ API routes (ERR-016 security issue)
+
+**Correct Architecture:**
+- API routes should use session-derived tenant ID from authenticated user's session
+- User ID is separate and used for permissions/auditing within the tenant
+- The `resolveActor` middleware handles this correctly for CLI/API key auth
+
+**Security Note:**
+Hardcoded `DEV_TENANT_ID` in production routes breaks multi-tenant isolation and is a security risk. All API routes must extract tenant ID from authenticated session before Stage 5 deployment.
+
 ## 9. Key Design Contracts & Conventions
 
 - **Canonical models** (`src/lib/types/canonical.ts`) — ALL adapters normalize to `CanonicalProduct` / `ListingDraft`. External vendor payloads **must never** leak into the application layer.
@@ -455,6 +497,8 @@ These files exist in the repository but are **NOT relevant to the GhostCart appl
 | `docker-compose.yml` | Local dev stack: PostgreSQL 16, Redis 7, Next.js app container | ✅ |
 | `.env.example` | Environment variable template (DATABASE_URL, REDIS_URL, NEXTAUTH_SECRET, etc.) | ✅ |
 | `README.md` | Project overview, quickstart, architecture diagram, AOP-CORE agent pipeline | ✅ |
+| `.logs/vulnerabilities.md` | Security vulnerability registry and remediation checklist | ✅ |
+
 
 ### 12.2 Infrastructure / DevOps
 
@@ -480,8 +524,14 @@ These files exist in the repository but are **NOT relevant to the GhostCart appl
 | `src/db/migrations/0009_stock_price_refresh.sql` | Stock/price refresh with change detection | ✅ |
 | `src/db/migrations/0010_margin_calculation.sql` | Margin calculation system | ✅ |
 | `src/db/migrations/0011_repricing_system.sql` | Repricing with guardrails | ✅ |
-| `src/db/migrate.ts` | Migration runner; applies 14 migrations in order (0001–0014) | ✅ |
+| `src/db/migrations/0012_rate_limiting.sql` | Rate limit definitions | ✅ |
+| `src/db/migrations/0013_dashboard_views.sql` | Database views for dashboard metrics | ✅ |
+| `src/db/migrations/0014_review_state.sql` | Manual corrections & review state workflow | ✅ |
+| `src/db/migrations/0015_alerts.sql` | System health & DLQ alerts schema | ✅ |
+| `src/db/migrations/0016_api_keys.sql` | API keys schema for CLI & Agentic authentication | ✅ |
+| `src/db/migrate.ts` | Migration runner; applies all migrations in order (0001–0016) | ✅ |
 | `src/lib/db/index.ts` | PG pool; RLS helpers; DEV_TENANT_ID; SIGTERM drain | ✅ |
+
 
 ## 12. Critical File Inventory — Application Layers
 
@@ -502,12 +552,14 @@ These files exist in the repository but are **NOT relevant to the GhostCart appl
 
 ✅ **Resolved** (see §11 #1): `src/app/api/products/route.ts` now imports `mockProduct` from `@/lib/adapters/mock.adapter` and the fixture export exists in `mock.adapter.ts`.
 
-### 12.5.1 API Helpers
+### 12.5.1 API Helpers & Telemetry
 
 | File | Purpose | Production Readiness |
 |---|---|---|
 | `src/lib/api/response.ts` | API response helpers: `apiSuccess`, `apiError` | ✅ |
 | `src/lib/api/idempotency.ts` | Idempotency helpers: `checkDuplicateSourceUrl` (DB query with tenant scoping), `generateIdempotencyKey` (SHA-256 hash) — Hybrid duplicate detection (API layer 409 Conflict + DB UNIQUE constraint) | ✅ |
+| `src/lib/logger.ts` | Centralized structured logger with level formatting, production JSON, correlation context routing, and auto-redaction rules | ✅ |
+
 
 ## 13. Known Issues & Technical Debt (Stage 2 Investigation)
 
@@ -546,11 +598,12 @@ npm install vitest@4.1.10 next@14.2.35 bullmq@5.81.3 @playwright/test@1.62.1
 
 ### 13.3 Logging Inconsistencies (ERR-010)
 
-**Severity:** Medium
+**Severity:** Medium (✅ RESOLVED)
 
 50+ console.log/error/warn calls across src/. No structured logging framework. Worker uses console.warn for lifecycle events. API routes use console.error without correlation IDs.
 
-**Impact:** Violates Production Blueprint §3.3 requirement for "structured logs, error tracking, health checks, and correlation IDs." Production debugging becomes difficult.
+**Remediation:** Centralized structured logger implemented in `src/lib/logger.ts`. It provides JSON output in production, colorized text in development, auto-redacts sensitive parameters (like passwords, access tokens, client secrets), and tracks correlation IDs via `AsyncLocalStorage`.
+
 
 ### 13.4 Configuration Security (ERR-011)
 
@@ -610,6 +663,9 @@ The investigation identified 5 new architectural patterns documented in [`.logs/
 | **AI Services** | `/api/ai/analyze` | GET, POST | Analyze product for materials, quality, market potential; retrieve cached analysis | ✅ |
 | | `/api/ai/rewrite` | GET, POST | Generate AI-assisted listing rewrite with style options; retrieve cached rewrite | ✅ |
 | **Auth** | `/api/auth/[...nextauth]` | GET, POST | NextAuth session handler and credentials provider | ✅ |
+| | `/api/auth/login` | POST | Programmatic login endpoint for the CLI/agents (returns JWT token) | ✅ |
+| | `/api/auth/keys` | GET, POST | List active API keys or generate a new API key (returned raw once) | ✅ |
+| | `/api/auth/keys/[id]` | GET, DELETE | Retrieve metadata or revoke (soft-delete) a specific API key | ✅ |
 | **Dashboard** | `/api/dashboard/metrics` | GET | Get dashboard metrics (imports, listings, jobs, margin analysis) | ✅ |
 | **eBay** | `/api/ebay/authorize` | GET, POST | Initiate eBay OAuth 2.0 authorization flow; handle OAuth callback | ✅ |
 | | `/api/ebay/export/csv` | GET | Export listings to eBay-compatible CSV format | ✅ |
@@ -623,7 +679,7 @@ The investigation identified 5 new architectural patterns documented in [`.logs/
 | | `/api/repricing/pause` | GET, POST | Set global or tenant-specific pause state; get current pause state | ✅ |
 
 **Notes:**
-- All endpoints currently use DEV_TENANT_ID placeholder (marked with @agent:forge TODO comments for session integration)
+- Unified authentication resolved via `resolveActor()` which handles NextAuth session cookies (web UI) and Bearer API keys (CLI/Agents).
 - Most endpoints have proper Zod validation, error handling, and audit logging
 - Several endpoints have @agent:oracle TODO comments for test coverage
 
@@ -710,7 +766,7 @@ The investigation identified 5 new architectural patterns documented in [`.logs/
 - Connection: node-postgres `pg` `Pool` from `DATABASE_URL` (`src/lib/db/index.ts`).
 - **No Supabase** - no `supabase/` folder, no `supabase` dependency, no Supabase MCP project wired.
 - **No ORM** (no Prisma/Knex/TypeORM) - migrations are hand-written `.sql` files applied by a custom runner: `npm run db:migrate` -> `src/db/migrate.ts`.
-- Migrations: `src/db/migrations/0001_init.sql` ... `0015_alerts.sql` (15 total).
+- Migrations: `src/db/migrations/0001_init.sql` ... `0016_api_keys.sql` (16 total).
 - RLS: tenant scoping via `set_config('ghostcart.tenant_id', ..., true)` + `withTenant()` inside a txn.
 
 ### Queue / Workers
@@ -721,7 +777,7 @@ The investigation identified 5 new architectural patterns documented in [`.logs/
 - `docker-compose up -d db redis`, then `npm run db:migrate`.
 - Dev defaults (`.env.example`): `postgresql://ghostcart:ghostcart_dev@localhost:5432/ghostcart`, `redis://localhost:6379`.
 - **The live stack is RUNNING (2026-08):** `ghostcart_db` (postgres:16-alpine, healthy) + `ghostcart_redis` (redis:7); ports 5432/6379 mapped; `.env` is present and populated. Superuser role is `ghostcart` (not `postgres`).
-- **Schema-state caveat:** the live `ghostcart` DB was observed at `schema_migrations` = 3 (only 0001-0003 applied). Run `npm run db:migrate` to sync to 0001-0015 (includes the alerting table).
+- **Schema-state caveat:** the live `ghostcart` DB was observed at `schema_migrations` = 3 (only 0001-0003 applied). Run `npm run db:migrate` to sync to 0001-0016 (includes the alerting and API key tables).
 - **Host client tools:** `psql`/`pg_dump` are NOT installed on the Windows host - run backup/restore scripts where they exist (container/WSL/CI).
 
 ### Implications
@@ -737,10 +793,44 @@ The investigation identified 5 new architectural patterns documented in [`.logs/
 | 2 - Real import | Complete (8/8) | CSV + eBay adapters, normalization, traceability, queue/refresh workers, corrections/review, instrumentation, integration tests |
 | 3 - Listing and publish | Complete (9/9) | Drafts, AI rewrite, eBay submit + CSV export, state machine, webhook verification, job activity/retry/kill, contract + E2E tests, beta |
 | 4 - Reliability/automation | Complete (8/8) | Refresh, margin, repricing, dashboards, rate limiting, failure-injection, pause verification + ops hardening (backup/restore-test, secrets rotation, alerting via `src/lib/alerts` + `0015`, runbooks) |
-| 5 - Expand | Open (0/6) | No second marketplace, roles/invitations, event publication, orders, or analytics yet |
+| 5 - Expand | In Progress (1/9) | AuthGuardException & withAuthRoute resolved Next.js unhandled throw bug. Feedback, Alerts, and Metrics routes migrated to session tenant checks and enforced database RLS contexts. Tenancy isolation integration tests pass. |
 
-**Stage 4 is now complete.** Stage-4 ops hardening shipped: `scripts/backup-db.sh` / `restore-db.sh` / `restore-test.sh`, `rotate-secrets.sh` / `verify-secret.sh` / `encrypt-env.sh` / `decrypt-env.sh`, alerting (`src/lib/alerts` + migration 0015 + worker DLQ hooks + `/api/alerts`), runbook sections, and a GitHub Actions CI workflow running `db:restore:test`. Notifications (in-app / browser / SMS / Messenger) remain a separate track. **Next: Stage 5** (adapter contract + certification checklist, second marketplace, roles/invitations, etc.).
+**Stage 4 is complete.** Stage-4 ops hardening shipped. **Stage 5 has commenced.** Stage 5 Security Gates (Part 1 - Auth Guard Refactoring & Low-Risk Route Migration) has been completed and verified with type checking, lint checking, and tenancy isolation integration tests. **Next actions:** Migrate remaining high-risk API routes under the secure session context.
 
+
+## 16. CLI & Programmatic Authentication Architecture
+
+### 16.1 Design Concept
+The CLI (`ghostcart`) serves as a terminal-native lightweight dashboard. It connects to the shared Next.js backend as a client. It supports timing-safe session and key-based authentication, structured JSON outputs for scripts and AI agents, and direct hyperlinks to open complex operations in the browser.
+
+### 16.2 Key & Authentication Mechanics
+1. **API Keys:** Created via `POST /api/auth/keys`. They use a secure design:
+   - Prefix: A public 8-character identifier stored plain-text (e.g. `gc_a3f1c`).
+   - Hash: The key token is SHA-256 hashed and stored in `api_keys.key_hash`. The plain-text key is returned exactly once on creation.
+   - Headers: Verified via `Authorization: Bearer gc_<token>`.
+2. **Programmatic Login:** The `/api/auth/login` endpoint validates credentials and signs a JWT token using `NEXTAUTH_SECRET`. The CLI stores this JWT locally in `~/.ghostcart/config.json` with secure `0600` permissions.
+3. **Actor Resolution:** `resolveActor(request)` intercepts request contexts. It looks for a Bearer token first, validating it against `api_keys`. If absent, it reads the NextAuth cookie session.
+
+### 16.3 CLI Tool Structure
+- Code resides in the `/cli/` root folder. It is built as a separate TypeScript/Node project.
+- Excluded from the main web application's compilation context (`tsconfig.json`) to prevent package resolution conflicts.
+- Commands use `commander` for definition, `chalk` for themed colors, and `@inquirer/prompts` for secure inputs.
+- All list commands support `--json` output, making the tool agentic-friendly for integration into platforms like Windsurf, Cursor, n8n, etc.
+
+### 16.4 Installation & Running
+1. **Navigate to the CLI directory:**
+   `cd cli`
+2. **Install dependencies:**
+   `npm install`
+3. **Build the CLI project:**
+   `npm run build`
+4. **Register CLI globally (optional):**
+   `npm link`
+5. **Run the commands:**
+   - Locally: `node dist/index.js <command>`
+   - Globally (if linked): `ghostcart <command>`
+
+---
 
 ## 13. Quick Reference: Development Setup
 
@@ -753,7 +843,7 @@ The investigation identified 5 new architectural patterns documented in [`.logs/
 7. **Lint:** `npm run lint` (zero warnings enforced)
 8. **Type check:** `npx tsc --noEmit` (strict mode)
 
-> **Note:** Apply the schema with `npm run db:migrate` (runner in `src/db/migrate.ts`). Requires `DATABASE_URL`; applies migrations `0001 → 0014` in order, each in a transaction.
+> **Note:** Apply the schema with `npm run db:migrate` (runner in `src/db/migrate.ts`). Requires `DATABASE_URL`; applies migrations `0001 → 0016` in order, each in a transaction.
 
 <!-- END_OF_WIKI -->
 

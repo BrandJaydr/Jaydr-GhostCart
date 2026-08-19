@@ -195,7 +195,7 @@ describe('CSV Adapter Integration Tests', () => {
         
         const result = await customAdapter.validateConnection();
         expect(result.valid).toBe(false);
-        expect(result.reason).toContain('missing required columns');
+        expect(result.reason?.toLowerCase()).toContain('missing required columns');
       } finally {
         if (prev === undefined) delete process.env.CSV_FEED_URL;
         else process.env.CSV_FEED_URL = prev;

@@ -1,8 +1,8 @@
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { z } from 'zod';
-import { calculateMargin, getFeeStructures, type MarginInput } from '@/lib/margin/calculator';
-import { DEV_TENANT_ID } from '@/lib/db/index';
+import { calculateMargin, getFeeStructures } from '@/lib/margin/calculator';
+import { withAuthRoute, requirePermission, Permission } from '@/lib/middleware/auth-guard';
 
 /**
  * Schema for margin calculation request
@@ -22,7 +22,9 @@ const MarginCalculationSchema = z.object({
  * POST /api/listings/calculate-margin
  * Calculate margin for a listing with full cost breakdown
  */
-export async function POST(req: NextRequest) {
+export const POST = withAuthRoute(async (req: NextRequest, actor) => {
+  await requirePermission(actor, Permission.LISTINGS_READ);
+
   let body: unknown;
   try {
     body = await req.json();
@@ -36,10 +38,7 @@ export async function POST(req: NextRequest) {
   }
 
   const input = parseResult.data;
-
-  // @agent:forge Replace this with the tenantId resolved from the
-  // authenticated session once next-auth is configured.
-  const tenantId = input.tenantId || DEV_TENANT_ID;
+  const tenantId = actor.tenantId;
 
   try {
     const marginResult = await calculateMargin({
@@ -55,13 +54,15 @@ export async function POST(req: NextRequest) {
     console.error('[api/listings/calculate-margin] error:', err);
     return apiError('Failed to calculate margin', null, 500);
   }
-}
+});
 
 /**
- * GET /api/fee-structures
+ * GET /api/fee-structures (physically /api/listings/calculate-margin GET)
  * List fee structures for a marketplace
  */
-export async function GET(req: NextRequest) {
+export const GET = withAuthRoute(async (req: NextRequest, actor) => {
+  await requirePermission(actor, Permission.LISTINGS_READ);
+
   const url = new URL(req.url);
   const marketplace = url.searchParams.get('marketplace');
 
@@ -77,4 +78,4 @@ export async function GET(req: NextRequest) {
     console.error('[api/fee-structures] error:', err);
     return apiError('Failed to fetch fee structures', null, 500);
   }
-}
+});

@@ -44,6 +44,8 @@ Design GhostCart as a calm operations workspace, not a marketing dashboard:
 3. **Activate tokens.** Add and import one global CSS entry point with semantic color, spacing, typography, focus-ring, dark-mode, and reduced-motion tokens. Map HeroUI theme values to these tokens; do not scatter raw Tailwind colors in components.
 4. **Certify one vertical slice.** Build only sign-in → import → product review → listing draft, with loading, empty, validation, error, and success states. Verify desktop, 768px tablet, and 375px mobile behavior; keyboard-only navigation; and screen-reader labels.
 5. **Expand by workflow, not by component inventory.** Build products/listings/jobs after the first slice works against real API states. A component is promoted into the owned layer only after it is used twice or represents a core domain pattern.
+6. **Harden UI/UX Interactions and Processing Isolation.** Ensure all navigation elements utilize pure CSS hovers (eliminating state-driven re-renders). Implement click-based panel drawer toggling (preventing hover collapses) and stage-based progress visualization (`SmartLoading` pattern) for long-running imports. Enforce RLS-backed token safety (OAuth Valet Key proxying) and isolate execution to Layer 3 BullMQ background workers.
+
 
 ## Definition of done for the shell
 

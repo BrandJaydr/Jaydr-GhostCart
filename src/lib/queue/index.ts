@@ -50,3 +50,50 @@ export const listingQueue = new Queue('listing.submit', {
     removeOnFail: { age: 7 * 24 * 3600 },
   },
 });
+
+/** Queue for product refresh jobs — enqueued by on-demand refresh or scheduled sync */
+export const refreshQueue = new Queue('product.refresh', {
+  connection: redis,
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: {
+      type: 'exponential',
+      delay: 2_000,
+    },
+    removeOnComplete: { age: 24 * 3600 },
+    removeOnFail: { age: 7 * 24 * 3600 },
+  },
+});
+
+/** Queue for automated periodic sync scheduling */
+export const syncSchedulerQueue = new Queue('product.sync_scheduler', {
+  connection: redis,
+  defaultJobOptions: {
+    attempts: 2,
+    backoff: { type: 'fixed', delay: 10_000 },
+    removeOnComplete: { count: 100 },
+    removeOnFail: { count: 100 },
+  },
+});
+
+/**
+ * Register repeatable periodic sync cron
+ */
+export async function registerRepeatableSyncJobs(): Promise<void> {
+  try {
+    const pattern = process.env.SYNC_INTERVAL_CRON || '*/30 * * * *';
+    await syncSchedulerQueue.add(
+      'schedule-active-sync',
+      { timestamp: Date.now() },
+      {
+        repeat: {
+          pattern,
+        },
+        jobId: 'product-sync-scheduler-cron',
+      },
+    );
+  } catch (err) {
+    console.error('[queue] Failed to register repeatable sync jobs:', err);
+  }
+}
+

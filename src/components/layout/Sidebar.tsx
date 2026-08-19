@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Settings, Package, FileText, Clock, DollarSign, Store, Factory, LayoutDashboard } from 'lucide-react';
+import { Tooltip, Button } from '@heroui/react';
+import { Settings, Package, FileText, Clock, DollarSign, Store, Factory, LayoutDashboard, Upload, Menu } from 'lucide-react';
 
 export interface SidebarSection {
   title: string;
@@ -17,10 +18,10 @@ export interface SidebarItem {
 
 export interface SidebarProps {
   isCollapsed?: boolean;
-  sections?: SidebarSection[];
+  onToggle?: () => void;
 }
 
-export function Sidebar({ isCollapsed = false }: SidebarProps) {
+export function Sidebar({ isCollapsed = false, onToggle }: SidebarProps) {
   const pathname = usePathname();
 
   const sections: SidebarSection[] = [
@@ -28,6 +29,7 @@ export function Sidebar({ isCollapsed = false }: SidebarProps) {
       title: 'Main',
       items: [
         { label: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
+        { label: 'Import', href: '/import', icon: <Upload className="w-5 h-5" /> },
         { label: 'Products', href: '/products', icon: <Package className="w-5 h-5" /> },
         { label: 'Listings', href: '/listings', icon: <FileText className="w-5 h-5" /> },
       ],
@@ -50,46 +52,73 @@ export function Sidebar({ isCollapsed = false }: SidebarProps) {
   ];
 
   return (
-    <nav className="flex flex-col h-full bg-surface border-r border-border">
-      {/* Brand */}
-      <div className="p-4 border-b border-border">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-primary-500 flex items-center justify-center text-white font-bold">
-            G
-          </div>
-          {!isCollapsed && (
-            <span className="font-bold text-lg text-foreground">GhostCart</span>
-          )}
-        </div>
+    <nav className="flex flex-col h-full bg-transparent">
+      {/* Brand & Toggle */}
+      <div className="p-4 flex items-center h-16 shrink-0 mt-4">
+        <Button
+          isIconOnly
+          variant="light"
+          onPress={onToggle}
+          aria-label="Toggle sidebar"
+          className="mr-2 text-foreground"
+          radius="full"
+        >
+          <Menu className="w-5 h-5" />
+        </Button>
+        
+        {!isCollapsed && (
+          <span className="font-bold text-lg text-foreground flex-shrink-0 tracking-tight">GhostCart</span>
+        )}
       </div>
 
       {/* Navigation Items */}
-      <div className="flex-1 overflow-y-auto py-4">
+      <div className="flex-1 overflow-y-auto py-6 overflow-x-hidden">
         {sections.map((section) => (
-          <div key={section.title} className="mb-6">
+          <div key={section.title} className="mb-8">
             {!isCollapsed && (
-              <div className="px-4 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <div className="px-6 mb-3 text-xs font-bold text-muted-foreground uppercase tracking-widest">
                 {section.title}
               </div>
             )}
-            {section.items.map((item) => {
-              const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-3 px-4 py-2 mx-2 rounded-lg transition-colors ${
-                    isActive
-                      ? 'bg-primary-50 text-primary-700 font-medium'
-                      : 'text-muted-foreground hover:bg-surface-elevated hover:text-foreground'
-                  }`}
-                  aria-label={item.label}
-                >
-                  {item.icon}
-                  {!isCollapsed && <span>{item.label}</span>}
-                </Link>
-              );
-            })}
+            <div className="space-y-2">
+              {section.items.map((item) => {
+                const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                
+                const linkContent = (
+                  <Link
+                    href={item.href}
+                    className={`flex items-center gap-4 mx-4 rounded-xl transition-all duration-300 ${
+                      isCollapsed ? 'justify-center p-3' : 'px-4 py-3'
+                    } ${
+                      isActive
+                        ? 'bg-primary-500 text-white font-medium shadow-md shadow-primary-500/20'
+                        : 'text-muted-foreground hover:bg-surface hover:text-foreground hover:shadow-sm'
+                    }`}
+                    aria-label={item.label}
+                  >
+                    {item.icon}
+                    {!isCollapsed && <span>{item.label}</span>}
+                  </Link>
+                );
+
+                return isCollapsed ? (
+                  <Tooltip
+                    key={item.href}
+                    content={item.label}
+                    placement="right"
+                    showArrow={true}
+                    offset={18}
+                    classNames={{
+                      content: "bg-primary-600 text-white border border-primary-700 shadow-lg text-xs rounded-lg px-3 py-1.5",
+                    }}
+                  >
+                    {linkContent}
+                  </Tooltip>
+                ) : (
+                  <div key={item.href}>{linkContent}</div>
+                );
+              })}
+            </div>
           </div>
         ))}
       </div>

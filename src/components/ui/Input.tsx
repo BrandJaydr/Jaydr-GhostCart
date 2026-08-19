@@ -36,6 +36,8 @@ export interface InputProps extends Omit<HeroUIInputProps, 'label' | 'errorMessa
   step?: number | string
   /** Form attribute */
   form?: string
+  /** Label placement style */
+  labelPlacement?: 'inside' | 'outside' | 'outside-left';
 }
 
 /**
@@ -44,6 +46,7 @@ export interface InputProps extends Omit<HeroUIInputProps, 'label' | 'errorMessa
  */
 export function Input({
   label,
+  labelPlacement = 'outside',
   error,
   helperText,
   value,
@@ -60,11 +63,20 @@ export function Input({
   max,
   step,
   form,
+  variant = 'bordered',
   ...rest
 }: InputProps) {
+  const mergedClassNames = {
+    label: `text-xs font-semibold text-neutral-600 dark:text-neutral-400 mb-1.5 ${rest.classNames?.label || ''}`,
+    input: `text-sm ${rest.classNames?.input || ''}`,
+    inputWrapper: `border-neutral-200 hover:border-neutral-400 focus-within:border-primary-500 dark:border-neutral-700 dark:hover:border-neutral-500 dark:focus-within:border-primary-400 ${rest.classNames?.inputWrapper || ''}`,
+    ...(rest.classNames || {})
+  };
+
   return (
     <HeroUIInput
       label={label}
+      labelPlacement={labelPlacement}
       errorMessage={error}
       description={helperText}
       value={value}
@@ -82,6 +94,8 @@ export function Input({
       max={max}
       step={step}
       form={form}
+      variant={variant}
+      classNames={mergedClassNames}
       {...rest}
     />
   );

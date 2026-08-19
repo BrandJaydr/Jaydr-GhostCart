@@ -117,18 +117,20 @@
 **Objective:** Establish navigation and layout foundation for all screens.
 
 **Screens/Components:**
-1. **AppShell Component** - Main layout wrapper with sidebar + topbar
-2. **Sidebar Component** - Collapsible navigation with sections
+1. **AppShell Component** - Main layout wrapper with semantic HTML CSS Grid sidebar + topbar
+2. **Sidebar Component** - Collapsible navigation with sections using **pure CSS hover transformations** (zero re-render overhead)
 3. **TopNav Component** - Top navigation bar with search, notifications, profile
-4. **Breadcrumbs Component** - Navigation trail for deep pages
-5. **Dashboard Layout** - Auth-gated layout with session validation
-6. **Toast Notifications** - Global toast notification system
-7. **Loading States** - Spinner and skeleton components
-8. **Error States** - Error display components
+4. **FloatingSearchBar Component** - Animated command palette (`Ctrl+K`) centered at 25vh with suggestions, fuzzy command matching, and click-outside dismissal
+5. **Breadcrumbs Component** - Navigation trail for deep pages
+6. **Dashboard Layout** - Auth-gated layout with session validation
+7. **Toast Notifications** - Global toast notification system
+8. **Loading States** - Spinner and skeleton components
+9. **Error States** - Error display components
 
 **Dependencies:** None (can start immediately)
 **Estimated Effort:** 3-5 days
 **UI Library:** HeroUI v2 (primary) - Install with `npm install @heroui/react@^2.2.0 --legacy-peer-deps`
+
 
 ### Phase 2: Dashboard Overview (Priority: HIGH)
 **Objective:** Provide operational visibility into system metrics.
@@ -173,11 +175,13 @@
 - TableFilters (filter sidebar)
 - ProductCard (grid view alternative)
 - ConfidenceIndicator (data quality display)
+- **SmartLoading Component** - Stage-based progress display supporting step/continuous states (Idle → Validating → Ingesting → Syncing → Complete/Error)
 
 **API Integration:** `/api/products`, `/api/products/[id]`, `/api/products/[id]/refresh`
 **Dependencies:** Phase 1 (Layout)
 **Estimated Effort:** 5-7 days
 **UI Library:** HeroUI v2 (primary)
+
 
 ### Phase 4: Listings Management (Priority: HIGH)
 **Objective:** Complete the listing workflow from draft to submission.
@@ -207,17 +211,17 @@
 **UI Library:** HeroUI v2 (primary), MagicUI (AI animations)
 
 ### Phase 5: Job Monitoring (Priority: MEDIUM)
-**Objective:** Provide visibility into background job execution.
+**Objective:** Provide visibility into background job execution on Layer 3 workers.
 
 **Screens:**
 1. **Job Activity Monitor** (`/jobs`)
-   - Recent jobs table
+   - Recent jobs table mapping BullMQ queue states (idle, active, complete, failed, retrying)
    - Filter by type, status
    - Error details display
    - Retry/kill controls
 
 2. **Job Detail Page** (`/jobs/[id]`)
-   - Full job information
+   - Full job information reflecting Redis/BullMQ worker outputs
    - Error stack traces
    - Retry history
    - Manual retry button
@@ -225,13 +229,14 @@
 **Components:**
 - JobStatusBadge (job state visualization)
 - ErrorDisplay (formatted error messages)
-- RetryButton (manual retry control)
-- KillButton (emergency stop)
+- RetryButton (manual retry control triggering Layer 3 BullMQ re-evaluation)
+- KillButton (emergency queue job removal)
 
 **API Integration:** `/api/jobs/activity`, `/api/jobs/[id]`, `/api/jobs/[id]/retry`, `/api/jobs/kill`
 **Dependencies:** Phase 1 (Layout)
 **Estimated Effort:** 4-5 days
 **UI Library:** HeroUI v2 (primary)
+
 
 ### Phase 6: Pricing Management (Priority: MEDIUM)
 **Objective:** Enable repricing rule configuration and monitoring.
@@ -272,8 +277,8 @@
    - Default pricing configuration
 
 3. **Marketplace Connections** (`/settings/marketplaces`)
-   - Connected marketplaces
-   - OAuth flow for new connections
+   - Connected marketplaces displaying connection states
+   - OAuth flows integrated via the **Valet Key Pattern** (raw credentials and tokens vaulted; client uses only connection identifiers)
 
 4. **Supplier Management** (`/settings/suppliers`)
    - Supplier list
@@ -281,9 +286,10 @@
 
 **Components:**
 - SettingsNav (settings navigation)
-- MarketplaceConnectionCard (connection status)
+- MarketplaceConnectionCard (connection status using opaque handles)
 - SupplierForm (supplier configuration)
 - DefaultPricingForm (pricing defaults)
+
 
 **Dependencies:** Phase 1 (Layout)
 **Estimated Effort:** 6-8 days

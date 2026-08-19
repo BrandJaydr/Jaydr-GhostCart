@@ -115,53 +115,67 @@ export class AIClient {
   }
 
   private async callOllama(baseUrl: string, model: string, prompt: string, timeout: number): Promise<AIResponse> {
-    const response = await fetch(`${baseUrl}/api/generate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    try {
+      const response = await fetch(`${baseUrl}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model,
+          prompt,
+          stream: false,
+        }),
+        signal: AbortSignal.timeout(timeout),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Ollama API error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return {
+        content: data.response,
         model,
-        prompt,
-        stream: false,
-      }),
-      signal: AbortSignal.timeout(timeout),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Ollama API error: ${response.statusText}`);
+        tokensUsed: data.eval_count,
+        cached: false,
+      };
+    } catch (err) {
+      if (err instanceof Error && err.message.includes('Ollama API error')) {
+        throw err;
+      }
+      throw new Error(`Ollama API error: ${err instanceof Error ? err.message : String(err)}`);
     }
-
-    const data = await response.json();
-    return {
-      content: data.response,
-      model,
-      tokensUsed: data.eval_count,
-      cached: false,
-    };
   }
 
   private async callVLLM(baseUrl: string, model: string, prompt: string, timeout: number): Promise<AIResponse> {
-    const response = await fetch(`${baseUrl}/v1/completions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    try {
+      const response = await fetch(`${baseUrl}/v1/completions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model,
+          prompt,
+          max_tokens: 1000,
+        }),
+        signal: AbortSignal.timeout(timeout),
+      });
+
+      if (!response.ok) {
+        throw new Error(`vLLM API error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return {
+        content: data.choices[0].text,
         model,
-        prompt,
-        max_tokens: 1000,
-      }),
-      signal: AbortSignal.timeout(timeout),
-    });
-
-    if (!response.ok) {
-      throw new Error(`vLLM API error: ${response.statusText}`);
+        tokensUsed: data.usage?.total_tokens,
+        cached: false,
+      };
+    } catch (err) {
+      if (err instanceof Error && err.message.includes('vLLM API error')) {
+        throw err;
+      }
+      throw new Error(`vLLM API error: ${err instanceof Error ? err.message : String(err)}`);
     }
-
-    const data = await response.json();
-    return {
-      content: data.choices[0].text,
-      model,
-      tokensUsed: data.usage?.total_tokens,
-      cached: false,
-    };
   }
 
   private async callCloudAPI(_model: string, _apiKey: string, _prompt: string, _timeout: number): Promise<AIResponse> {

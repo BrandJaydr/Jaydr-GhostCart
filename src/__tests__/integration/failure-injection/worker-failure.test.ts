@@ -13,11 +13,35 @@ describe('Worker Failure Injection Tests', () => {
   beforeEach(async () => {
     // Clean up test data
     await db.query('DELETE FROM jobs WHERE idempotency_key LIKE $1', ['test-failure-%']);
+    await db.query(
+      'DELETE FROM jobs WHERE id IN ($1, $2, $3, $4, $5, $6)',
+      [
+        '00000000-0000-0000-0000-000000000011',
+        '00000000-0000-0000-0000-000000000012',
+        '00000000-0000-0000-0000-000000000013',
+        '00000000-0000-0000-0000-000000000014',
+        '00000000-0000-0000-0000-000000000015',
+        '00000000-0000-0000-0000-000000000016',
+      ]
+    );
+    await db.query('DELETE FROM products WHERE id = $1', ['00000000-0000-0000-0000-000000000017']);
   });
 
   afterEach(async () => {
     // Clean up test data
     await db.query('DELETE FROM jobs WHERE idempotency_key LIKE $1', ['test-failure-%']);
+    await db.query(
+      'DELETE FROM jobs WHERE id IN ($1, $2, $3, $4, $5, $6)',
+      [
+        '00000000-0000-0000-0000-000000000011',
+        '00000000-0000-0000-0000-000000000012',
+        '00000000-0000-0000-0000-000000000013',
+        '00000000-0000-0000-0000-000000000014',
+        '00000000-0000-0000-0000-000000000015',
+        '00000000-0000-0000-0000-000000000016',
+      ]
+    );
+    await db.query('DELETE FROM products WHERE id = $1', ['00000000-0000-0000-0000-000000000017']);
   });
 
   describe('Database Connection Failure', () => {
@@ -33,7 +57,7 @@ describe('Worker Failure Injection Tests', () => {
         `INSERT INTO jobs
          (id, tenant_id, type, payload, idempotency_key, status, attempts, last_error, created_at, completed_at)
          VALUES ($1, $2, 'product.import', '{}', $3, 'failed', 1, 'Database connection failed', now(), now())`,
-        ['test-job-id-1', '00000000-0000-0000-0000-000000000001', idempotencyKey],
+        ['00000000-0000-0000-0000-000000000011', '00000000-0000-0000-0000-000000000001', idempotencyKey],
       );
 
       // Verify job was recorded as failed
@@ -55,7 +79,7 @@ describe('Worker Failure Injection Tests', () => {
         `INSERT INTO jobs
          (id, tenant_id, type, payload, idempotency_key, status, attempts, last_error, created_at)
          VALUES ($1, $2, 'product.import', '{}', $3, 'queued', 0, NULL, now())`,
-        ['test-job-id-2', '00000000-0000-0000-0000-000000000001', idempotencyKey],
+        ['00000000-0000-0000-0000-000000000012', '00000000-0000-0000-0000-000000000001', idempotencyKey],
       );
 
       // Verify job is queued for retry
@@ -82,7 +106,7 @@ describe('Worker Failure Injection Tests', () => {
         `INSERT INTO jobs
          (id, tenant_id, type, payload, idempotency_key, status, attempts, last_error, created_at, completed_at)
          VALUES ($1, $2, 'product.import', '{}', $3, 'failed', 1, 'Redis connection failed', now(), now())`,
-        ['test-job-id-3', '00000000-0000-0000-0000-000000000001', idempotencyKey],
+        ['00000000-0000-0000-0000-000000000013', '00000000-0000-0000-0000-000000000001', idempotencyKey],
       );
 
       const result = await db.query(
@@ -104,7 +128,7 @@ describe('Worker Failure Injection Tests', () => {
         `INSERT INTO jobs
          (id, tenant_id, type, payload, idempotency_key, status, attempts, last_error, error_category, created_at)
          VALUES ($1, $2, 'product.import', '{}', $3, 'queued', 1, 'API timeout after 30s', 'transient', now())`,
-        ['test-job-id-4', '00000000-0000-0000-0000-000000000001', idempotencyKey],
+        ['00000000-0000-0000-0000-000000000014', '00000000-0000-0000-0000-000000000001', idempotencyKey],
       );
 
       const result = await db.query(
@@ -128,7 +152,7 @@ describe('Worker Failure Injection Tests', () => {
         `INSERT INTO jobs
          (id, tenant_id, type, payload, idempotency_key, status, attempts, last_error, created_at, completed_at)
          VALUES ($1, $2, 'product.import', '{}', $3, 'failed', 4, 'Max retries exceeded', now(), now())`,
-        ['test-job-id-5', '00000000-0000-0000-0000-000000000001', idempotencyKey],
+        ['00000000-0000-0000-0000-000000000015', '00000000-0000-0000-0000-000000000001', idempotencyKey],
       );
 
       // Simulate dead-letter queue entry
@@ -138,7 +162,7 @@ describe('Worker Failure Injection Tests', () => {
          VALUES ($1, 'product.import', $2, $3, $4, 4, now())`,
         [
           '00000000-0000-0000-0000-000000000001',
-          'test-job-id-5',
+          '00000000-0000-0000-0000-000000000015',
           JSON.stringify({ url: 'https://example.com' }),
           'Max retries exceeded',
         ],
@@ -147,7 +171,7 @@ describe('Worker Failure Injection Tests', () => {
       // Verify dead-letter queue entry
       const dlqResult = await db.query(
         'SELECT * FROM dead_letter_queue WHERE bull_job_id = $1',
-        ['test-job-id-5'],
+        ['00000000-0000-0000-0000-000000000015'],
       );
 
       expect(dlqResult.rowCount).toBeGreaterThan(0);
@@ -158,7 +182,7 @@ describe('Worker Failure Injection Tests', () => {
 
   describe('Reconciliation After Failure', () => {
     it('should reconcile data after worker failure', async () => {
-      const productId = 'test-product-reconciliation';
+      const productId = '00000000-0000-0000-0000-000000000017';
       
       // Create a product with inconsistent state
       await db.query(
@@ -173,7 +197,7 @@ describe('Worker Failure Injection Tests', () => {
         `INSERT INTO jobs
          (id, tenant_id, type, payload, idempotency_key, status, attempts, last_error, created_at, completed_at)
          VALUES ($1, $2, 'product.refresh', $3, $4, 'failed', 1, 'Partial update failed', now(), now())`,
-        ['test-job-id-6', '00000000-0000-0000-0000-000000000001', JSON.stringify({ productId }), 'test-reconcile'],
+        ['00000000-0000-0000-0000-000000000016', '00000000-0000-0000-0000-000000000001', JSON.stringify({ productId }), 'test-reconcile'],
       );
 
       // Reconciliation: Verify product data is still valid

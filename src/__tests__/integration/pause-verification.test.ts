@@ -14,32 +14,36 @@ describe('Pause Verification Tests', () => {
     // Clean up test data
     await db.query('DELETE FROM repricing_pause WHERE tenant_id IS NULL');
     await db.query('DELETE FROM jobs WHERE idempotency_key LIKE $1', ['test-pause-%']);
+    await db.query('DELETE FROM jobs WHERE id = $1', ['00000000-0000-0000-0000-000000000101']);
+    await db.query('DELETE FROM listings WHERE id = $1', ['00000000-0000-0000-0000-000000000201']);
   });
 
   afterEach(async () => {
     // Clean up test data
     await db.query('DELETE FROM repricing_pause WHERE tenant_id IS NULL');
     await db.query('DELETE FROM jobs WHERE idempotency_key LIKE $1', ['test-pause-%']);
+    await db.query('DELETE FROM jobs WHERE id = $1', ['00000000-0000-0000-0000-000000000101']);
+    await db.query('DELETE FROM listings WHERE id = $1', ['00000000-0000-0000-0000-000000000201']);
   });
 
   describe('Global Pause for Repricing', () => {
     it('should stop repricing when global pause is active', async () => {
       // Set global pause
       await db.query(
-        'SELECT repricing.set_pause(NULL, true, $1, NULL)',
+        'SELECT set_pause(true, NULL, $1, NULL)',
         ['Test pause verification'],
       );
 
       // Check if paused
-      const result = await db.query('SELECT repricing.is_paused(NULL) as paused');
+      const result = await db.query('SELECT is_paused(NULL) as paused');
       expect(result.rows[0].paused).toBe(true);
 
       // Try to generate suggestion (should fail or return null)
       const suggestionResult = await db.query(
-        `SELECT repricing.generate_suggestion($1, $2, $3, $4, $5) as suggestion_id`,
+        `SELECT generate_suggestion($1, $2, $3, $4, $5) as suggestion_id`,
         [
           '00000000-0000-0000-0000-000000000001',
-          'test-listing-id',
+          '00000000-0000-0000-0000-000000000008',
           10000,
           5000,
           9000,
@@ -54,18 +58,18 @@ describe('Pause Verification Tests', () => {
     it('should resume repricing after global pause is lifted', async () => {
       // Set global pause
       await db.query(
-        'SELECT repricing.set_pause(NULL, true, $1, NULL)',
+        'SELECT set_pause(true, NULL, $1, NULL)',
         ['Test pause verification'],
       );
 
       // Lift pause
       await db.query(
-        'SELECT repricing.set_pause(NULL, false, $2, NULL)',
-        [null, 'Resume after test'],
+        'SELECT set_pause(false, NULL, $1, NULL)',
+        ['Resume after test'],
       );
 
       // Check if not paused
-      const result = await db.query('SELECT repricing.is_paused(NULL) as paused');
+      const result = await db.query('SELECT is_paused(NULL) as paused');
       expect(result.rows[0].paused).toBe(false);
     });
   });
@@ -76,12 +80,12 @@ describe('Pause Verification Tests', () => {
 
       // Set tenant-specific pause
       await db.query(
-        'SELECT repricing.set_pause($1, true, $2, NULL)',
+        'SELECT set_pause(true, $1, $2, NULL)',
         [tenantId, 'Tenant pause verification'],
       );
 
       // Check if paused for this tenant
-      const result = await db.query('SELECT repricing.is_paused($1) as paused', [tenantId]);
+      const result = await db.query('SELECT is_paused($1) as paused', [tenantId]);
       expect(result.rows[0].paused).toBe(true);
     });
 
@@ -91,16 +95,16 @@ describe('Pause Verification Tests', () => {
 
       // Pause first tenant
       await db.query(
-        'SELECT repricing.set_pause($1, true, $2, NULL)',
+        'SELECT set_pause(true, $1, $2, NULL)',
         [pausedTenantId, 'Tenant pause verification'],
       );
 
       // Check first tenant is paused
-      const pausedResult = await db.query('SELECT repricing.is_paused($1) as paused', [pausedTenantId]);
+      const pausedResult = await db.query('SELECT is_paused($1) as paused', [pausedTenantId]);
       expect(pausedResult.rows[0].paused).toBe(true);
 
       // Check other tenant is not paused
-      const otherResult = await db.query('SELECT repricing.is_paused($1) as paused', [otherTenantId]);
+      const otherResult = await db.query('SELECT is_paused($1) as paused', [otherTenantId]);
       expect(otherResult.rows[0].paused).toBe(false);
     });
   });
@@ -117,11 +121,11 @@ describe('Pause Verification Tests', () => {
       
       // Set global pause
       await db.query(
-        'SELECT repricing.set_pause(NULL, true, $1, NULL)',
+        'SELECT set_pause(true, NULL, $1, NULL)',
         ['Job queue pause test'],
       );
 
-      const result = await db.query('SELECT repricing.is_paused(NULL) as paused');
+      const result = await db.query('SELECT is_paused(NULL) as paused');
       expect(result.rows[0].paused).toBe(true);
     });
 
@@ -133,12 +137,12 @@ describe('Pause Verification Tests', () => {
         `INSERT INTO jobs
          (id, tenant_id, type, payload, idempotency_key, status, attempts, created_at)
          VALUES ($1, $2, 'product.import', '{}', $3, 'queued', 0, now())`,
-        ['test-job-id-pause-1', '00000000-0000-0000-0000-000000000001', idempotencyKey],
+        ['00000000-0000-0000-0000-000000000101', '00000000-0000-0000-0000-000000000001', idempotencyKey],
       );
 
       // Set global pause
       await db.query(
-        'SELECT repricing.set_pause(NULL, true, $1, NULL)',
+        'SELECT set_pause(true, NULL, $1, NULL)',
         ['Stop queued jobs test'],
       );
 
@@ -154,10 +158,13 @@ describe('Pause Verification Tests', () => {
 
   describe('Pause Audit Trail', () => {
     it('should record pause actions in audit trail', async () => {
+      const userRes = await db.query('SELECT id FROM users LIMIT 1');
+      const userId = userRes.rows[0].id;
+
       // Set pause
       await db.query(
-        'SELECT repricing.set_pause(NULL, true, $1, $2)',
-        ['Audit trail test', '00000000-0000-0000-0000-000000000001'],
+        'SELECT set_pause(true, NULL, $1, $2)',
+        ['Audit trail test', userId],
       );
 
       // Check pause record
@@ -168,26 +175,26 @@ describe('Pause Verification Tests', () => {
       expect(pauseResult.rowCount).toBeGreaterThan(0);
       expect(pauseResult.rows[0].paused).toBe(true);
       expect(pauseResult.rows[0].reason).toBe('Audit trail test');
-      expect(pauseResult.rows[0].paused_by).toBe('00000000-0000-0000-0000-000000000001');
+      expect(pauseResult.rows[0].paused_by).toBe(userId);
     });
 
     it('should track pause history over time', async () => {
       // Set pause
       await db.query(
-        'SELECT repricing.set_pause(NULL, true, $1, NULL)',
+        'SELECT set_pause(true, NULL, $1, NULL)',
         ['First pause'],
       );
 
       // Lift pause
       await db.query(
-        'SELECT repricing.set_pause(NULL, false, $2, NULL)',
-        [null, 'Resume'],
+        'SELECT set_pause(false, NULL, $1, NULL)',
+        ['Resume'],
       );
 
       // Set pause again
       await db.query(
-        'SELECT repricing.set_pause(NULL, true, $3, NULL)',
-        [null, 'Second pause'],
+        'SELECT set_pause(true, NULL, $1, NULL)',
+        ['Second pause'],
       );
 
       // Check history
@@ -203,12 +210,12 @@ describe('Pause Verification Tests', () => {
     it('should prevent external API calls when paused', async () => {
       // Set global pause
       await db.query(
-        'SELECT repricing.set_pause(NULL, true, $1, NULL)',
+        'SELECT set_pause(true, NULL, $1, NULL)',
         ['Prevent external calls test'],
       );
 
       // Verify pause state
-      const result = await db.query('SELECT repricing.is_paused(NULL) as paused');
+      const result = await db.query('SELECT is_paused(NULL) as paused');
       expect(result.rows[0].paused).toBe(true);
 
       // In a real implementation, external API clients would check pause state
@@ -221,21 +228,21 @@ describe('Pause Verification Tests', () => {
       // Create a listing ready for submission
       await db.query(
         `INSERT INTO listings
-         (id, tenant_id, product_id, state, list_price_cents, created_at, updated_at)
-         VALUES ($1, $2, $3, 'ready_for_review', 10000, now(), now())`,
-        ['test-listing-pause-1', '00000000-0000-0000-0000-000000000001', 'test-product-1'],
+         (id, tenant_id, product_id, marketplace, state, list_price_cents, created_at, updated_at)
+         VALUES ($1, $2, NULL, 'ebay', 'ready_for_review', 10000, now(), now())`,
+        ['00000000-0000-0000-0000-000000000201', '00000000-0000-0000-0000-000000000001'],
       );
 
       // Set global pause
       await db.query(
-        'SELECT repricing.set_pause(NULL, true, $1, NULL)',
+        'SELECT set_pause(true, NULL, $1, NULL)',
         ['Prevent submissions test'],
       );
 
       // Verify listing is still in ready_for_review state
       const listingResult = await db.query(
         'SELECT state FROM listings WHERE id = $1',
-        ['test-listing-pause-1'],
+        ['00000000-0000-0000-0000-000000000201'],
       );
 
       expect(listingResult.rows[0].state).toBe('ready_for_review');

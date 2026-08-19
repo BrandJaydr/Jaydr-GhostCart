@@ -1,16 +1,34 @@
 import type { Metadata } from 'next';
-
 import SignInForm from '@/components/SignInForm';
 
 export const metadata: Metadata = {
-  title: 'Sign In',
+  title: 'Sign In | GhostCart',
 };
 
 export default function SignInPage() {
   return (
-    <main aria-label="Sign in to GhostCart">
-      <h1>Sign In</h1>
-      <SignInForm />
-    </main>
+    <div className="min-h-screen flex items-center justify-center bg-neutral-50 p-4">
+      <div className="max-w-md w-full bg-white shadow-lg rounded-2xl p-8">
+        <div className="flex justify-center mb-6">
+          <div className="w-12 h-12 rounded-xl bg-sky-500 flex items-center justify-center">
+            <span className="text-white text-2xl font-bold">G</span>
+          </div>
+        </div>
+        <h1 className="text-2xl font-bold text-neutral-900 text-center mb-2">
+          Sign in to GhostCart
+        </h1>
+        <p className="text-sm text-neutral-500 text-center mb-8">
+          Enterprise Reseller & Dropshipping Platform
+        </p>
+        
+        <SignInForm />
+        
+        <div className="mt-8 bg-neutral-100 rounded-lg p-3">
+          <p className="text-sm text-neutral-500 text-center">
+            Dev credentials: admin@ghostcart.dev / any password
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }

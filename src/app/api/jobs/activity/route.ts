@@ -1,7 +1,8 @@
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { z } from 'zod';
-import { db, DEV_TENANT_ID } from '@/lib/db/index';
+import { withTenant } from '@/lib/db/index';
+import { withAuthRoute, requirePermission, Permission } from '@/lib/middleware/auth-guard';
 
 /**
  * Schema for activity history query
@@ -23,7 +24,9 @@ const ActivityQuerySchema = z.object({
  *
  * @agent:oracle Add tests for activity history endpoint
  */
-export async function GET(req: NextRequest) {
+export const GET = withAuthRoute(async (req: NextRequest, actor) => {
+  await requirePermission(actor, Permission.JOBS_READ);
+
   const url = new URL(req.url);
   const queryParams = Object.fromEntries(url.searchParams.entries());
 
@@ -34,10 +37,7 @@ export async function GET(req: NextRequest) {
 
   const { page = 1, limit = 50, jobType, status, startDate, endDate } = parseResult.data;
   const offset = (page - 1) * limit;
-
-  // @agent:forge Replace this with the tenantId resolved from the
-  // authenticated session once next-auth is configured.
-  const tenantId = DEV_TENANT_ID;
+  const tenantId = actor.tenantId;
 
   try {
     // Build WHERE clause for filters
@@ -72,22 +72,26 @@ export async function GET(req: NextRequest) {
     const whereClause = conditions.join(' AND ');
 
     // Query activity history (audit_events + jobs)
-    const result = await db.query(
-      `SELECT
-        ae.id, ae.action, ae.entity_type, ae.entity_id, ae.metadata,
-        ae.created_at, j.status, j.attempts, j.last_error, j.error_category
-       FROM audit_events ae
-       LEFT JOIN jobs j ON ae.metadata->>'bullJobId' = j.id::text
-       WHERE ${whereClause}
-       ORDER BY ae.created_at DESC
-       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
-      [...values, limit, offset],
+    const result = await withTenant(tenantId, (tx) =>
+      tx.query(
+        `SELECT
+          ae.id, ae.action, ae.entity_type, ae.entity_id, ae.metadata,
+          ae.created_at, j.status, j.attempts, j.last_error, j.error_category
+         FROM audit_events ae
+         LEFT JOIN jobs j ON ae.metadata->>'bullJobId' = j.id::text
+         WHERE ${whereClause}
+         ORDER BY ae.created_at DESC
+         LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
+        [...values, limit, offset],
+      )
     );
 
     // Get total count
-    const countResult = await db.query(
-      `SELECT COUNT(*) as total FROM audit_events ae LEFT JOIN jobs j ON ae.metadata->>'bullJobId' = j.id::text WHERE ${whereClause}`,
-      values,
+    const countResult = await withTenant(tenantId, (tx) =>
+      tx.query(
+        `SELECT COUNT(*) as total FROM audit_events ae LEFT JOIN jobs j ON ae.metadata->>'bullJobId' = j.id::text WHERE ${whereClause}`,
+        values,
+      )
     );
 
     const total = parseInt(countResult.rows[0].total as string, 10);
@@ -110,4 +114,4 @@ export async function GET(req: NextRequest) {
     console.error('[api/jobs/activity] Error:', err);
     return apiError('Failed to fetch activity history', null, 500);
   }
-}
+});

@@ -7,7 +7,7 @@
  * @agent:oracle Add tests for margin calculations
  */
 
-import { db } from '@/lib/db/index';
+import { db, withTenant } from '@/lib/db/index';
 
 export type RoundingRule = 'nearest' | 'up' | 'down';
 
@@ -87,7 +87,7 @@ export async function calculateTax(
 }
 
 /**
- * Calculate shipping cost
+ * Calculate shipping cost within tenant RLS context
  */
 export async function calculateShippingCost(
   tenantId: string,
@@ -95,12 +95,14 @@ export async function calculateShippingCost(
   weightGrams: number | null,
 ): Promise<number> {
   try {
-    const result = await db.query(
-      'SELECT margin.calculate_shipping_cost($1, $2, $3) as shipping',
-      [tenantId, carrier, weightGrams],
-    );
+    return await withTenant(tenantId, async (client) => {
+      const result = await client.query(
+        'SELECT margin.calculate_shipping_cost($1, $2, $3) as shipping',
+        [tenantId, carrier, weightGrams],
+      );
 
-    return (result.rows[0].shipping as number) || 0;
+      return (result.rows[0]?.shipping as number) || 0;
+    });
   } catch (err) {
     console.error('[margin-calculator] calculateShippingCost error:', err);
     return 0; // Fail open

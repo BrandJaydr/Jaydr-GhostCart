@@ -15,15 +15,19 @@
  */
 
 import { Worker, type Job } from 'bullmq';
-import { redis } from '../lib/queue/index.js';
-import { db, setTenantContextOn } from '../lib/db/index.js';
+import { redis, refreshQueue, registerRepeatableSyncJobs } from '../lib/queue/index.js';
+import { db, withTenant, setTenantContextOn } from '../lib/db/index.js';
 import { getSupplierAdapter } from '../lib/adapters/factory.js';
 import type { CanonicalProduct } from '../lib/types/canonical.js';
 import { randomUUID } from 'node:crypto';
 import { notify } from '../lib/alerts/index.js';
-
+import { calculateMargin } from '../lib/margin/calculator.js';
+import { isRepricingPaused, generateSuggestion } from '../lib/repricing/engine.js';
 
 console.warn('[Worker] Starting GhostCart worker process...');
+
+// Initialize automated sync repeatable cron job
+void registerRepeatableSyncJobs();
 
 /**
  * Persistence helpers for the product.import worker.
@@ -335,6 +339,11 @@ importWorker.on('failed', (job, err) => {
 // Stage 2: refreshes an already-imported product from its supplier feed by
 // re-running the adapter's fetchProduct and re-persisting (upsert).
 // Stage 4: Extended to handle stock/price refresh with change detection and logging.
+// ─── Product Refresh Worker ───────────────────────────────────────────────────
+// Stage 2: refreshes an already-imported product from its supplier feed by
+// re-running the adapter's fetchProduct and re-persisting (upsert).
+// Stage 4: Extended to handle stock/price refresh with change detection,
+// margin recalculations, repricing engine suggestions, alerts, and withTenant RLS.
 const refreshWorker = new Worker(
   'product.refresh',
   async (job) => {
@@ -345,14 +354,23 @@ const refreshWorker = new Worker(
       throw new Error(`Unknown supplier adapter: ${supplierId}`);
     }
 
-    // Get current product data for change detection
-    const currentProduct = await db.query(
-      'SELECT supplier_price_cents, current_stock FROM products WHERE id = $1',
-      [productId],
-    );
+    // Get current product data within tenant context
+    const currentProduct = await withTenant(tenantId, async (client) => {
+      return await client.query(
+        `SELECT p.id, p.title, p.supplier_price_cents, p.current_stock,
+                l.id as listing_id, l.price_cents as listing_price_cents, l.marketplace
+         FROM products p
+         LEFT JOIN listings l ON l.product_id = p.id
+         WHERE p.id = $1`,
+        [productId],
+      );
+    });
 
     const oldPrice = (currentProduct.rowCount ?? 0) > 0 ? currentProduct.rows[0].supplier_price_cents : null;
     const oldStock = (currentProduct.rowCount ?? 0) > 0 ? currentProduct.rows[0].current_stock : null;
+    const listingId = (currentProduct.rowCount ?? 0) > 0 ? currentProduct.rows[0].listing_id : null;
+    const listingPriceCents = (currentProduct.rowCount ?? 0) > 0 ? currentProduct.rows[0].listing_price_cents : null;
+    const listingMarketplace = (currentProduct.rowCount ?? 0) > 0 ? currentProduct.rows[0].marketplace : 'ebay';
 
     const product = await adapter.fetchProduct(productId, tenantId);
 
@@ -363,47 +381,103 @@ const refreshWorker = new Worker(
     try {
       await persistImport(product, { jobId: job.id, tenantId, idempotencyKey });
 
-      // Log price change if different
-      if (refreshType === 'price' || refreshType === 'both') {
-        const priceHistoryId = await db.query(
-          'SELECT products.log_price_change($1, $2, $3, $4, $5) as history_id',
-          [productId, oldPrice, product.supplierPriceCents, 'scheduled', null],
+      await withTenant(tenantId, async (client) => {
+        // Log price change if different
+        if (refreshType === 'price' || refreshType === 'both') {
+          const priceHistoryId = await client.query(
+            'SELECT products.log_price_change($1, $2, $3, $4, $5) as history_id',
+            [productId, oldPrice, product.supplierPriceCents, 'scheduled', null],
+          );
+          priceChanged = (priceHistoryId.rowCount ?? 0) > 0 && priceHistoryId.rows[0].history_id !== null;
+
+          // If price changed and there is an active listing, recalculate margin and evaluate repricing
+          if (priceChanged && listingId && listingPriceCents) {
+            const marginResult = await calculateMargin({
+              sellingPriceCents: listingPriceCents,
+              costCents: product.supplierPriceCents,
+              marketplace: listingMarketplace,
+              tenantId,
+            });
+
+            // Alert if margin falls below safe threshold (< 5% or negative)
+            if (marginResult.marginPercent < 5) {
+              await notify({
+                tenantId,
+                alertType: 'repricing.margin_risk',
+                severity: marginResult.marginPercent < 0 ? 'critical' : 'warning',
+                message: `Low profit margin warning: Product "${product.title}" margin is ${marginResult.marginPercent}% on ${listingMarketplace}.`,
+                payload: {
+                  productId,
+                  listingId,
+                  marginPercent: marginResult.marginPercent,
+                  profitCents: marginResult.profitCents,
+                  supplierPriceCents: product.supplierPriceCents,
+                },
+              });
+            }
+
+            // Check if repricing is paused before generating suggestions
+            const paused = await isRepricingPaused(tenantId);
+            if (!paused) {
+              await generateSuggestion({
+                tenantId,
+                listingId,
+                currentPriceCents: listingPriceCents,
+                costCents: product.supplierPriceCents,
+              });
+            }
+          }
+        }
+
+        // Log stock change if different
+        if (refreshType === 'stock' || refreshType === 'both') {
+          const newStock = product.availability === 'in_stock' ? 100 : 0;
+          const stockChangedResult = await client.query(
+            'SELECT products.log_stock_change($1, $2, $3, $4, $5) as changed',
+            [productId, oldStock, newStock, 'scheduled', null],
+          );
+          stockChanged = (stockChangedResult.rowCount ?? 0) > 0 && stockChangedResult.rows[0].changed;
+
+          // Out-of-stock warning alert
+          if (product.availability === 'out_of_stock' || newStock === 0) {
+            await notify({
+              tenantId,
+              alertType: 'stock.out_of_stock',
+              severity: 'warning',
+              message: `Supplier out of stock: Product "${product.title}" is currently out of stock.`,
+              payload: {
+                productId,
+                supplierId,
+                oldStock,
+              },
+            });
+          }
+        }
+
+        await client.query(
+          `UPDATE products SET last_refreshed_at = now(), review_status = review_status
+            WHERE id = $1`,
+          [productId],
         );
-        priceChanged = (priceHistoryId.rowCount ?? 0) > 0 && priceHistoryId.rows[0].history_id !== null;
-      }
 
-      // Log stock change if different
-      if (refreshType === 'stock' || refreshType === 'both') {
-        const stockChangedResult = await db.query(
-          'SELECT products.log_stock_change($1, $2, $3, $4, $5) as changed',
-          [productId, oldStock, product.availability === 'in_stock' ? 100 : 0, 'scheduled', null],
+        // Audit event for refresh
+        await client.query(
+          `INSERT INTO audit_events
+             (tenant_id, user_id, action, entity_type, entity_id, metadata, created_at)
+           VALUES ($1, NULL, 'product.refreshed', 'products', $2, $3, now())`,
+          [
+            tenantId,
+            productId,
+            JSON.stringify({
+              refreshType,
+              priceChanged,
+              stockChanged,
+              oldPrice,
+              newPrice: product.supplierPriceCents,
+            }),
+          ],
         );
-        stockChanged = (stockChangedResult.rowCount ?? 0) > 0 && stockChangedResult.rows[0].changed;
-      }
-
-      await db.query(
-        `UPDATE products SET last_refreshed_at = now(), review_status = review_status
-          WHERE id = $1`,
-        [productId],
-      );
-
-      // Audit event for refresh
-      await db.query(
-        `INSERT INTO audit_events
-           (tenant_id, user_id, action, entity_type, entity_id, metadata, created_at)
-         VALUES ($1, NULL, 'product.refreshed', 'products', $2, $3, now())`,
-        [
-          tenantId,
-          productId,
-          JSON.stringify({
-            refreshType,
-            priceChanged,
-            stockChanged,
-            oldPrice,
-            newPrice: product.supplierPriceCents,
-          }),
-        ],
-      );
+      });
     } catch (err) {
       persisted = false;
       console.error(`[Worker] Refresh persist failed for ${job.id}:`, (err as Error).message);
@@ -446,9 +520,60 @@ refreshWorker.on('failed', (job, err) => {
   }
 });
 
+// ─── Automated Sync Scheduler Worker ──────────────────────────────────────────
+// Runs periodically to query products that are stale and enqueues them for refresh.
+const syncSchedulerWorker = new Worker(
+  'product.sync_scheduler',
+  async (job) => {
+    console.warn(`[Worker] Running scheduled stock/price sync pass (job ${job.id})...`);
+    
+    // Find products requiring sync (refreshed > 6 hours ago or never refreshed)
+    const staleProducts = await db.query(
+      `SELECT p.id, p.tenant_id, p.supplier_id
+       FROM products p
+       JOIN tenants t ON p.tenant_id = t.id
+       WHERE p.last_refreshed_at IS NULL 
+          OR p.last_refreshed_at < now() - INTERVAL '6 hours'
+       ORDER BY p.last_refreshed_at ASC NULLS FIRST
+       LIMIT 100`,
+    );
+
+    let enqueuedCount = 0;
+    for (let i = 0; i < staleProducts.rows.length; i++) {
+      const row = staleProducts.rows[i];
+      await refreshQueue.add(
+        'product.refresh',
+        {
+          productId: row.id,
+          tenantId: row.tenant_id,
+          supplierId: row.supplier_id,
+          idempotencyKey: `sync-${row.id}-${Date.now()}`,
+          refreshType: 'both',
+        },
+        {
+          delay: i * 250, // 250ms delay between dispatches to prevent supplier spikes
+        },
+      );
+      enqueuedCount++;
+    }
+
+    console.warn(`[Worker] Scheduled sync pass completed. Enqueued ${enqueuedCount} refresh jobs.`);
+    return { enqueuedCount };
+  },
+  { connection: redis, concurrency: 1 },
+);
+
+syncSchedulerWorker.on('failed', (job, err) => {
+  console.error(`[Worker] Sync scheduler job ${job?.id} failed:`, err.message);
+});
+
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   console.warn('[Worker] Shutting down...');
-  await Promise.allSettled([importWorker.close(), refreshWorker.close()]);
+  await Promise.allSettled([
+    importWorker.close(),
+    refreshWorker.close(),
+    syncSchedulerWorker.close(),
+  ]);
   process.exit(0);
 });

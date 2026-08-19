@@ -3,7 +3,7 @@ import { apiSuccess, apiError } from '@/lib/api/response';
 import { z } from 'zod';
 import { getAIClient, type RewriteRequest } from '@/lib/ai/ai-client';
 import { getCacheManager, CacheManager } from '@/lib/ai/cache-manager';
-import { DEV_TENANT_ID } from '@/lib/db/index';
+import { requireAuth } from '@/lib/middleware/auth-guard';
 
 /**
  * Schema for AI rewrite request
@@ -28,6 +28,8 @@ const RewriteSchema = z.object({
  * @agent:oracle Add unit tests for this endpoint
  */
 export async function POST(req: NextRequest) {
+  const actor = await requireAuth(req);
+
   let body: unknown;
   try {
     body = await req.json();
@@ -41,10 +43,6 @@ export async function POST(req: NextRequest) {
   }
 
   const rewriteRequest = parseResult.data;
-
-  // @agent:forge Replace this with the tenantId resolved from the
-  // authenticated session once next-auth is configured.
-  const tenantId = DEV_TENANT_ID;
 
   try {
     // Generate cache key
@@ -112,6 +110,8 @@ export async function POST(req: NextRequest) {
  * Get cached rewrite for a product or listing
  */
 export async function GET(req: NextRequest) {
+  const actor = await requireAuth(req);
+
   const url = new URL(req.url);
   const productId = url.searchParams.get('productId');
   const listingId = url.searchParams.get('listingId');
@@ -119,9 +119,6 @@ export async function GET(req: NextRequest) {
   if (!productId && !listingId) {
     return apiError('Either productId or listingId is required', null, 400);
   }
-
-  // @agent:forge Replace with session tenantId
-  const tenantId = DEV_TENANT_ID;
 
   try {
     const cacheManager = getCacheManager();

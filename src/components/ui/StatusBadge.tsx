@@ -33,9 +33,14 @@ export function StatusBadge({ state }: StatusBadgeProps) {
     submitted: { color: 'primary', label: STATE_LABELS.submitted },
     published: { color: 'success', label: STATE_LABELS.published },
     failed: { color: 'danger', label: STATE_LABELS.failed },
+    // Dashboard fallbacks
+    active: { color: 'success', label: 'Active' },
+    processing: { color: 'warning', label: 'Processing' },
+    error: { color: 'danger', label: 'Error' },
   };
 
-  const config = badgeConfig[state as string];
+  const normalizedState = (state || 'draft').toLowerCase();
+  const config = badgeConfig[normalizedState] || { color: 'default', label: state };
 
   return (
     <HeroUIChip color={config.color as any} variant="flat" size="sm">

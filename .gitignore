@@ -47,3 +47,20 @@ Prism Working/ui-sandbox/dist/
 backups/
 .age-key.txt
 .env.age
+
+# BrainSync generated agent rules and shadows
+.clinerules
+.cursorrules
+.windsurfrules
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+.cursor/rules/brainsync.mdc
+.windsurf/rules/brainsync.md
+.gemini/GEMINI.md
+.gemini/antigravity/brain/brainsync.md
+.kiro/steering/brainsync.md
+.brainsync/generated-context.md
+.brainsync/sync-state.json
+.agent-mem/last-session.md
+

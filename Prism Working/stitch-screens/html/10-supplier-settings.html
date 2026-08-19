@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GhostCart - Supplier Freedom</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary-fixed-variant": "#3323cc",
+                    "on-tertiary": "#472a00",
+                    "surface-container": "#171f33",
+                    "surface-tint": "#c3c0ff",
+                    "on-secondary-container": "#00311f",
+                    "outline-variant": "#464555",
+                    "on-primary-container": "#dad7ff",
+                    "primary-fixed": "#e2dfff",
+                    "outline": "#918fa1",
+                    "on-tertiary-fixed": "#2a1700",
+                    "on-background": "#dae2fd",
+                    "tertiary-fixed-dim": "#ffb95f",
+                    "inverse-surface": "#dae2fd",
+                    "on-surface": "#dae2fd",
+                    "surface-card": "#1E293B",
+                    "info": "#0EA5E9",
+                    "glow-indigo": "rgba(79, 70, 229, 0.15)",
+                    "secondary-fixed": "#6ffbbe",
+                    "on-error": "#690005",
+                    "on-primary-fixed": "#0f0069",
+                    "inverse-primary": "#4d44e3",
+                    "primary": "#c3c0ff",
+                    "surface": "#0b1326",
+                    "surface-dim": "#0b1326",
+                    "secondary": "#4edea3",
+                    "primary-container": "#4f46e5",
+                    "danger": "#EF4444",
+                    "glass-stroke": "rgba(255, 255, 255, 0.1)",
+                    "surface-bright": "#31394d",
+                    "on-primary": "#1d00a5",
+                    "surface-container-lowest": "#060e20",
+                    "surface-container-highest": "#2d3449",
+                    "on-tertiary-container": "#ffd4a4",
+                    "error-container": "#93000a",
+                    "on-tertiary-fixed-variant": "#653e00",
+                    "secondary-container": "#00a572",
+                    "primary-fixed-dim": "#c3c0ff",
+                    "on-secondary": "#003824",
+                    "inverse-on-surface": "#283044",
+                    "tertiary-container": "#885500",
+                    "surface-variant": "#2d3449",
+                    "on-surface-variant": "#c7c4d8",
+                    "surface-container-low": "#131b2e",
+                    "secondary-fixed-dim": "#4edea3",
+                    "on-secondary-fixed-variant": "#005236",
+                    "tertiary-fixed": "#ffddb8",
+                    "on-secondary-fixed": "#002113",
+                    "error": "#ffb4ab",
+                    "tertiary": "#ffb95f",
+                    "on-error-container": "#ffdad6",
+                    "surface-container-high": "#222a3d",
+                    "background": "#0b1326"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "stack-sm": "8px",
+                    "sidebar-width": "260px",
+                    "stack-xs": "4px",
+                    "card-padding": "16px",
+                    "sidebar-collapsed": "64px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Inter", "sans-serif"],
+                    "label-mono": ["JetBrains Mono", "monospace"],
+                    "headline-lg": ["Inter", "sans-serif"],
+                    "body-md": ["Inter", "sans-serif"],
+                    "body-sm": ["Inter", "sans-serif"],
+                    "data-table": ["Inter", "sans-serif"]
+            },
+            "fontSize": {
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "label-mono": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-md": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "body-sm": ["13px", {"lineHeight": "1.4", "fontWeight": "400"}],
+                    "data-table": ["13px", {"lineHeight": "1", "letterSpacing": "-0.01em", "fontWeight": "500"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        body {
+            background-color: #0F172A; /* Pure Slate Background */
+            color: #dae2fd;
+        }
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background-color: #1E293B;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .interactive-card:hover {
+            box-shadow: 0 0 8px 0 rgba(79, 70, 229, 0.15);
+            transition: box-shadow 0.2s ease-in-out;
+        }
+        
+        /* Custom scrollbar for terminal/tables */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.5); 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(71, 85, 105, 0.5); 
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(71, 85, 105, 0.8); 
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md bg-background min-h-screen flex selection:bg-primary-container selection:text-white">
+<!-- SideNavBar -->
+<nav class="hidden md:flex w-sidebar-width h-full fixed left-0 top-0 border-r border-glass-stroke bg-surface-container flex-col p-4 z-40">
+<div class="mb-8 flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-lg" style="font-variation-settings: 'FILL' 1;">precision_manufacturing</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">GhostCart</h1>
+<p class="font-label-mono text-label-mono text-on-surface-variant uppercase mt-1">Automation Engine</p>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto pr-2 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined text-lg group-hover:text-primary transition-colors">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined text-lg group-hover:text-primary transition-colors">search</span>
+<span>Research</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined text-lg group-hover:text-primary transition-colors">inventory_2</span>
+<span>Library</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined text-lg group-hover:text-primary transition-colors">format_list_bulleted</span>
+<span>Listings</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined text-lg group-hover:text-primary transition-colors">sell</span>
+<span>Pricing</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined text-lg group-hover:text-primary transition-colors">shopping_cart</span>
+<span>Orders</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined text-lg group-hover:text-primary transition-colors">analytics</span>
+<span>Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined text-lg group-hover:text-primary transition-colors">health_and_safety</span>
+<span>Health</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-primary font-bold bg-surface-container-high border-r-2 border-primary group" href="#">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">settings</span>
+<span>Settings</span>
+</a>
+</div>
+<div class="mt-auto pt-4 border-t border-glass-stroke">
+<button class="w-full py-2.5 bg-primary-container text-white rounded-lg font-medium hover:bg-inverse-primary transition-all shadow-[0_0_15px_rgba(79,70,229,0.3)] hover:shadow-[0_0_20px_rgba(79,70,229,0.5)] flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">rocket_launch</span>
+                Deploy Bot
+            </button>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 md:ml-sidebar-width flex flex-col min-h-screen relative">
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 w-full md:w-[calc(100%-260px)] h-16 z-30 bg-surface/80 backdrop-blur-xl border-b border-glass-stroke flex justify-between items-center px-gutter">
+<div class="md:hidden flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-lg">precision_manufacturing</span>
+</div>
+<h1 class="font-headline-md text-headline-md font-black text-on-surface">GhostCart</h1>
+</div>
+<div class="hidden md:flex items-center w-96 relative">
+<span class="material-symbols-outlined absolute left-3 text-on-surface-variant text-lg">search</span>
+<input class="w-full bg-[#0F172A] border border-slate-700 rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all font-body-sm text-on-surface placeholder-on-surface-variant" placeholder="Search suppliers, tasks..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-all focus-within:ring-1 focus-within:ring-primary rounded-full p-1">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-all focus-within:ring-1 focus-within:ring-primary rounded-full p-1">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Canvas -->
+<main class="flex-1 pt-24 pb-12 px-4 md:px-gutter max-w-[1600px] w-full mx-auto space-y-6">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Supplier Freedom Settings</h2>
+<p class="text-on-surface-variant mt-2 max-w-2xl">Train GhostCart to monitor custom supplier URLs and scrape data with precision.</p>
+</div>
+<div class="flex gap-3 w-full md:w-auto">
+<button class="flex-1 md:flex-none px-4 py-2 rounded-lg border border-glass-stroke bg-transparent hover:bg-surface-variant text-on-surface font-medium transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">bug_report</span>
+                        Test Scraper
+                    </button>
+<button class="flex-1 md:flex-none px-4 py-2 rounded-lg bg-primary-container text-white font-medium hover:shadow-[0_0_12px_rgba(79,70,229,0.4)] transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">add</span>
+                        Add Custom Supplier
+                    </button>
+</div>
+</div>
+<!-- Main Layout Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Left Column: Supplier Library (Span 2) -->
+<div class="lg:col-span-2 space-y-6">
+<div class="glass-panel rounded-xl overflow-hidden interactive-card">
+<div class="p-card-padding border-b border-glass-stroke bg-surface-container-low flex justify-between items-center">
+<h3 class="font-headline-md text-[18px] font-semibold text-on-surface">Custom Supplier Library</h3>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-glass-stroke bg-[#0F172A]/50">
+<th class="py-3 px-4 font-label-mono text-label-mono text-on-surface-variant uppercase tracking-wider">Supplier Name</th>
+<th class="py-3 px-4 font-label-mono text-label-mono text-on-surface-variant uppercase tracking-wider">Target URL</th>
+<th class="py-3 px-4 font-label-mono text-label-mono text-on-surface-variant uppercase tracking-wider">Status</th>
+<th class="py-3 px-4 font-label-mono text-label-mono text-on-surface-variant uppercase tracking-wider">Last Scan</th>
+<th class="py-3 px-4 font-label-mono text-label-mono text-on-surface-variant uppercase tracking-wider text-right">Action</th>
+</tr>
+</thead>
+<tbody class="font-data-table text-data-table">
+<tr class="border-b border-glass-stroke/50 hover:bg-[#334155] transition-colors group cursor-pointer">
+<td class="py-4 px-4 font-medium text-on-surface flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-surface-variant flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">build</span>
+</div>
+                                            Local Tool Wholesaler
+                                        </td>
+<td class="py-4 px-4 text-on-surface-variant truncate max-w-[150px]">toolwholesale.local/products</td>
+<td class="py-4 px-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Active
+                                            </span>
+</td>
+<td class="py-4 px-4 text-on-surface-variant">12 mins ago</td>
+<td class="py-4 px-4 text-right">
+<button class="text-on-surface-variant group-hover:text-primary transition-colors p-1">
+<span class="material-symbols-outlined text-sm">edit</span>
+</button>
+</td>
+</tr>
+<tr class="border-b border-glass-stroke/50 hover:bg-[#334155] transition-colors group cursor-pointer bg-primary-container/5 relative">
+<!-- Active State indicator -->
+<td class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></td>
+<td class="py-4 px-4 font-medium text-on-surface flex items-center gap-3 pl-5">
+<div class="w-8 h-8 rounded bg-primary-container/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-sm">toys</span>
+</div>
+                                            Specialty Hobby Shop
+                                        </td>
+<td class="py-4 px-4 text-on-surface-variant truncate max-w-[150px]">hobbymasters.com/catalog</td>
+<td class="py-4 px-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
+<span class="material-symbols-outlined text-[10px]">sync</span> Testing
+                                            </span>
+</td>
+<td class="py-4 px-4 text-on-surface-variant">-</td>
+<td class="py-4 px-4 text-right">
+<button class="text-primary transition-colors p-1">
+<span class="material-symbols-outlined text-sm">edit</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-[#334155] transition-colors group cursor-pointer">
+<td class="py-4 px-4 font-medium text-on-surface flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-surface-variant flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">cable</span>
+</div>
+                                            ElectroDistro EU
+                                        </td>
+<td class="py-4 px-4 text-on-surface-variant truncate max-w-[150px]">electro-eu.net/b2b</td>
+<td class="py-4 px-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/20">
+<span class="material-symbols-outlined text-[10px]">error</span> Failed
+                                            </span>
+</td>
+<td class="py-4 px-4 text-on-surface-variant">1 hr ago</td>
+<td class="py-4 px-4 text-right">
+<button class="text-on-surface-variant group-hover:text-primary transition-colors p-1">
+<span class="material-symbols-outlined text-sm">edit</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Global Scraper Settings -->
+<div class="glass-panel rounded-xl p-card-padding">
+<div class="flex items-center gap-2 mb-6 border-b border-glass-stroke pb-4">
+<span class="material-symbols-outlined text-primary">public</span>
+<h3 class="font-headline-md text-[18px] font-semibold text-on-surface">Global Scraper Engine</h3>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Frequency Slider -->
+<div class="space-y-3">
+<div class="flex justify-between items-center">
+<label class="font-label-mono text-label-mono text-on-surface-variant uppercase">Scan Frequency</label>
+<span class="text-sm font-medium text-primary">60 mins</span>
+</div>
+<input class="w-full h-1 bg-surface-bright rounded-lg appearance-none cursor-pointer accent-primary-container" max="1440" min="15" type="range" value="60"/>
+<div class="flex justify-between text-xs text-on-surface-variant/50">
+<span>15m</span>
+<span>24h</span>
+</div>
+</div>
+<!-- Proxy Level -->
+<div class="space-y-3">
+<label class="font-label-mono text-label-mono text-on-surface-variant uppercase block">Proxy Rotation</label>
+<div class="bg-[#0F172A] border border-slate-700 rounded-lg p-1 flex">
+<button class="flex-1 py-1.5 text-xs font-medium rounded-md text-on-surface-variant hover:text-on-surface transition-colors">Std</button>
+<button class="flex-1 py-1.5 text-xs font-medium rounded-md text-on-surface-variant hover:text-on-surface transition-colors">Adv</button>
+<button class="flex-1 py-1.5 text-xs font-medium rounded-md bg-surface-variant text-primary shadow-sm border border-glass-stroke">Ghost</button>
+</div>
+</div>
+<!-- Emulation Level -->
+<div class="space-y-3">
+<label class="font-label-mono text-label-mono text-on-surface-variant uppercase block">Human Emulation</label>
+<div class="bg-[#0F172A] border border-slate-700 rounded-lg p-1 flex">
+<button class="flex-1 py-1.5 text-xs font-medium rounded-md text-on-surface-variant hover:text-on-surface transition-colors">Low</button>
+<button class="flex-1 py-1.5 text-xs font-medium rounded-md text-on-surface-variant hover:text-on-surface transition-colors">Med</button>
+<button class="flex-1 py-1.5 text-xs font-medium rounded-md bg-surface-variant text-amber-400 shadow-sm border border-glass-stroke flex items-center justify-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> High
+                                    </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Training Configuration -->
+<div class="lg:col-span-1">
+<div class="glass-panel rounded-xl border border-primary/30 shadow-[0_0_15px_rgba(79,70,229,0.1)] h-full flex flex-col relative overflow-hidden">
+<!-- Top Accent Line -->
+<div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-container to-secondary"></div>
+<div class="p-card-padding border-b border-glass-stroke bg-surface-container-low">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-headline-md text-[18px] font-semibold text-on-surface">Scraper Training</h3>
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-primary-container/20 text-primary uppercase tracking-wider border border-primary/30">Editing</span>
+</div>
+<p class="text-xs text-on-surface-variant truncate">Target: hobbymasters.com</p>
+</div>
+<div class="p-card-padding flex-1 space-y-6 overflow-y-auto">
+<!-- Selectors -->
+<div class="space-y-4">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-sm text-secondary">code_blocks</span>
+<h4 class="font-label-mono text-label-mono text-on-surface-variant uppercase">CSS Selectors</h4>
+</div>
+<!-- Input Group -->
+<div class="space-y-1.5">
+<label class="text-xs text-on-surface-variant flex justify-between">
+                                        Product Title
+                                        <span class="font-label-mono text-[10px] text-emerald-400">98% Match</span>
+</label>
+<div class="relative">
+<input class="w-full bg-[#0F172A] border border-slate-700 rounded-lg px-3 py-2 text-sm font-label-mono text-secondary focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all" type="text" value="h1.product-title, .product-info h1"/>
+<span class="material-symbols-outlined absolute right-2 top-2 text-sm text-on-surface-variant cursor-pointer hover:text-on-surface">content_copy</span>
+</div>
+</div>
+<div class="space-y-1.5">
+<label class="text-xs text-on-surface-variant flex justify-between">
+                                        Current Price
+                                        <span class="font-label-mono text-[10px] text-emerald-400">100% Match</span>
+</label>
+<div class="relative">
+<input class="w-full bg-[#0F172A] border border-slate-700 rounded-lg px-3 py-2 text-sm font-label-mono text-secondary focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all" type="text" value=".price-current &gt; span.amount"/>
+</div>
+</div>
+<div class="space-y-1.5">
+<label class="text-xs text-on-surface-variant flex justify-between">
+                                        Stock Status
+                                        <span class="font-label-mono text-[10px] text-amber-400">Regex Req.</span>
+</label>
+<div class="relative">
+<input class="w-full bg-[#0F172A] border border-slate-700 rounded-lg px-3 py-2 text-sm font-label-mono text-amber-300 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all" type="text" value="div.availability-msg"/>
+</div>
+</div>
+<div class="space-y-1.5">
+<label class="text-xs text-on-surface-variant">Main Image</label>
+<div class="relative">
+<input class="w-full bg-[#0F172A] border border-slate-700 rounded-lg px-3 py-2 text-sm font-label-mono text-secondary focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all" type="text" value="#main-product-img::attr(src)"/>
+</div>
+</div>
+</div>
+<hr class="border-glass-stroke"/>
+<!-- Headers -->
+<div class="space-y-4">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-sm text-primary">security</span>
+<h4 class="font-label-mono text-label-mono text-on-surface-variant uppercase">Automation Headers</h4>
+</div>
+<div class="space-y-1.5">
+<label class="text-xs text-on-surface-variant">Custom User-Agent (Optional)</label>
+<textarea class="w-full bg-[#0F172A] border border-slate-700 rounded-lg px-3 py-2 text-xs font-label-mono text-on-surface focus:outline-none focus:border-primary-container transition-all placeholder-on-surface-variant/50" placeholder="Leave blank for auto-rotation" rows="2"></textarea>
+</div>
+</div>
+</div>
+<!-- Test Console -->
+<div class="bg-[#0b1326] border-t border-glass-stroke p-3 h-40 flex flex-col">
+<div class="flex justify-between items-center mb-2">
+<span class="font-label-mono text-[10px] text-on-surface-variant uppercase tracking-widest">Live Test Console</span>
+<div class="flex gap-1">
+<div class="w-2 h-2 rounded-full bg-red-500/50"></div>
+<div class="w-2 h-2 rounded-full bg-amber-500/50"></div>
+<div class="w-2 h-2 rounded-full bg-emerald-500/80 shadow-[0_0_5px_rgba(16,185,129,0.5)]"></div>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto font-label-mono text-[11px] leading-relaxed font-mono">
+<div class="text-on-surface-variant/60">&gt; Init GhostScraper v2.4.1</div>
+<div class="text-info">&gt; Targeting: hobbymasters.com/catalog/item-492</div>
+<div class="text-on-surface-variant/60">&gt; Applying headers &amp; rotating proxy (Ghost)...</div>
+<div class="text-emerald-400">&gt; 200 OK - Fetched in 1.2s</div>
+<div class="text-secondary">&gt; MATCH: Product Title -&gt; "Kyosho 1/10 RC Buggy"</div>
+<div class="text-secondary">&gt; MATCH: Current Price -&gt; "$349.99"</div>
+<div class="text-amber-400">&gt; WARN: Stock Status -&gt; Raw: "Only 2 left in stock!" - Applying Regex...</div>
+<div class="text-secondary">&gt; MATCH: Stock Status -&gt; Parsed Int: 2</div>
+<div class="text-emerald-400 mt-2">&gt; Test Complete: Ready for deployment.</div>
+</div>
+<div class="mt-2 flex gap-2">
+<button class="flex-1 py-1.5 rounded bg-surface-variant text-on-surface text-xs font-medium border border-glass-stroke hover:bg-surface-bright transition-colors">Clear Log</button>
+<button class="flex-1 py-1.5 rounded bg-primary-container/20 text-primary text-xs font-medium border border-primary/30 hover:bg-primary-container/30 transition-colors">Save Training</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

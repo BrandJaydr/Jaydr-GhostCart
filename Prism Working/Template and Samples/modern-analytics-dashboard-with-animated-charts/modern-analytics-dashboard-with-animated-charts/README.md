@@ -1,0 +1,7 @@
+# Modern Analytics Dashboard with Animated Charts
+
+A Pen created on CodePen.
+
+Original URL: [https://codepen.io/layxterdev/pen/MYKGZaB](https://codepen.io/layxterdev/pen/MYKGZaB).
+
+A comprehensive analytics dashboard component featuring real-time data visualization with animated progress bars, interactive metric cards, and smooth chart animations. Built for Kiara Sinha's data analytics platform with pure HTML5, CSS3, and vanilla JavaScript. This professional dashboard includes dark and light theme toggling, SVG path icons for all visualizations, responsive grid layouts for mobile, tablet, and desktop devices, and smooth entrance animations for all data elements. Features include revenue tracking, user growth metrics, conversion rate monitoring, and sales performance indicators with percentage changes and trend indicators. The component demonstrates modern dashboard design principles with clean typography, color-coded metrics, gradient progress bars, hover states, and professional data presentation. Perfect for business intelligence platforms, SaaS analytics dashboards, admin panels, CRM systems, financial reporting tools, or any application requiring professional data visualization without external charting libraries.

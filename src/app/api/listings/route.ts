@@ -2,13 +2,16 @@ import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { ListingListQuerySchema, ListingCreateSchema } from '@/lib/validation/schemas';
 import type { ListingDraft } from '@/lib/types/canonical';
-import { withTenant, DEV_TENANT_ID } from '@/lib/db';
+import { withTenant } from '@/lib/db';
+import { withAuthRoute, requirePermission, Permission } from '@/lib/middleware/auth-guard';
 
 /**
  * GET /api/listings
  * List listing drafts for the authenticated tenant.
  */
-export async function GET(req: NextRequest) {
+export const GET = withAuthRoute(async (req: NextRequest, actor) => {
+  await requirePermission(actor, Permission.LISTINGS_READ);
+
   const url = new URL(req.url);
   const queryParams = Object.fromEntries(url.searchParams.entries());
 
@@ -19,10 +22,11 @@ export async function GET(req: NextRequest) {
 
   const { page, limit, state } = parseResult.data;
   const offset = (page - 1) * limit;
+  const tenantId = actor.tenantId;
 
   try {
     const result = await withTenant<{ rows: ListingDraft[]; count: string }>(
-      DEV_TENANT_ID,
+      tenantId,
       async (client) => {
         const whereClause = state ? 'WHERE state = $3' : '';
         const countQuery = `SELECT COUNT(*) FROM listing_drafts ${whereClause}`;
@@ -70,14 +74,15 @@ export async function GET(req: NextRequest) {
     console.error('[API] GET /api/listings DB error:', (err as Error).message);
     return apiError('Failed to fetch listings', undefined, 500);
   }
-}
-
+});
 
 /**
  * POST /api/listings
  * Create a new listing draft from a reviewed product.
  */
-export async function POST(req: NextRequest) {
+export const POST = withAuthRoute(async (req: NextRequest, actor) => {
+  await requirePermission(actor, Permission.LISTINGS_WRITE);
+
   let body: unknown;
   try {
     body = await req.json();
@@ -91,10 +96,11 @@ export async function POST(req: NextRequest) {
   }
 
   const { productId, marketplace, idempotencyKey } = parseResult.data;
+  const tenantId = actor.tenantId;
 
   try {
     const draft = await withTenant<ListingDraft>(
-      DEV_TENANT_ID,
+      tenantId,
       async (client) => {
         const id = `lst_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
         const now = new Date().toISOString();
@@ -113,7 +119,7 @@ export async function POST(req: NextRequest) {
                      list_price_cents, currency, attributes, shipping, image_urls,
                      idempotency_key, marketplace_listing_id, last_error,
                      created_at, updated_at`,
-          [id, DEV_TENANT_ID, productId, marketplace, key, now, now],
+          [id, tenantId, productId, marketplace, key, now, now],
         );
 
         const row = (await client.query(
@@ -153,4 +159,4 @@ export async function POST(req: NextRequest) {
     console.error('[API] POST /api/listings DB error:', (err as Error).message);
     return apiError('Failed to create listing draft', undefined, 500);
   }
-}
+});

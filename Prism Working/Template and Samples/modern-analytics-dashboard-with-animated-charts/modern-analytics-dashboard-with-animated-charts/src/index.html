@@ -1,0 +1,237 @@
+<div class="theme-toggle" id="themeToggle" aria-label="Toggle dark and light theme">
+  <svg class="icon-sun" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+    <circle cx="12" cy="12" r="5"/>
+    <line x1="12" y1="1" x2="12" y2="3"/>
+    <line x1="12" y1="21" x2="12" y2="23"/>
+    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+    <line x1="1" y1="12" x2="3" y2="12"/>
+    <line x1="21" y1="12" x2="23" y2="12"/>
+    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+  </svg>
+  <svg class="icon-moon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+</div>
+
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <div class="header-content">
+      <div class="brand-info">
+        <h1 class="dashboard-title">Analytics Dashboard</h1>
+        <p class="dashboard-subtitle">Kiara Sinha Analytics Platform</p>
+      </div>
+      <div class="time-range">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        <span>Last 30 Days</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="metrics-grid">
+    <div class="metric-card revenue-card">
+      <div class="metric-header">
+        <div class="metric-icon">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="1" x2="12" y2="23"/>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+        </div>
+        <div class="trend-badge positive">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+            <polyline points="17 6 23 6 23 12"/>
+          </svg>
+          <span>12.5%</span>
+        </div>
+      </div>
+      <div class="metric-content">
+        <h3 class="metric-value">$48,574</h3>
+        <p class="metric-label">Total Revenue</p>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill revenue-progress" data-progress="75"></div>
+      </div>
+      <p class="metric-footer">$52,000 monthly goal</p>
+    </div>
+
+    <div class="metric-card users-card">
+      <div class="metric-header">
+        <div class="metric-icon">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <div class="trend-badge positive">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+            <polyline points="17 6 23 6 23 12"/>
+          </svg>
+          <span>8.3%</span>
+        </div>
+      </div>
+      <div class="metric-content">
+        <h3 class="metric-value">12,847</h3>
+        <p class="metric-label">Active Users</p>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill users-progress" data-progress="65"></div>
+      </div>
+      <p class="metric-footer">15,000 users target</p>
+    </div>
+
+    <div class="metric-card conversion-card">
+      <div class="metric-header">
+        <div class="metric-icon">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+        </div>
+        <div class="trend-badge negative">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/>
+            <polyline points="17 18 23 18 23 12"/>
+          </svg>
+          <span>2.1%</span>
+        </div>
+      </div>
+      <div class="metric-content">
+        <h3 class="metric-value">3.24%</h3>
+        <p class="metric-label">Conversion Rate</p>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill conversion-progress" data-progress="45"></div>
+      </div>
+      <p class="metric-footer">4.5% optimal rate</p>
+    </div>
+
+    <div class="metric-card orders-card">
+      <div class="metric-header">
+        <div class="metric-icon">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="9" cy="21" r="1"/>
+            <circle cx="20" cy="21" r="1"/>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+          </svg>
+        </div>
+        <div class="trend-badge positive">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+            <polyline points="17 6 23 6 23 12"/>
+          </svg>
+          <span>15.7%</span>
+        </div>
+      </div>
+      <div class="metric-content">
+        <h3 class="metric-value">1,893</h3>
+        <p class="metric-label">Total Orders</p>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill orders-progress" data-progress="85"></div>
+      </div>
+      <p class="metric-footer">2,000 orders target</p>
+    </div>
+  </div>
+
+  <div class="chart-section">
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3 class="chart-title">Weekly Performance</h3>
+        <div class="chart-legend">
+          <span class="legend-item">
+            <span class="legend-dot revenue-dot"></span>
+            Revenue
+          </span>
+          <span class="legend-item">
+            <span class="legend-dot orders-dot"></span>
+            Orders
+          </span>
+        </div>
+      </div>
+      <div class="bar-chart">
+        <div class="chart-bar" data-height="60">
+          <div class="bar-fill revenue-bar"></div>
+          <span class="bar-label">Mon</span>
+        </div>
+        <div class="chart-bar" data-height="75">
+          <div class="bar-fill revenue-bar"></div>
+          <span class="bar-label">Tue</span>
+        </div>
+        <div class="chart-bar" data-height="45">
+          <div class="bar-fill revenue-bar"></div>
+          <span class="bar-label">Wed</span>
+        </div>
+        <div class="chart-bar" data-height="85">
+          <div class="bar-fill revenue-bar"></div>
+          <span class="bar-label">Thu</span>
+        </div>
+        <div class="chart-bar" data-height="70">
+          <div class="bar-fill revenue-bar"></div>
+          <span class="bar-label">Fri</span>
+        </div>
+        <div class="chart-bar" data-height="90">
+          <div class="bar-fill revenue-bar"></div>
+          <span class="bar-label">Sat</span>
+        </div>
+        <div class="chart-bar" data-height="55">
+          <div class="bar-fill revenue-bar"></div>
+          <span class="bar-label">Sun</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-card">
+      <h3 class="stats-title">Quick Stats</h3>
+      <div class="stats-list">
+        <div class="stat-row">
+          <div class="stat-info">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            <span class="stat-name">Avg Order Value</span>
+          </div>
+          <span class="stat-value">$156.42</span>
+        </div>
+        <div class="stat-row">
+          <div class="stat-info">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span class="stat-name">Avg Session</span>
+          </div>
+          <span class="stat-value">4m 32s</span>
+        </div>
+        <div class="stat-row">
+          <div class="stat-info">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span class="stat-name">Downloads</span>
+          </div>
+          <span class="stat-value">8,392</span>
+        </div>
+        <div class="stat-row">
+          <div class="stat-info">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+            <span class="stat-name">Rating</span>
+          </div>
+          <span class="stat-value">4.8/5.0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

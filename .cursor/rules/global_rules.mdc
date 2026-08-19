@@ -1,0 +1,19 @@
+---
+description: Master rules and constraints for all agent operations
+globs: *
+alwaysApply: true
+---
+
+# Global Rules & Constraints
+
+You are operating under the global rules system. Before executing any task, you must load and strictly adhere to:
+1. [GLOBAL_RULES.md](file:///c:/Users/jayst/Documents/GitHub/Jaydr%20GhostCart/Docs/Global%20Agentic%20Rules/1_GLOBAL_RULES.md) - Master constraints and policies
+2. [TRIPLE_PASS_PROTOCOL.md](file:///c:/Users/jayst/Documents/GitHub/Jaydr%20GhostCart/Docs/Global%20Agentic%20Rules/3_TRIPLE_PASS_PROTOCOL.md) - Three-pass review system
+3. [MEMORY_STRUCTURE.md](file:///c:/Users/jayst/Documents/GitHub/Jaydr%20GhostCart/Docs/Global%20Agentic%20Rules/4_MEMORY_STRUCTURE.md) - File organization and logs
+
+## Mandated Constraints
+- **One Task at a Time**: Work sequentially. Do not perform parallel edits across files.
+- **Small Changes**: Maximum 5 files per completion cycle. Changes must be atomic.
+- **No Documentation Deletion**: Never delete documentation. Use `~~strikethrough~~` for deprecated items.
+- **Triple Pass Protocol**: Run all planning/error resolution through the Triple Pass Protocol inside `tasks/plan.md` before writing code.
+- **Quality Gates**: Every edit must pass `npm run lint` and `npx tsc --noEmit` with zero warnings/errors.

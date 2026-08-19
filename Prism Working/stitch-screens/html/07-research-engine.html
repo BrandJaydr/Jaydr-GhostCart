@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GhostCart - Product Research Engine</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "outline-variant": "#464555",
+                    "surface": "#0b1326",
+                    "surface-card": "#1E293B",
+                    "surface-container": "#171f33",
+                    "surface-container-high": "#222a3d",
+                    "tertiary-fixed": "#ffddb8",
+                    "on-error-container": "#ffdad6",
+                    "error-container": "#93000a",
+                    "tertiary": "#ffb95f",
+                    "primary-fixed": "#e2dfff",
+                    "on-primary-fixed-variant": "#3323cc",
+                    "glass-stroke": "rgba(255, 255, 255, 0.1)",
+                    "on-primary-container": "#dad7ff",
+                    "on-secondary-fixed-variant": "#005236",
+                    "info": "#0EA5E9",
+                    "surface-container-low": "#131b2e",
+                    "secondary-fixed-dim": "#4edea3",
+                    "secondary-fixed": "#6ffbbe",
+                    "primary-fixed-dim": "#c3c0ff",
+                    "primary": "#c3c0ff",
+                    "on-tertiary-fixed-variant": "#653e00",
+                    "secondary-container": "#00a572",
+                    "on-primary": "#1d00a5",
+                    "surface-dim": "#0b1326",
+                    "on-secondary-container": "#00311f",
+                    "primary-container": "#4f46e5",
+                    "danger": "#EF4444",
+                    "background": "#0b1326",
+                    "on-secondary-fixed": "#002113",
+                    "surface-bright": "#31394d",
+                    "surface-tint": "#c3c0ff",
+                    "on-tertiary-container": "#ffd4a4",
+                    "surface-container-highest": "#2d3449",
+                    "on-secondary": "#003824",
+                    "on-tertiary-fixed": "#2a1700",
+                    "surface-variant": "#2d3449",
+                    "on-error": "#690005",
+                    "surface-container-lowest": "#060e20",
+                    "outline": "#918fa1",
+                    "on-surface-variant": "#c7c4d8",
+                    "glow-indigo": "rgba(79, 70, 229, 0.15)",
+                    "inverse-primary": "#4d44e3",
+                    "on-surface": "#dae2fd",
+                    "on-background": "#dae2fd",
+                    "inverse-on-surface": "#283044",
+                    "secondary": "#4edea3",
+                    "error": "#ffb4ab",
+                    "tertiary-fixed-dim": "#ffb95f",
+                    "inverse-surface": "#dae2fd",
+                    "on-tertiary": "#472a00",
+                    "tertiary-container": "#885500",
+                    "on-primary-fixed": "#0f0069"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "stack-xs": "4px",
+                    "stack-sm": "8px",
+                    "sidebar-collapsed": "64px",
+                    "gutter": "24px",
+                    "sidebar-width": "260px",
+                    "card-padding": "16px"
+            },
+            "fontFamily": {
+                    "body-md": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "data-table": ["Inter"],
+                    "label-mono": ["JetBrains Mono"]
+            },
+            "fontSize": {
+                    "body-md": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-sm": ["13px", {"lineHeight": "1.4", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "data-table": ["13px", {"lineHeight": "1", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                    "label-mono": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "500"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        body { background-color: #0F172A; color: #dae2fd; }
+        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .hidden-niche-glow { box-shadow: 0 0 15px rgba(245, 158, 11, 0.2); border-color: rgba(245, 158, 11, 0.4); }
+    </style>
+</head>
+<body class="font-body-md text-body-md antialiased overflow-hidden flex">
+<!-- SideNavBar -->
+<nav class="w-sidebar-width h-full fixed left-0 top-0 bg-surface-container dark:bg-surface-container border-r border-glass-stroke flex flex-col p-4 z-40 hidden md:flex">
+<div class="flex items-center gap-3 mb-8 px-2">
+<div class="w-8 h-8 rounded bg-primary-container flex items-center justify-center text-on-primary-container">
+<span class="material-symbols-outlined font-bold">shopping_cart</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">GhostCart</h1>
+<p class="font-label-mono text-label-mono text-on-surface-variant text-[10px] uppercase">Automation Engine</p>
+</div>
+</div>
+<div class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-primary font-bold border-r-2 border-primary bg-surface-container-high transition-colors scale-95 duration-100" href="#">
+<span class="material-symbols-outlined text-[20px]">search</span>
+<span>Research</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">inventory_2</span>
+<span>Library</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">format_list_bulleted</span>
+<span>Listings</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">sell</span>
+<span>Pricing</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">shopping_cart</span>
+<span>Orders</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">analytics</span>
+<span>Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">health_and_safety</span>
+<span>Health</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span>Settings</span>
+</a>
+</div>
+<button class="mt-auto w-full py-2 bg-primary-container text-on-primary-container font-label-mono text-label-mono rounded-DEFAULT hover:bg-inverse-primary transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[16px]">rocket_launch</span>
+            Deploy Bot
+        </button>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 ml-0 md:ml-sidebar-width h-screen flex flex-col relative">
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 w-full md:w-[calc(100%-260px)] h-16 z-50 bg-surface/80 backdrop-blur-xl border-b border-glass-stroke shadow-sm flex justify-between items-center px-gutter">
+<div class="flex-1 max-w-2xl">
+<div class="relative focus-within:ring-1 focus-within:ring-primary rounded-DEFAULT">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+<input class="w-full bg-[#0F172A] border border-slate-700 rounded-DEFAULT py-2 pl-10 pr-4 text-on-surface placeholder:text-on-surface-variant font-label-mono text-label-mono focus:outline-none focus:border-primary-container transition-colors" placeholder="Paste URL or keyword to spy..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4 ml-4">
+<button class="text-on-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined text-[24px]">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined text-[24px]">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Content -->
+<div class="flex-1 overflow-y-auto pt-20 p-gutter flex gap-gutter">
+<!-- Results Section -->
+<div class="flex-1 flex flex-col gap-gutter">
+<!-- Filters Bar -->
+<div class="glass-panel p-3 rounded-lg flex items-center justify-between gap-4">
+<div class="flex items-center gap-3">
+<span class="font-label-mono text-label-mono text-on-surface-variant uppercase">Marketplace:</span>
+<select class="bg-[#0F172A] border border-slate-700 text-on-surface font-body-sm text-body-sm rounded-DEFAULT px-2 py-1 focus:outline-none focus:border-primary">
+<option>All Platforms</option>
+<option>Amazon</option>
+<option>Walmart</option>
+<option>eBay</option>
+</select>
+</div>
+<div class="flex items-center gap-3">
+<span class="font-label-mono text-label-mono text-on-surface-variant uppercase">Min Margin:</span>
+<select class="bg-[#0F172A] border border-slate-700 text-on-surface font-body-sm text-body-sm rounded-DEFAULT px-2 py-1 focus:outline-none focus:border-primary">
+<option>&gt; 10%</option>
+<option>&gt; 20%</option>
+<option>&gt; 30%</option>
+</select>
+</div>
+<div class="flex items-center gap-3">
+<span class="font-label-mono text-label-mono text-on-surface-variant uppercase">Shipping:</span>
+<select class="bg-[#0F172A] border border-slate-700 text-on-surface font-body-sm text-body-sm rounded-DEFAULT px-2 py-1 focus:outline-none focus:border-primary">
+<option>Any Speed</option>
+<option>&lt; 7 Days</option>
+<option>&lt; 3 Days</option>
+</select>
+</div>
+<button class="ml-auto text-primary font-label-mono text-label-mono hover:text-primary-fixed transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">filter_list</span> Advanced
+                    </button>
+</div>
+<!-- Result Grid -->
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+<!-- Card 1 -->
+<div class="glass-panel rounded-lg p-card-padding flex gap-4 hover:shadow-[0_0_15px_rgba(79,70,229,0.15)] transition-shadow">
+<div class="w-24 h-24 rounded bg-[#0F172A] border border-slate-700 flex-shrink-0 overflow-hidden relative">
+<img class="w-full h-full object-cover opacity-80" data-alt="A sleek, modern pair of noise-canceling headphones resting on a metallic dark slate surface. The lighting is moody and dramatic with cool blue and purple rim lights emphasizing the technological edge. High resolution, professional product photography style fitting a dark enterprise theme." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAMRBLSkytUSijB0BteE7QN1u_6zv3EFSMhdLjZbODNiVE7AMk7mTifCveIwjgrDLAH2fecfW7ws2tPyf2iHEz5blNx5bba_yiUv1ryHKo4ly_36r_qhgBEJ0poEY0cajUh0y-dWE3WsBKxtO-CmIredvLxSGE0VHthNRPnLgjF9hDo3F2t3tSNGVY7IOb2mTvSK_d330i5qgxTAcj9Ubrh2k2fOQ0FjdtEg_pFadEIW0vQizhUzZ3y"/>
+<div class="absolute top-1 left-1 bg-surface/80 backdrop-blur px-1 rounded text-[10px] font-label-mono text-primary border border-glass-stroke">AMZ</div>
+</div>
+<div class="flex-1 flex flex-col justify-between">
+<div>
+<h3 class="font-data-table text-data-table text-on-surface truncate">Sony WH-1000XM4 Wireless Noise Canceling Headphones</h3>
+<div class="flex gap-2 mt-1">
+<span class="text-[10px] font-label-mono text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded">ASIN: B0863TXGM3</span>
+<span class="text-[10px] font-label-mono text-secondary bg-secondary/10 border border-secondary/20 px-1.5 py-0.5 rounded flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> Active</span>
+</div>
+</div>
+<div class="grid grid-cols-4 gap-2 mt-3">
+<div>
+<p class="text-[10px] font-label-mono text-on-surface-variant uppercase">Supplier</p>
+<p class="font-data-table text-data-table text-on-surface">$198.50</p>
+</div>
+<div>
+<p class="text-[10px] font-label-mono text-on-surface-variant uppercase">Target</p>
+<p class="font-data-table text-data-table text-on-surface">$348.00</p>
+</div>
+<div>
+<p class="text-[10px] font-label-mono text-on-surface-variant uppercase">Est Profit</p>
+<p class="font-data-table text-data-table text-secondary">+$114.20</p>
+</div>
+<div>
+<p class="text-[10px] font-label-mono text-on-surface-variant uppercase">Risk</p>
+<div class="w-full bg-surface-container rounded-full h-1.5 mt-1.5">
+<div class="bg-secondary h-1.5 rounded-full" style="width: 15%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 2 (Hidden Niche) -->
+<div class="glass-panel rounded-lg p-card-padding flex gap-4 hidden-niche-glow transition-shadow relative overflow-hidden">
+<div class="absolute top-0 right-0 bg-amber-500/20 text-amber-500 font-label-mono text-[10px] px-2 py-1 rounded-bl-lg border-b border-l border-amber-500/30 flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">visibility</span> Hidden Niche
+                        </div>
+<div class="w-24 h-24 rounded bg-[#0F172A] border border-slate-700 flex-shrink-0 overflow-hidden relative">
+<img class="w-full h-full object-cover opacity-80" data-alt="A specialized ergonomic split keyboard designed for developers, sitting on a dark matte desk mat. Subtle amber under-glow illumination highlights the keys against the dark obsidian glass aesthetic of the surrounding environment. High-end, technical, dark-mode photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBU3r9njNVk1gEHccoTP6YB11e1Ti4RvTcKVq7r2hqHWw-63JbSdI3g0YKcxzgzJqGXq61MJDJNp7X1brPjxM3dqhV3fkeRM2oXtsTw9s1wBSdEkFt7rYjjxzDVO04byuWR5XhE8bRloilZwMdbnS-sovR4qISnya_Y1zlzFlKz87q3u2qDR5kck5Xp2nUfxiuDCDITnKAMpMZoc_XvXk0Htid7Icnt0gfk7sa2QQuqAZDjP_rPtaoY"/>
+<div class="absolute top-1 left-1 bg-surface/80 backdrop-blur px-1 rounded text-[10px] font-label-mono text-primary border border-glass-stroke">WMT</div>
+</div>
+<div class="flex-1 flex flex-col justify-between">
+<div>
+<h3 class="font-data-table text-data-table text-on-surface truncate pr-20">Ergodox EZ Ergonomic Split Keyboard</h3>
+<div class="flex gap-2 mt-1">
+<span class="text-[10px] font-label-mono text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded">UPC: 843198031</span>
+<span class="text-[10px] font-label-mono text-secondary bg-secondary/10 border border-secondary/20 px-1.5 py-0.5 rounded flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> Active</span>
+</div>
+</div>
+<div class="grid grid-cols-4 gap-2 mt-3">
+<div>
+<p class="text-[10px] font-label-mono text-on-surface-variant uppercase">Supplier</p>
+<p class="font-data-table text-data-table text-on-surface">$145.00</p>
+</div>
+<div>
+<p class="text-[10px] font-label-mono text-on-surface-variant uppercase">Target</p>
+<p class="font-data-table text-data-table text-on-surface">$299.00</p>
+</div>
+<div>
+<p class="text-[10px] font-label-mono text-on-surface-variant uppercase">Est Profit</p>
+<p class="font-data-table text-data-table text-secondary">+$124.00</p>
+</div>
+<div>
+<p class="text-[10px] font-label-mono text-on-surface-variant uppercase">Risk</p>
+<div class="w-full bg-surface-container rounded-full h-1.5 mt-1.5">
+<div class="bg-amber-500 h-1.5 rounded-full" style="width: 45%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="glass-panel rounded-lg p-card-padding flex gap-4 hover:shadow-[0_0_15px_rgba(79,70,229,0.15)] transition-shadow">
+<div class="w-24 h-24 rounded bg-[#0F172A] border border-slate-700 flex-shrink-0 overflow-hidden relative">
+<img class="w-full h-full object-cover opacity-80" data-alt="A minimalist smart home security camera with a matte black finish, mounted against a dark textured wall. The lens reflects a faint blue light, conveying advanced surveillance technology in a sleek, modern enterprise context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5J49D_memCKtHOCcbrCMWd_NE_TVvayOAOIA5TA7vqpk3vrp9Kp5Xrkd8cHgs6p9ACdsG6_FOcrdkWrJKvJWpn3zZM3EX1E7e0lfZnfjJNF4Ja7arp1jOhUYmyXD74bSKm6jk8O4sJAjYLGR2cjJMkIOx-ElzkrApOuNVnKnKFUuYeuKHQMpA73f9QiBgD167hm_aIOZ74SgWMFYLeaw8_gZwIIQZ7xOJttpAiH3f2qtncuO2RYDB"/>
+<div class="absolute top-1 left-1 bg-surface/80 backdrop-blur px-1 rounded text-[10px] font-label-mono text-primary border border-glass-stroke">EBY</div>
+</div>
+<div class="flex-1 flex flex-col justify-between">
+<div>
+<h3 class="font-data-table text-data-table text-on-surface truncate">Wyze Cam v3 Indoor/Outdoor Security Camera</h3>
+<div class="flex gap-2 mt-1">
+<span class="text-[10px] font-label-mono text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded">SKU: WYZ-300</span>
+</div>
+</div>
+<div class="grid grid-cols-4 gap-2 mt-3">
+<div>
+<p class="text-[10px] font-label-mono text-on-surface-variant uppercase">Supplier</p>
+<p class="font-data-table text-data-table text-on-surface">$18.50</p>
+</div>
+<div>
+<p class="text-[10px] font-label-mono text-on-surface-variant uppercase">Target</p>
+<p class="font-data-table text-data-table text-on-surface">$35.99</p>
+</div>
+<div>
+<p class="text-[10px] font-label-mono text-on-surface-variant uppercase">Est Profit</p>
+<p class="font-data-table text-data-table text-secondary">+$12.49</p>
+</div>
+<div>
+<p class="text-[10px] font-label-mono text-on-surface-variant uppercase">Risk</p>
+<div class="w-full bg-surface-container rounded-full h-1.5 mt-1.5">
+<div class="bg-danger h-1.5 rounded-full" style="width: 85%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Side Panel: Trending Niche Finder -->
+<div class="w-80 flex-shrink-0 flex flex-col gap-4">
+<div class="glass-panel rounded-lg p-card-padding flex-1">
+<div class="flex items-center justify-between mb-4 border-b border-glass-stroke pb-2">
+<h2 class="font-headline-sm text-headline-sm font-semibold text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">trending_up</span>
+                            Trending Niches
+                        </h2>
+<span class="text-[10px] font-label-mono text-on-surface-variant">Live Data</span>
+</div>
+<div class="space-y-3">
+<div class="p-2 rounded bg-surface/50 border border-transparent hover:border-glass-stroke transition-colors cursor-pointer group">
+<div class="flex justify-between items-start">
+<span class="font-data-table text-data-table text-on-surface group-hover:text-primary transition-colors">Ergonomic Office</span>
+<span class="text-[10px] font-label-mono text-secondary">+124% Vol</span>
+</div>
+<div class="mt-1 flex gap-1">
+<span class="text-[9px] font-label-mono text-on-surface-variant bg-surface-container px-1 rounded">Keyboards</span>
+<span class="text-[9px] font-label-mono text-on-surface-variant bg-surface-container px-1 rounded">Desks</span>
+</div>
+</div>
+<div class="p-2 rounded bg-surface/50 border border-transparent hover:border-glass-stroke transition-colors cursor-pointer group hidden-niche-glow relative overflow-hidden">
+<div class="absolute top-0 right-0 w-1 h-full bg-amber-500"></div>
+<div class="flex justify-between items-start">
+<span class="font-data-table text-data-table text-on-surface group-hover:text-primary transition-colors pr-6">Pet Tech</span>
+<span class="text-[10px] font-label-mono text-secondary">+312% Vol</span>
+</div>
+<div class="mt-1 flex gap-1">
+<span class="text-[9px] font-label-mono text-on-surface-variant bg-surface-container px-1 rounded">Feeders</span>
+<span class="text-[9px] font-label-mono text-on-surface-variant bg-surface-container px-1 rounded">Cameras</span>
+</div>
+</div>
+<div class="p-2 rounded bg-surface/50 border border-transparent hover:border-glass-stroke transition-colors cursor-pointer group">
+<div class="flex justify-between items-start">
+<span class="font-data-table text-data-table text-on-surface group-hover:text-primary transition-colors">Smart Lighting</span>
+<span class="text-[10px] font-label-mono text-secondary">+85% Vol</span>
+</div>
+<div class="mt-1 flex gap-1">
+<span class="text-[9px] font-label-mono text-on-surface-variant bg-surface-container px-1 rounded">LED Strips</span>
+<span class="text-[9px] font-label-mono text-on-surface-variant bg-surface-container px-1 rounded">Bulbs</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

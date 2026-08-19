@@ -11,75 +11,47 @@
 
 ## Color System
 
-### Primary Colors
+### Primary Colors (Burgundy Palette)
 ```typescript
 primary: {
-  50: '#f0f9ff',   // Lightest blue
-  100: '#e0f2fe',  // Very light blue
-  200: '#bae6fd',  // Light blue
-  300: '#7dd3fc',  // Medium light blue
-  400: '#38bdf8',  // Medium blue
-  500: '#0ea5e9',  // Standard blue (primary)
-  600: '#0284c7',  // Dark blue
-  700: '#0369a1',  // Darker blue
-  800: '#075985',  // Very dark blue
-  900: '#0c4a6e',  // Darkest blue
+  50: '#fef0f2',   // Lightest pink/burgundy tint
+  100: '#fde0e5',  // Very light burgundy tint
+  200: '#fbbfc8',  // Light burgundy tint
+  300: '#f79aa8',  // Medium light burgundy
+  400: '#f16f84',  // Medium burgundy
+  500: '#791228',  // Primary Burgundy Brand
+  600: '#55121e',  // Deep Burgundy Accent
+  700: '#420d16',  // Dark burgundy
+  800: '#2d090f',  // Very dark burgundy
+  900: '#1a0508',  // Darkest burgundy
 }
 ```
 
-### Secondary Colors
-```typescript
-secondary: {
-  50: '#f5f3ff',   // Lightest purple
-  100: '#ede9fe',  // Very light purple
-  200: '#ddd6fe',  // Light purple
-  300: '#c4b5fd',  // Medium light purple
-  400: '#a78bfa',  // Medium purple
-  500: '#8b5cf6',  // Standard purple (secondary)
-  600: '#7c3aed',  // Dark purple
-  700: '#6d28d9',  // Darker purple
-  800: '#5b21b6',  // Very dark purple
-  900: '#4c1d95',  // Darkest purple
-}
-```
-
-### Semantic Colors
-```typescript
-success: {
-  light: '#34d399',
-  DEFAULT: '#10b981',
-  dark: '#059669',
-},
-warning: {
-  light: '#fbbf24',
-  DEFAULT: '#f59e0b',
-  dark: '#d97706',
-},
-error: {
-  light: '#f87171',
-  DEFAULT: '#ef4444',
-  dark: '#dc2626',
-},
-info: {
-  light: '#60a5fa',
-  DEFAULT: '#3b82f6',
-  dark: '#2563eb',
-},
-```
-
-### Neutral Colors
+### Neutral & Surface Colors (Warm Cream Palette)
 ```typescript
 neutral: {
   50: '#f9fafb',
-  100: '#f3f4f6',
-  200: '#e5e7eb',
+  100: '#f3f1ef',  // Base Background (Warm Cream)
+  200: '#e0dbd8',  // Subtle Surface & Border Contrast
   300: '#d1d5db',
   400: '#9ca3af',
-  500: '#6b7280',
+  500: '#6b7280',  // Muted Foreground Text
   600: '#4b5563',
   700: '#374151',
   800: '#1f2937',
-  900: '#111827',
+  900: '#0d0d0d',  // Foreground Text (Near Black)
+}
+```
+
+### Semantic Surface Tokens
+```typescript
+theme: {
+  background: '#f3f1ef',
+  surface: '#ffffff',
+  surfaceElevated: '#ffffff',
+  foreground: '#0d0d0d',
+  mutedForeground: '#6b7280',
+  border: '#e0dbd8',
 }
 ```
 
@@ -260,18 +232,20 @@ topnav: {
 ```typescript
 button: {
   primary: {
-    backgroundColor: '#0ea5e9', // primary-500
-    hoverColor: '#0284c7', // primary-600
+    backgroundColor: '#791228', // primary-500
+    hoverColor: '#55121e', // primary-600
     textColor: '#ffffff',
+    disabledBackgroundColor: '#e0dbd8', // neutral-200 / surface border
+    disabledTextColor: '#6b7280', // neutral-500 muted text
   },
   secondary: {
-    backgroundColor: '#8b5cf6', // secondary-500
-    hoverColor: '#7c3aed', // secondary-600
-    textColor: '#ffffff',
+    backgroundColor: '#e0dbd8',
+    hoverColor: '#d1d5db',
+    textColor: '#0d0d0d',
   },
   danger: {
-    backgroundColor: '#ef4444', // error-DEFAULT
-    hoverColor: '#dc2626', // error-dark
+    backgroundColor: '#ef4444',
+    hoverColor: '#dc2626',
     textColor: '#ffffff',
   },
 }

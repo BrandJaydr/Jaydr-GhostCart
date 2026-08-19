@@ -108,7 +108,7 @@ export function validateCsv(text: string, requiredKeys: string[]): ValidationRes
   const errors: ValidationError[] = [];
   const warnings: ValidationError[] = [];
 
-  const lines = text.split(/\r?\n/).map((l) => l.trim());
+  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
   if (lines.length === 0) {
     errors.push({ message: 'CSV file is empty', severity: 'error' });
     return { isValid: false, errors, warnings };

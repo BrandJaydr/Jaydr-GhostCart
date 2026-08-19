@@ -173,7 +173,7 @@ describe('AI Client', () => {
         eval_count: 50,
       };
 
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: true,
         json: async () => mockResponse,
       });

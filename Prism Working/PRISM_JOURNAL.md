@@ -525,3 +525,11 @@ The Production Blueprint provides clear design guidance:
 8. **Coinbase** - Fintech trust patterns, pill buttons
 
 ---
+
+## 🎨 DESIGN SYSTEM REVISION (2026-08-17)
+
+### Island Interface & Warm Cream / Burgundy Palette
+- **Palette Adoption:** Adopted Coolors palette (`#f3f1ef`, `#e0dbd8`, `#791228`, `#55121e`, `#0d0d0d`).
+- **Layout Architecture:** Shifted from boxed containers to a floating "Island Interface" where search bar, floating sidebar icons, and cards hover over `#f3f1ef` background.
+- **Button Contrast Rules:** Required explicit solid `#e0dbd8` background with `#6b7280` text for disabled primary buttons to guarantee high contrast visibility against `#f3f1ef` light surfaces.
+

@@ -1,16 +1,33 @@
 import { describe, it, expect, vi } from 'vitest';
 
 // Mock db before importing routes that transitively load idempotency → db.
+const mockDb = {
+  query: vi.fn(async () => ({ rowCount: 0, rows: [] })),
+  connect: vi.fn(async () => ({
+    query: vi.fn(async () => undefined),
+    release: vi.fn(),
+  })),
+};
+
 vi.mock('@/lib/db/index.js', () => ({
-  db: {
-    query: vi.fn(async () => ({ rowCount: 0, rows: [] })),
-    connect: vi.fn(async () => ({
-      query: vi.fn(async () => undefined),
-      release: vi.fn(),
-    })),
-  },
+  db: mockDb,
   setTenantContextOn: vi.fn(async () => undefined),
   DEV_TENANT_ID: '00000000-0000-0000-0000-000000000001',
+  withTenant: vi.fn(async (tenantId, cb) => await cb(mockDb)),
+}));
+
+vi.mock('@/lib/middleware/resolve-actor', () => ({
+  resolveActor: vi.fn(async () => ({
+    userId: '00000000-0000-0000-0000-000000000001',
+    tenantId: '00000000-0000-0000-0000-000000000001',
+    role: 'owner',
+  })),
+}));
+
+vi.mock('@/lib/queue', () => ({
+  importQueue: {
+    add: vi.fn(async () => ({ id: 'mock-job-id' })),
+  },
 }));
 
 const { GET: getProducts, POST: postProducts } = await import('@/app/api/products/route');

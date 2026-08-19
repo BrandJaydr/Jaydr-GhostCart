@@ -3,7 +3,8 @@ import { apiSuccess, apiError } from '@/lib/api/response';
 import { z } from 'zod';
 import { getEBayClient, type ListingItem } from '@/lib/adapters/ebay/ebay-client';
 import { mapListingDraftToEBayListing, validateEBayListing } from '@/lib/adapters/ebay/listing-mapper';
-import { db, DEV_TENANT_ID, withTenant } from '@/lib/db/index';
+import { db, withTenant } from '@/lib/db/index';
+import { requireAuth } from '@/lib/middleware/auth-guard';
 
 /**
  * Schema for eBay listing submission
@@ -23,6 +24,8 @@ const SubmitListingSchema = z.object({
  * @agent:oracle Add tests for listing submission
  */
 export async function POST(req: NextRequest) {
+  const actor = await requireAuth(req);
+
   let body: unknown;
   try {
     body = await req.json();
@@ -36,20 +39,19 @@ export async function POST(req: NextRequest) {
   }
 
   const { listingId, category, condition, listingType, duration } = parseResult.data;
-
-  // @agent:forge Replace this with the tenantId resolved from the
-  // authenticated session once next-auth is configured.
-  const tenantId = DEV_TENANT_ID;
+  const { tenantId } = actor;
 
   try {
     // Fetch listing draft from database
-    const listingResult = await db.query(
-      `SELECT id, title, description, list_price_cents, currency, image_urls
-       FROM listings
-       WHERE id = $1 AND tenant_id = $2
-       LIMIT 1`,
-      [listingId, tenantId],
-    );
+    const listingResult = await withTenant(tenantId, async (client) => {
+      return await client.query(
+        `SELECT id, title, description, list_price_cents, currency, image_urls
+         FROM listings
+         WHERE id = $1 AND tenant_id = $2
+         LIMIT 1`,
+        [listingId, tenantId],
+      );
+    });
 
     if ((listingResult.rowCount ?? 0) === 0) {
       return apiError('Listing not found', null, 404);

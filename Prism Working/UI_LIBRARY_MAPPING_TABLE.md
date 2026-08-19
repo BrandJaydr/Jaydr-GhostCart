@@ -4,7 +4,7 @@
 > **Date:** 2026-08-11
 > **Purpose:** Map HeroUI, MagicUI, and Lightswind UI components to GhostCart features
 
-> **ACTIVE IMPLEMENTATION NOTICE (2026-08-12):** Verified baseline: **Next.js 14.2.5, React 18.3.1, HeroUI v2.8.10, Tailwind CSS v4.3.3**. All dependencies are installed and configured. `UI_RECOVERY_BRIEF.md` governs implementation. Do not represent unverified library capabilities as available.
+> **ACTIVE IMPLEMENTATION NOTICE (2026-08-12):** Verified baseline: **Next.js 14.2.5, React 18.3.1, HeroUI v2.8.10, Tailwind CSS v3.4.19**. All dependencies are installed and configured. `UI_RECOVERY_BRIEF.md` governs implementation. Do not represent unverified library capabilities as available.
 
 ---
 
@@ -146,31 +146,15 @@
 - AI-native with MCP server integration
 - Excellent TypeScript support
 
-### Secondary Library: MagicUI
-**Use for:**
-- Animation effects and transitions
-- Visual enhancements
-- Landing page elements
-- Interactive backgrounds
+### Flexible Integration Strategy (Secondary/Tertiary Libraries)
+**MagicUI & Lightswind UI Usage:**
+These libraries (and others evaluated in the future) do not have to be fixed. They are documented here to keep track of what is available and where they are likely to be used.
 
-**Rationale:**
-- Complements HeroUI with animation focus
-- Copy-paste approach for easy integration
-- 150+ animated components
-- Perfect for visual polish
-
-### Tertiary Library: Lightswind UI
-**Use for:**
-- Advanced 3D components (when needed)
-- High-performance layout components
-- WebGL effects (rare cases)
-- Specialized visual effects
-
-**Rationale:**
-- Advanced capabilities for specific use cases
-- High-performance components
-- MCP integration for AI assistance
-- Use sparingly for performance optimization
+**Rationale for Evaluation on Each Pass:**
+- We must remain vigilant during each development pass to improve the UX/UI experience wherever possible.
+- Prioritize the most fitting, compatible, premium, and functional components when the appropriate timing is right.
+- Ensure that any new library added does not break accessibility or the core React 18 / Tailwind v3 foundations.
+- Add components selectively and copy-paste code where possible to minimize bundle size bloat.
 
 ---
 
@@ -183,9 +167,8 @@
 
 ### Component Selection Rules
 - **Default to HeroUI** for all standard UI components
-- **Use MagicUI** only when animation is required
-- **Use Lightswind UI** only when 3D/performance is critical
-- **Avoid mixing** similar components from different libraries
+- **Dynamically Evaluate:** For animations and advanced effects, dynamically evaluate MagicUI, Lightswind UI, or custom Framer Motion implementations on each development pass. Choose the option that provides the most premium and compatible experience.
+- **Avoid mixing** similar functional components from different libraries (e.g., don't use two different Button implementations)
 
 ### Custom Component Layer
 - Create custom components in `components/custom/`

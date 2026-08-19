@@ -12,6 +12,7 @@ export interface ButtonProps extends Omit<HeroUIButtonProps, 'color' | 'size' | 
   name?: string;
   value?: string;
   form?: string;
+  className?: string;
 }
 
 export function Button({
@@ -25,6 +26,7 @@ export function Button({
   name,
   value,
   form,
+  className = '',
   ...rest
 }: ButtonProps) {
   const colorMap = {
@@ -41,6 +43,21 @@ export function Button({
     ghost: 'ghost',
   };
 
+  const getVariantStyles = () => {
+    switch (variant) {
+      case 'primary':
+        return 'bg-primary-500 text-white font-semibold hover:bg-primary-600 data-[disabled=true]:bg-border data-[disabled=true]:text-muted-foreground data-[disabled=true]:opacity-100 disabled:bg-border disabled:text-muted-foreground disabled:opacity-100';
+      case 'secondary':
+        return 'bg-surface text-foreground font-medium border border-border hover:bg-border/50 data-[disabled=true]:opacity-60';
+      case 'danger':
+        return 'bg-danger text-white font-medium hover:bg-danger-600 data-[disabled=true]:opacity-60';
+      case 'ghost':
+        return 'text-foreground hover:bg-surface data-[disabled=true]:opacity-60';
+      default:
+        return '';
+    }
+  };
+
   return (
     <HeroUIButton
       color={colorMap[variant] as 'primary' | 'secondary' | 'danger' | 'default'}
@@ -53,6 +70,7 @@ export function Button({
       name={name}
       value={value}
       form={form}
+      className={`${getVariantStyles()} ${className}`}
       {...rest}
     >
       {children}

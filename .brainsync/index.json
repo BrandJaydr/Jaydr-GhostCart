@@ -6,14 +6,14 @@
     "rootPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart",
     "canonical": "https://github.com/BrandJaydr/Jaydr-GhostCart.git",
     "createdAt": "2026-08-09T02:06:53.066Z",
-    "updatedAt": "2026-08-13T03:08:58.579Z"
+    "updatedAt": "2026-08-16T15:49:57.355Z"
   },
-  "updatedAt": "2026-08-13T13:54:39.514Z",
-  "totalEntries": 19,
+  "updatedAt": "2026-08-17T09:15:12.397Z",
+  "totalEntries": 54,
   "byKind": {
     "note": 3,
-    "conversation": 15,
-    "rule": 1
+    "rule": 21,
+    "conversation": 30
   },
   "latestEntries": [
     {
@@ -22,6 +22,46 @@
       "title": "Postgres IS active (correction)",
       "source": "cline:postgres-check",
       "createdAt": "2026-08-12T09:23:54.458Z",
+      "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
+    },
+    {
+      "id": "20260817091458-66d5f293cd47",
+      "kind": "rule",
+      "title": "Mandated Constraints",
+      "source": ".cursor/rules/global_rules.mdc",
+      "createdAt": "2026-08-17T09:14:58.744Z",
+      "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
+    },
+    {
+      "id": "20260816015913-352d442b0817",
+      "kind": "rule",
+      "title": "📁 Memory Registers",
+      "source": ".windsurf/rules/aop-core-summary.md",
+      "createdAt": "2026-08-16T01:59:13.300Z",
+      "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
+    },
+    {
+      "id": "20260816015913-38e0e43fdf85",
+      "kind": "rule",
+      "title": "🔄 Triple Pass Protocol (Mandatory for Errors & Planning)",
+      "source": ".windsurf/rules/aop-core-summary.md",
+      "createdAt": "2026-08-16T01:59:13.299Z",
+      "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
+    },
+    {
+      "id": "20260814050415-595632d167c1",
+      "kind": "conversation",
+      "title": "Antigravity artifact: {\"id\":\"b09b9fcd-e4b3-434a-b27c-60feef757cba\",\"recipient\":\"b7c38ca5-ebd9-4a28-b36a-8068981eb1",
+      "source": "antigravity-brain:b09b9fcd-e4b3-434a-b27c-60feef757cba.json",
+      "createdAt": "2026-08-14T05:04:15.334Z",
+      "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
+    },
+    {
+      "id": "20260814041146-838603818f93",
+      "kind": "conversation",
+      "title": "Antigravity artifact: {\"id\":\"cee5ec35-4fb4-4557-9de9-6a693a010022\",\"recipient\":\"b7c38ca5-ebd9-4a28-b36a-8068981eb1",
+      "source": "antigravity-brain:cee5ec35-4fb4-4557-9de9-6a693a010022.json",
+      "createdAt": "2026-08-14T04:11:46.678Z",
       "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
     },
     {
@@ -57,115 +97,83 @@
       "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
     },
     {
-      "id": "20260809020653-d02b10904cbb",
+      "id": "20260816015913-829a4e31955e",
       "kind": "rule",
-      "title": "trigger: manual",
-      "source": ".windsurf/rules/project objective alignment.md",
-      "createdAt": "2026-08-09T02:06:53.380Z",
+      "title": "📁 Memory Registers",
+      "source": ".windsurf/rules/aop-core-summary.md",
+      "createdAt": "2026-08-16T01:59:13.300Z",
       "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
     },
     {
-      "id": "20260523012545-5916647c5118",
-      "kind": "conversation",
-      "title": "Windsurf Cascade: Migrate Windsurf MCP Config",
-      "source": "windsurf-cascade-meta:517a5cfd-033f-46d7-bfd2-5efc684a55f2",
-      "createdAt": "2026-05-23T01:25:45.021Z",
+      "id": "20260817091458-482fcd36653a",
+      "kind": "rule",
+      "title": "Mandated Constraints",
+      "source": ".cursor/rules/global_rules.mdc",
+      "createdAt": "2026-08-17T09:14:58.745Z",
       "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
     },
     {
-      "id": "20260523005518-d2a6e0690f22",
-      "kind": "conversation",
-      "title": "Windsurf Cascade: Understanding AI Tools",
-      "source": "windsurf-cascade-meta:f43d17a1-4526-4524-a7f4-7bdfb2753b14",
-      "createdAt": "2026-05-23T00:55:18.094Z",
+      "id": "20260817091458-1ff4cc516110",
+      "kind": "rule",
+      "title": "Mandated Constraints",
+      "source": ".cursor/rules/global_rules.mdc",
+      "createdAt": "2026-08-17T09:14:58.745Z",
       "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
     },
     {
-      "id": "20260509122933-0b4e1f35d517",
-      "kind": "conversation",
-      "title": "Windsurf Cascade: Analyze Workflow Document",
-      "source": "windsurf-cascade-meta:ad00c36f-24ac-4fd4-996b-6ed272aa9cb0",
-      "createdAt": "2026-05-09T12:29:33.026Z",
+      "id": "20260817091458-7cbbcd9d0194",
+      "kind": "rule",
+      "title": "Global Rules & Constraints",
+      "source": ".cursor/rules/global_rules.mdc",
+      "createdAt": "2026-08-17T09:14:58.744Z",
       "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
     },
     {
-      "id": "20260509122318-0679f113abf9",
-      "kind": "conversation",
-      "title": "Windsurf Cascade: GhostCart Project Analysis",
-      "source": "windsurf-cascade-meta:fc79ec81-e982-42db-a07c-e8ce0c7b3227",
-      "createdAt": "2026-05-09T12:23:18.704Z",
+      "id": "20260817091458-8b89150c9db1",
+      "kind": "rule",
+      "title": "Mandated Constraints",
+      "source": ".cursor/rules/global_rules.mdc",
+      "createdAt": "2026-08-17T09:14:58.744Z",
       "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
     },
     {
-      "id": "20260508053018-bb994a5bbfec",
-      "kind": "conversation",
-      "title": "Windsurf Cascade: Investigate Gizmo Control Center",
-      "source": "windsurf-cascade-meta:b905611d-18a1-4bd3-8be0-1453ed204935",
-      "createdAt": "2026-05-08T05:30:18.835Z",
+      "id": "20260817091458-b03a1d1f8580",
+      "kind": "rule",
+      "title": "Mandated Constraints",
+      "source": ".cursor/rules/global_rules.mdc",
+      "createdAt": "2026-08-17T09:14:58.744Z",
       "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
     },
     {
-      "id": "20260508052731-1e7ca3fcb471",
-      "kind": "conversation",
-      "title": "Windsurf Cascade: WordPress Plugin Refactor",
-      "source": "windsurf-cascade-meta:600a6ba7-cde8-41ae-ba4c-ca67a81a430b",
-      "createdAt": "2026-05-08T05:27:31.019Z",
+      "id": "20260817091458-4e753a37941e",
+      "kind": "rule",
+      "title": "description: Master rules and constraints for all agent operations",
+      "source": ".cursor/rules/global_rules.mdc",
+      "createdAt": "2026-08-17T09:14:58.743Z",
       "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
     },
     {
-      "id": "20260508052146-5829f1dbbd6e",
-      "kind": "conversation",
-      "title": "Windsurf Cascade: Analyze Project and Extract Memories",
-      "source": "windsurf-cascade-meta:857e73ce-a4e8-4635-a7c8-d6e48631d191",
-      "createdAt": "2026-05-08T05:21:46.438Z",
+      "id": "20260816062242-b024f186691b",
+      "kind": "rule",
+      "title": "Generated at: 2026-08-16T06:22:38.957Z",
+      "source": ".clinerules (ide-delta)",
+      "createdAt": "2026-08-16T06:22:42.928Z",
       "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
     },
     {
-      "id": "20260423001422-7e3e5ac205c1",
-      "kind": "conversation",
-      "title": "Windsurf Cascade: Deploying RSS Reader App",
-      "source": "windsurf-cascade-meta:661b8cb4-ca40-495b-9159-58de4ffba918",
-      "createdAt": "2026-04-23T00:14:22.364Z",
+      "id": "20260816015913-13cf896c6d19",
+      "kind": "rule",
+      "title": "📁 Memory Registers",
+      "source": ".windsurf/rules/aop-core-summary.md",
+      "createdAt": "2026-08-16T01:59:13.300Z",
       "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
     },
     {
-      "id": "20260423000016-01ed343dd0f4",
-      "kind": "conversation",
-      "title": "Windsurf Cascade: Documentation Review and Update",
-      "source": "windsurf-cascade-meta:2386c663-dd8d-47b5-b481-5817ad6fc6eb",
-      "createdAt": "2026-04-23T00:00:16.487Z",
-      "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
-    },
-    {
-      "id": "20260416233138-02169751c9d3",
-      "kind": "conversation",
-      "title": "Windsurf Cascade: WordPress Forum Page Layout",
-      "source": "windsurf-cascade-meta:1b72a5a2-7956-45fb-901e-3cca307e918a",
-      "createdAt": "2026-04-16T23:31:38.436Z",
-      "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
-    },
-    {
-      "id": "20260416204850-b75ee29ba9b0",
-      "kind": "conversation",
-      "title": "Windsurf Cascade: Analyze JSON File",
-      "source": "windsurf-cascade-meta:d3a65a4f-e358-4929-a3ec-50b86961bd31",
-      "createdAt": "2026-04-16T20:48:50.806Z",
-      "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
-    },
-    {
-      "id": "20260415202046-8b4fa1be47e5",
-      "kind": "conversation",
-      "title": "Windsurf Cascade: Implementing Audius User ID",
-      "source": "windsurf-cascade-meta:a44897c6-31b3-4f9f-9f0a-277c9a170940",
-      "createdAt": "2026-04-15T20:20:46.715Z",
-      "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
-    },
-    {
-      "id": "20260414190435-50d246b2ae74",
-      "kind": "conversation",
-      "title": "Windsurf Cascade: Identify Documentation Inconsistencies",
-      "source": "windsurf-cascade-meta:26cba51b-0cb2-4db0-964c-fea347112f78",
-      "createdAt": "2026-04-14T19:04:35.869Z",
+      "id": "20260816015913-96c8a4677257",
+      "kind": "rule",
+      "title": "📁 Memory Registers",
+      "source": ".windsurf/rules/aop-core-summary.md",
+      "createdAt": "2026-08-16T01:59:13.300Z",
       "projectPath": "c:\\Users\\jayst\\Documents\\GitHub\\Jaydr GhostCart"
     }
   ]

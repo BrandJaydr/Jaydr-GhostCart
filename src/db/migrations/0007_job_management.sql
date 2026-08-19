@@ -101,7 +101,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Function to kill all queued jobs for a tenant
-CREATE OR REPLACE FUNCTION kill_all_tenant_jobs(tenant_id UUID, user_id UUID)
+CREATE OR REPLACE FUNCTION kill_all_tenant_jobs(p_tenant_id UUID, user_id UUID)
 RETURNS INTEGER AS $$
 DECLARE
   killed_count INTEGER;
@@ -112,7 +112,7 @@ BEGIN
       killed_by = user_id,
       status = 'cancelled',
       next_retry_at = NULL
-  WHERE tenant_id = tenant_id
+  WHERE tenant_id = p_tenant_id
     AND status IN ('pending', 'queued')
     AND killed = false;
 

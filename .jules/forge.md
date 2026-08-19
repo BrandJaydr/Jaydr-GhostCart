@@ -80,3 +80,27 @@ This journal tracks structural patterns, architecture conventions, and reusable 
 - `@agent:atlas` — Implement correction persistence logic in worker
 - `@agent:forge` — Stage 2+: Add design tokens and styling to correction UI
 - `@agent:archivist` — Review migration for RLS policy alignment
+
+---
+
+### [2026-08-17] Stage 3 — Product Library & Island UI Scaffold
+
+- **Stage:** AOP-CORE Stage 3 (Planning) + Execution
+- **Handoff received from:** User
+- **Files created:** `SmartLoading.tsx`, `ConfidenceIndicator.tsx`, `ProductCard.tsx`, `/products/page.tsx` scaffold, `SmartLoading.test.tsx`
+
+#### Structural Patterns Established
+
+**10. Island Interface Architecture**
+- Use floating, unboxed UI components without Radix/HeroUI.
+- Adopt pure React + Tailwind CSS + Lucide React for core semantic components.
+- Rely on `#f3f1ef` background and `#ffffff` surfaces.
+
+**11. Visual Pipeline Loading (`SmartLoading`)**
+- Scaffolded multi-stage progress component for entity ingestion (`VALIDATING` → `CHECKING_DUPLICATES` → `INGESTING` → `COMPLETE`).
+
+#### Handoffs Placed
+- `@agent:atlas` — Implement actual transitions, animations, and state management for `SmartLoading`
+- `@agent:atlas` — Build the dynamic tooltips and validation bounds for `ConfidenceIndicator`
+- `@agent:atlas` — Add image fallback parsing and robust currency localization to `ProductCard`
+- `@agent:atlas` — Implement pagination, actual search/filter logic, and state persistence in `/products/page.tsx`

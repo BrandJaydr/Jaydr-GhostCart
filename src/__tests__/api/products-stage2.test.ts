@@ -1,13 +1,23 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+const mockDb = {
+  query: vi.fn(async () => ({ rowCount: 0, rows: [] })),
+  connect: vi.fn(async () => ({ query: vi.fn(async () => undefined), release: vi.fn() })),
+};
 
 vi.mock('@/lib/db/index.js', () => ({
-  db: {
-    query: vi.fn(async () => ({ rowCount: 0, rows: [] })),
-    connect: vi.fn(async () => ({ query: vi.fn(async () => undefined), release: vi.fn() })),
-  },
-  withTenant: vi.fn(async (_tenantId: string, work: (client: unknown) => Promise<unknown>) => work({})),
+  db: mockDb,
+  withTenant: vi.fn(async (_tenantId: string, work: (client: any) => Promise<any>) => work(mockDb)),
   DEV_TENANT_ID: '00000000-0000-0000-0000-000000000001',
   setTenantContextOn: vi.fn(async () => undefined),
+}));
+
+vi.mock('@/lib/middleware/resolve-actor', () => ({
+  resolveActor: vi.fn(async () => ({
+    userId: '00000000-0000-0000-0000-000000000001',
+    tenantId: '00000000-0000-0000-0000-000000000001',
+    role: 'owner',
+  })),
 }));
 
 const { POST: approveProduct } = await import('@/app/api/products/[id]/approve/route');
@@ -15,6 +25,14 @@ const { POST: refreshProduct } = await import('@/app/api/products/[id]/refresh/r
 import { NextRequest } from 'next/server';
 
 const PROD_UUID = '22222222-2222-2222-2222-222222222222';
+
+beforeEach(async () => {
+  vi.clearAllMocks();
+  const { withTenant } = await import('@/lib/db/index.js');
+  vi.mocked(withTenant).mockImplementation(
+    async (_tenantId: string, work: (client: any) => Promise<any>) => work(mockDb)
+  );
+});
 
 describe('POST /api/products/[id]/approve', () => {
   it('returns 400 for a non-UUID id', async () => {

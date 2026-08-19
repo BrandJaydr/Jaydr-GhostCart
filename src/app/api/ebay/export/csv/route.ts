@@ -1,20 +1,24 @@
 import type { NextRequest } from 'next/server';
 import { apiError } from '@/lib/api/response';
-import { db, DEV_TENANT_ID } from '@/lib/db/index';
+import { db, withTenant } from '@/lib/db/index';
+import { requireAuth } from '@/lib/middleware/auth-guard';
 
 /**
  * GET /api/ebay/export/csv
  * Export listings to eBay-compatible CSV format
  */
 export async function GET(req: NextRequest) {
-  const tenantId = DEV_TENANT_ID;
+  const actor = await requireAuth(req);
+  const { tenantId } = actor;
 
   try {
-    const result = await db.query(
-      `SELECT title, description, list_price_cents, currency, image_urls
-       FROM listings WHERE tenant_id = $1`,
-      [tenantId],
-    );
+    const result = await withTenant(tenantId, async (client) => {
+      return await client.query(
+        `SELECT title, description, list_price_cents, currency, image_urls
+         FROM listings WHERE tenant_id = $1`,
+        [tenantId],
+      );
+    });
 
     const csv = [
       '*Title', 'Description', 'Price', 'Currency', 'ImageURLs',

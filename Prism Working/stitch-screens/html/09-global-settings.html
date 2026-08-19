@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GhostCart - Global System Settings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline": "#918fa1",
+                        "primary": "#c3c0ff",
+                        "inverse-primary": "#4d44e3",
+                        "on-secondary-container": "#00311f",
+                        "surface-dim": "#0b1326",
+                        "surface-container-high": "#222a3d",
+                        "primary-container": "#4f46e5",
+                        "on-error": "#690005",
+                        "surface-variant": "#2d3449",
+                        "on-tertiary-fixed": "#2a1700",
+                        "on-primary": "#1d00a5",
+                        "on-tertiary": "#472a00",
+                        "on-tertiary-container": "#ffd4a4",
+                        "danger": "#EF4444",
+                        "surface-container-highest": "#2d3449",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "surface-container-lowest": "#060e20",
+                        "tertiary-fixed": "#ffddb8",
+                        "surface-container": "#171f33",
+                        "on-surface": "#dae2fd",
+                        "secondary-container": "#00a572",
+                        "secondary": "#4edea3",
+                        "on-surface-variant": "#c7c4d8",
+                        "on-secondary-fixed": "#002113",
+                        "background": "#0b1326",
+                        "on-secondary-fixed-variant": "#005236",
+                        "primary-fixed-dim": "#c3c0ff",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "secondary-fixed": "#6ffbbe",
+                        "surface": "#0b1326",
+                        "on-error-container": "#ffdad6",
+                        "on-primary-fixed": "#0f0069",
+                        "inverse-surface": "#dae2fd",
+                        "glass-stroke": "rgba(255, 255, 255, 0.1)",
+                        "surface-tint": "#c3c0ff",
+                        "inverse-on-surface": "#283044",
+                        "tertiary-container": "#885500",
+                        "secondary-fixed-dim": "#4edea3",
+                        "error": "#ffb4ab",
+                        "on-primary-container": "#dad7ff",
+                        "info": "#0EA5E9",
+                        "surface-card": "#1E293B",
+                        "on-secondary": "#003824",
+                        "on-primary-fixed-variant": "#3323cc",
+                        "on-background": "#dae2fd",
+                        "error-container": "#93000a",
+                        "glow-indigo": "rgba(79, 70, 229, 0.15)",
+                        "surface-bright": "#31394d",
+                        "tertiary": "#ffb95f",
+                        "primary-fixed": "#e2dfff",
+                        "surface-container-low": "#131b2e",
+                        "outline-variant": "#464555"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "stack-xs": "4px",
+                        "card-padding": "16px",
+                        "sidebar-width": "260px",
+                        "stack-sm": "8px",
+                        "gutter": "24px",
+                        "sidebar-collapsed": "64px"
+                    },
+                    "fontFamily": {
+                        "data-table": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-mono": ["JetBrains Mono"],
+                        "headline-lg": ["Inter"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "data-table": ["13px", { "lineHeight": "1", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+                        "body-md": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "label-mono": ["12px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-sm": ["13px", { "lineHeight": "1.4", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        /* Custom Scrollbar for dark theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b1326; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2d3449; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #464555; 
+        }
+
+        /* Glassmorphism utilities */
+        .glass-panel {
+            background-color: #1E293B;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-overlay {
+            background-color: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Input specific styles to match design system */
+        input[type="text"], input[type="password"], input[type="number"], select {
+            background-color: #0F172A;
+            border: 1px solid #334155;
+            color: #dae2fd;
+        }
+        input[type="text"]:focus, input[type="password"]:focus, input[type="number"]:focus, select:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.15);
+            outline: none;
+        }
+        
+        /* Checkbox/Toggle styles */
+        input[type="checkbox"] {
+            background-color: #0F172A;
+            border-color: #334155;
+        }
+        input[type="checkbox"]:checked {
+            background-color: #4f46e5;
+            border-color: #4f46e5;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md h-screen overflow-hidden flex selection:bg-primary-container selection:text-on-primary-container">
+<!-- SideNavBar (Shared Component) -->
+<nav class="w-sidebar-width h-full fixed left-0 top-0 bg-surface-container dark:bg-surface-container border-r border-glass-stroke flex flex-col p-4 z-40 md:flex hidden">
+<!-- Header -->
+<div class="flex items-center gap-3 mb-8 px-2">
+<div class="w-8 h-8 rounded bg-primary-container flex items-center justify-center text-on-primary-container font-bold shadow-[0_0_15px_rgba(79,70,229,0.5)]">
+<span class="material-symbols-outlined text-[20px]">precision_manufacturing</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary tracking-tight">GhostCart</h1>
+<p class="font-label-mono text-label-mono text-on-surface-variant uppercase text-[10px]">Automation Engine</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<div class="flex-1 overflow-y-auto space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+<span class="font-body-md text-body-md">Research</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span class="font-body-md text-body-md">Library</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined" data-icon="format_list_bulleted">format_list_bulleted</span>
+<span class="font-body-md text-body-md">Listings</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined" data-icon="sell">sell</span>
+<span class="font-body-md text-body-md">Pricing</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+<span class="font-body-md text-body-md">Orders</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-body-md text-body-md">Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined" data-icon="health_and_safety">health_and_safety</span>
+<span class="font-body-md text-body-md">Health</span>
+</a>
+<!-- Active State -->
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-primary font-bold border-r-2 border-primary bg-surface-container-high transition-colors active:scale-95 duration-100 relative overflow-hidden" href="#">
+<div class="absolute inset-0 bg-gradient-to-r from-transparent to-glow-indigo opacity-20 pointer-events-none"></div>
+<span class="material-symbols-outlined fill" data-icon="settings">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+</div>
+<!-- CTA Bottom -->
+<div class="mt-auto pt-4">
+<button class="w-full flex items-center justify-center gap-2 bg-primary-container text-white py-2 px-4 rounded-lg font-body-md text-body-md hover:bg-inverse-primary hover:shadow-[0_0_15px_rgba(79,70,229,0.3)] transition-all">
+<span class="material-symbols-outlined text-[18px]">rocket_launch</span>
+                Deploy Bot
+            </button>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col md:ml-[260px] h-screen overflow-hidden bg-background relative">
+<!-- Ambient Background Glow -->
+<div class="absolute top-0 left-1/4 w-96 h-96 bg-primary-container rounded-full mix-blend-screen filter blur-[120px] opacity-10 pointer-events-none z-0"></div>
+<!-- TopNavBar (Shared Component) -->
+<header class="fixed top-0 right-0 w-full md:w-[calc(100%-260px)] h-16 z-50 bg-surface/80 backdrop-blur-xl border-b border-glass-stroke shadow-sm flex justify-between items-center px-gutter">
+<!-- Mobile Menu Toggle (Visible only on mobile) -->
+<button class="md:hidden text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<!-- Page Title Area (Replacing Search for this context, keeping it minimal) -->
+<div class="flex items-center gap-4 flex-1">
+<div class="hidden md:flex items-center gap-2 text-on-surface-variant font-label-mono text-label-mono uppercase tracking-wider">
+<span class="material-symbols-outlined text-[16px]">home</span>
+<span class="text-glass-stroke">/</span>
+<span class="text-primary font-bold">System Settings</span>
+</div>
+</div>
+<!-- Trailing Actions -->
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-all relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-danger rounded-full"></span>
+</button>
+<div class="h-8 w-8 rounded-full bg-surface-card border border-glass-stroke flex items-center justify-center overflow-hidden cursor-pointer hover:border-primary transition-colors">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="A macro shot of a sleek, dark metallic cyberpunk helmet visor reflecting neon purple lights, serving as a high-tech user avatar in a modern enterprise software interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjIOe6at1v3YO5Z6jKnXYlvxONgDQeW4dX3XzrUWxRX-_mEqK_1E9dM1NM1ES3VWy6-oybh1rjPkM-kej3u-c89ZBoJo_-S68j5ykqLrb6c9CeoxdwGtalnPjzyZ3GlDeel-Sn1BeWZCPw9TYWXdMB0svET9DEGEKVi9HyXK6V_hTAel7WczJRVQlkXZlg1I01wnT25OLsg3h3CVyK9HyGzUSta0iFgSGid4CxRVig5xmR812QkgvR"/>
+</div>
+</div>
+</header>
+<!-- Scrollable Canvas -->
+<main class="flex-1 overflow-y-auto mt-16 p-4 md:p-gutter z-10 relative">
+<div class="max-w-6xl mx-auto flex flex-col md:flex-row gap-6">
+<!-- Settings Internal Navigation (Sidebar within page) -->
+<div class="w-full md:w-64 flex-shrink-0">
+<div class="sticky top-gutter space-y-1">
+<h2 class="font-label-mono text-label-mono text-outline uppercase tracking-wider mb-4 px-3">Configuration</h2>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-primary bg-glow-indigo border border-primary/20 transition-all font-body-md text-body-md" href="#api-connections">
+<span class="material-symbols-outlined text-[18px]">cable</span>
+                            API Connections
+                        </a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all font-body-md text-body-md" href="#pricing-rules">
+<span class="material-symbols-outlined text-[18px]">price_change</span>
+                            Pricing Rules
+                        </a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all font-body-md text-body-md" href="#network-proxy">
+<span class="material-symbols-outlined text-[18px]">router</span>
+                            Network &amp; Proxies
+                        </a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all font-body-md text-body-md" href="#ai-engines">
+<span class="material-symbols-outlined text-[18px]">psychology</span>
+                            AI Engines
+                        </a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all font-body-md text-body-md" href="#security">
+<span class="material-symbols-outlined text-[18px]">security</span>
+                            Security
+                        </a>
+</div>
+</div>
+<!-- Settings Content Area -->
+<div class="flex-1 space-y-8">
+<!-- Section Header -->
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">API Connections</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Manage credentials for external marketplaces and data providers.</p>
+</div>
+<!-- Marketplace Integrations Bento Grid -->
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+<!-- eBay Card -->
+<div class="glass-panel rounded-xl p-card-padding relative overflow-hidden group hover:border-primary/50 transition-colors">
+<div class="absolute top-0 right-0 w-32 h-32 bg-secondary/10 rounded-full blur-[40px] -mr-10 -mt-10 pointer-events-none"></div>
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-dim flex items-center justify-center border border-glass-stroke">
+<span class="material-symbols-outlined text-secondary">storefront</span>
+</div>
+<div>
+<h3 class="font-headline-md text-[16px] text-on-surface font-semibold">eBay Partner Network</h3>
+<div class="flex items-center gap-2 mt-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span class="font-label-mono text-[10px] text-secondary uppercase">Connected</span>
+</div>
+</div>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="space-y-4">
+<div>
+<label class="block font-label-mono text-label-mono text-outline mb-1">App ID (Client ID)</label>
+<div class="relative">
+<input class="w-full rounded-md px-3 py-2 text-body-sm font-label-mono" readonly="" type="password" value="************************"/>
+<button class="absolute right-2 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface">
+<span class="material-symbols-outlined text-[16px]">visibility</span>
+</button>
+</div>
+</div>
+<div>
+<label class="block font-label-mono text-label-mono text-outline mb-1">Cert ID (Client Secret)</label>
+<div class="relative">
+<input class="w-full rounded-md px-3 py-2 text-body-sm font-label-mono" readonly="" type="password" value="************************"/>
+<button class="absolute right-2 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface">
+<span class="material-symbols-outlined text-[16px]">visibility</span>
+</button>
+</div>
+</div>
+</div>
+<div class="mt-6 pt-4 border-t border-glass-stroke flex justify-between items-center">
+<span class="font-label-mono text-[10px] text-outline">Last sync: 2 mins ago</span>
+<button class="px-3 py-1.5 rounded bg-surface-dim border border-glass-stroke text-on-surface font-body-sm text-body-sm hover:bg-surface-container transition-colors">Test Connection</button>
+</div>
+</div>
+<!-- Amazon SP-API Card -->
+<div class="glass-panel rounded-xl p-card-padding relative overflow-hidden group hover:border-primary/50 transition-colors">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-dim flex items-center justify-center border border-glass-stroke">
+<span class="material-symbols-outlined text-tertiary">shopping_bag</span>
+</div>
+<div>
+<h3 class="font-headline-md text-[16px] text-on-surface font-semibold">Amazon SP-API</h3>
+<div class="flex items-center gap-2 mt-1">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+<span class="font-label-mono text-[10px] text-outline uppercase">Disconnected</span>
+</div>
+</div>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="space-y-4 opacity-50 pointer-events-none">
+<div>
+<label class="block font-label-mono text-label-mono text-outline mb-1">IAM Role ARN</label>
+<input class="w-full rounded-md px-3 py-2 text-body-sm font-label-mono" placeholder="arn:aws:iam::..." type="text"/>
+</div>
+<div>
+<label class="block font-label-mono text-label-mono text-outline mb-1">Refresh Token</label>
+<input class="w-full rounded-md px-3 py-2 text-body-sm font-label-mono" placeholder="Atzr|IwEBI..." type="password"/>
+</div>
+</div>
+<div class="mt-6 pt-4 border-t border-glass-stroke flex justify-between items-center">
+<span class="font-label-mono text-[10px] text-outline">Configuration Required</span>
+<button class="px-3 py-1.5 rounded bg-primary-container text-white font-body-sm text-body-sm hover:bg-inverse-primary transition-colors shadow-[0_0_10px_rgba(79,70,229,0.3)]">Configure</button>
+</div>
+</div>
+</div>
+<!-- Divider -->
+<div class="h-px w-full bg-glass-stroke my-8"></div>
+<!-- Global Rule Toggles -->
+<div class="glass-panel rounded-xl overflow-hidden">
+<div class="p-4 border-b border-glass-stroke bg-surface-container-low flex justify-between items-center">
+<h3 class="font-headline-md text-[16px] text-on-surface font-semibold">Global Sync Behaviors</h3>
+<span class="font-label-mono text-[10px] text-outline uppercase tracking-widest">Master Switches</span>
+</div>
+<div class="divide-y divide-glass-stroke">
+<!-- Toggle Row 1 -->
+<div class="p-4 flex items-center justify-between hover:bg-surface-container-low transition-colors">
+<div>
+<div class="font-body-md text-body-md font-medium text-on-surface">Aggressive Inventory Sync</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Poll source APIs every 5 minutes instead of 30. Uses more proxy bandwidth.</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-surface-dim peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container border border-glass-stroke"></div>
+</label>
+</div>
+<!-- Toggle Row 2 -->
+<div class="p-4 flex items-center justify-between hover:bg-surface-container-low transition-colors">
+<div>
+<div class="font-body-md text-body-md font-medium text-on-surface">Auto-Delist on Source Out-of-Stock</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Immediately remove active listings if source inventory hits 0.</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-surface-dim peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container border border-glass-stroke"></div>
+</label>
+</div>
+<!-- Toggle Row 3 -->
+<div class="p-4 flex items-center justify-between hover:bg-surface-container-low transition-colors">
+<div>
+<div class="font-body-md text-body-md font-medium text-on-surface">AI Title Optimization</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Automatically rewrite scraped titles to maximize SEO before posting.</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-surface-dim peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container border border-glass-stroke"></div>
+</label>
+</div>
+</div>
+</div>
+<!-- Action Bar Bottom -->
+<div class="flex justify-end gap-3 pt-6 pb-12 border-t border-glass-stroke mt-8">
+<button class="px-4 py-2 rounded-lg bg-transparent border border-glass-stroke text-on-surface font-body-md text-body-md hover:bg-surface-container transition-colors">Discard Changes</button>
+<button class="px-4 py-2 rounded-lg bg-primary-container text-white font-body-md text-body-md hover:bg-inverse-primary transition-colors shadow-[0_0_15px_rgba(79,70,229,0.3)]">Save Configuration</button>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

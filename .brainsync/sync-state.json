@@ -1,62 +1,70 @@
 {
   "files": {
     "c:/Users/jayst/Documents/GitHub/Jaydr GhostCart/.windsurf/rules/project objective alignment.md": {
-      "mtimeMs": 1776523027211.7632,
-      "size": 25
+      "mtimeMs": 1786684206391.811,
+      "size": 29
     },
     "c:/Users/jayst/Documents/GitHub/Jaydr GhostCart/AGENTS.md": {
-      "mtimeMs": 1786629278774.402,
-      "size": 19272
+      "mtimeMs": 1786958110332.1648,
+      "size": 90956
     },
     "c:/Users/jayst/Documents/GitHub/Jaydr GhostCart/CLAUDE.md": {
-      "mtimeMs": 1786629278823.36,
-      "size": 19272
+      "mtimeMs": 1786958110473.5786,
+      "size": 90956
     },
     "c:/Users/jayst/Documents/GitHub/Jaydr GhostCart/GEMINI.md": {
-      "mtimeMs": 1786629279040.029,
-      "size": 19272
+      "mtimeMs": 1786958110591.1875,
+      "size": 90956
     },
     "c:/Users/jayst/Documents/GitHub/Jaydr GhostCart/.windsurfrules": {
-      "mtimeMs": 1786629279091.5793,
-      "size": 19272
+      "mtimeMs": 1786958110748.8086,
+      "size": 90956
     },
     "c:/Users/jayst/Documents/GitHub/Jaydr GhostCart/.windsurf/rules/brainsync.md": {
-      "mtimeMs": 1786629279121.5544,
-      "size": 19272
+      "mtimeMs": 1786958110887.3596,
+      "size": 90956
     },
     "c:/Users/jayst/Documents/GitHub/Jaydr GhostCart/.cursorrules": {
-      "mtimeMs": 1786629279186.9336,
-      "size": 19272
+      "mtimeMs": 1786958111026.3252,
+      "size": 90956
     },
     "c:/Users/jayst/Documents/GitHub/Jaydr GhostCart/.clinerules": {
-      "mtimeMs": 1786629279214.2068,
-      "size": 19272
+      "mtimeMs": 1786958111169.723,
+      "size": 90956
     },
     "c:/Users/jayst/Documents/GitHub/Jaydr GhostCart/.gemini/GEMINI.md": {
-      "mtimeMs": 1786629279252.9636,
-      "size": 19272
+      "mtimeMs": 1786958111441.3032,
+      "size": 90956
     },
     "c:/Users/jayst/Documents/GitHub/Jaydr GhostCart/.gemini/antigravity/brain/brainsync.md": {
-      "mtimeMs": 1786629279282.801,
-      "size": 19272
+      "mtimeMs": 1786958111620.8948,
+      "size": 90956
     },
     "c:/Users/jayst/Documents/GitHub/Jaydr GhostCart/.cursor/active-context.md": {
-      "mtimeMs": 1786629279320.8203,
-      "size": 19272
+      "mtimeMs": 1786958111722.985,
+      "size": 90956
     },
     "c:/Users/jayst/Documents/GitHub/Jaydr GhostCart/.cursor/rules/brainsync.mdc": {
-      "mtimeMs": 1786629279375.3782,
-      "size": 19359
+      "mtimeMs": 1786958111961.5637,
+      "size": 91043
     },
     "c:/Users/jayst/Documents/GitHub/Jaydr GhostCart/.kiro/steering/brainsync.md": {
-      "mtimeMs": 1786629279411.0637,
-      "size": 19299
+      "mtimeMs": 1786958112068.236,
+      "size": 90983
     },
     "c:/Users/jayst/Documents/GitHub/Jaydr GhostCart/.agent-mem/last-session.md": {
-      "mtimeMs": 1786629279451.7002,
-      "size": 19272
+      "mtimeMs": 1786958112239.2231,
+      "size": 90956
+    },
+    "c:/Users/jayst/Documents/GitHub/Jaydr GhostCart/.windsurf/rules/aop-core-summary.md": {
+      "mtimeMs": 1786680561668.0166,
+      "size": 1933
+    },
+    "c:/Users/jayst/Documents/GitHub/Jaydr GhostCart/.cursor/rules/global_rules.mdc": {
+      "mtimeMs": 1786958092596.2712,
+      "size": 1295
     }
   },
-  "lastExportHash": "17335b10ce06a599",
-  "lastExportAt": "2026-08-13T13:54:39.487Z"
+  "lastExportHash": "907824e5ac30ec85",
+  "lastExportAt": "2026-08-17T09:15:12.303Z"
 }

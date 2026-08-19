@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { z } from 'zod';
 import { setRepricingPause, isRepricingPaused } from '@/lib/repricing/engine';
-import { DEV_TENANT_ID } from '@/lib/db/index';
+import { requireAuth } from '@/lib/middleware/auth-guard';
 
 /**
  * Schema for pause request
@@ -17,6 +17,8 @@ const PauseSchema = z.object({
  * Set global or tenant-specific pause state
  */
 export async function POST(req: NextRequest) {
+  const actor = await requireAuth(req);
+
   let body: unknown;
   try {
     body = await req.json();
@@ -30,13 +32,10 @@ export async function POST(req: NextRequest) {
   }
 
   const { paused, reason } = parseResult.data;
-
-  // @agent:forge Replace with session tenantId and userId
-  const tenantId = null; // Global pause
-  const userId = '00000000-0000-0000-0000-000000000001';
+  const { userId } = actor;
 
   try {
-    const success = await setRepricingPause(tenantId, paused, reason, userId);
+    const success = await setRepricingPause(null, paused, reason, userId);
     if (!success) {
       return apiError('Failed to set pause state', null, 500);
     }
@@ -53,10 +52,11 @@ export async function POST(req: NextRequest) {
  * Get current pause state
  */
 export async function GET(req: NextRequest) {
+  const actor = await requireAuth(req);
+
   const url = new URL(req.url);
   const tenantId = url.searchParams.get('tenantId');
 
-  // @agent:forge Replace with session tenantId
   const effectiveTenantId = tenantId || null;
 
   try {

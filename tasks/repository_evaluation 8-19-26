@@ -1,0 +1,118 @@
+# Repository Evaluation Report
+
+This report evaluates the current state of the **Jaydr GhostCart** repository to identify outstanding work, current build/test gates status, security vulnerabilities, and functional regressions.
+
+---
+
+## 📊 Executive Summary
+
+- **Completed Foundation:** Stages 1–4 are fully implemented. The system has core database migrations, user roles, a retro BBS-style CLI, programmatic API keys, and BullMQ worker queue pipelines.
+- **Stage 5 Security Progress:** The codebase is partially through Stage 5 (Security Gates & API Tenancy Hardening). Direct dependency on `DEV_TENANT_ID` has been removed from all production routes, and row-level security (RLS) is contextually enforced via NextAuth sessions and Bearer API keys.
+- **Blockers & Gaps:**
+  - **Toolchain / Quality Gates:** TypeScript type checking passes cleanly, but the linter fails with **159 errors and 182 warnings** (violating the mandated zero-warnings Quality Gate). Integration tests are failing because the local Docker database daemon is not active.
+  - **Deployment Posture:** Development-only Docker Compose is configured. Production Docker configurations, worker scaling, and hosting deployment are pending.
+  - **Functional Bugs:** Multiple client-API schema mismatches, missing dashboard routes, and non-functional logout are unresolved.
+
+---
+
+## 🌿 Git & Workspace State
+
+We are currently on the branch **`workflow-developer`** with substantial uncommitted changes:
+- **Modified files:** 60+ files covering API routes, test suites, styling, and components.
+- **Untracked files:** Includes CLI implementation (`cli/`), tenancy isolation test suites, custom logging utilities, API key routes, and Stage 5 staging plans.
+- **Summary:** The repository is in an active, mid-implementation state for Stage 5.
+
+---
+
+## 🚦 Quality Gates & Toolchain Status
+
+Every change must satisfy the project's Quality Gates. Here is the current status:
+
+### 1. TypeScript Compiler (`tsc`)
+- **Status:** **`PASS`** (Clean compilation, 0 errors).
+- **Execution:** Runs cleanly via `npx tsc --noEmit`.
+
+### 2. Linter (`eslint`)
+- **Status:** **`FAIL`** (341 problems: 159 errors, 182 warnings).
+- **Major Offenses:**
+  - Unused imports/variables (`@typescript-eslint/no-unused-vars`).
+  - Use of `any` types instead of explicit typings (`@typescript-eslint/no-explicit-any`).
+  - Standard imports of types that must use `import type` (`@typescript-eslint/consistent-type-imports`).
+- **Remediation:** Any modifications will require resolving these violations locally in changed files to satisfy the strict zero-warnings build criteria.
+
+### 3. Unit & Integration Tests (`vitest`)
+- **Status:** **`FAIL`** (29 tests failing, 140 tests passing).
+- **Root Cause:** All failures are connection refused or timeout errors (`ECONNREFUSED` / `ETIMEDOUT`) trying to reach PostgreSQL on port `5432`.
+- **Blocker:** The local Docker Desktop/daemon is currently not running on this host. Once Docker is active and the postgres container starts, these tests are expected to pass.
+
+---
+
+## 📌 Milestone Status (Stage 0 - Stage 6)
+
+### Stage 1 - 4: **`COMPLETED`**
+Core product import, normalizers, BullMQ ingestion queues, AI rewrite, margin calculations, repricing engines, backup/restore scripts, and CLI access are functional and covered by tests.
+
+### Stage 5: Security Gates & Expansion (In Progress)
+- [x] **API Authorization & Tenancy:** Replaced `DEV_TENANT_ID` with session-derived context across all production API routes (verified via code audit and grep).
+- [x] **Tenant Isolation:** RLS context wraps queries using the contextual `withTenant(actor.tenantId, cb)` database transaction helper.
+- [ ] **Staged Checklists & Verification:** Staging tests and certifying tenant switching under a least-privilege database role are still pending.
+- [ ] **Production Deployment:**
+  - Create production-ready `Dockerfile.prod` and `docker-compose.prod.yml` separating web server and background worker processes.
+  - Implement production health checks and backup verification.
+  - Select staging host (VPS/Fly.io/Render/Railway).
+
+### Stage 6: Enterprise & Scale
+- [ ] Currently all tasks are pending (Kafka integration, microservice boundaries, multi-marketplace scalability).
+
+---
+
+## 🔒 Outstanding Security Concerns
+
+Tracked in [`.logs/vulnerabilities.md`](file:///c:/Users/jayst/Documents/GitHub/Jaydr%20GhostCart/.logs/vulnerabilities.md):
+
+| ID | Component | Severity | Description | Status |
+|---|---|---|---|---|
+| **SEC-001** | Dependencies | Critical | **Vitest RCE** (GHSA-9crc-q9x8-hgqq) | ⚠️ PENDING |
+| **SEC-002** | Dependencies | High | **PostCSS XSS/Path Traversal** (GHSA-qx2v-qp2m-jg93) | ⚠️ PENDING |
+| **SEC-003** | Dependencies | High | **Vite Path Traversal** (GHSA-4w7w-66w2-5vf9) | ⚠️ PENDING |
+| **SEC-006** | Dependencies | Moderate | **UUID Buffer Bounds** (GHSA-w5hq-g745-h8pq) | ⚠️ PENDING |
+| **SEC-007** | Logging | High | **Structured logging not fully adopted.** 40+ codebase files still call raw `console.*` methods. Webhook handlers dump complete order payloads containing potential PII/auth credentials. | ⚠️ REOPENED |
+| **SEC-008** | Secret Hygiene | Moderate | **MCP credentials cleartext at rest.** Local MCP settings file stores Stitch and Magic SDK keys in cleartext. | ⚠️ PENDING |
+
+---
+
+## 🐛 Functional Bugs & UI Issues
+
+Tracked in [`.logs/errors.md`](file:///c:/Users/jayst/Documents/GitHub/Jaydr%20GhostCart/.logs/errors.md):
+
+1. **ERR-022: Import Form Contract Mismatch**
+   - **Symptom:** Submitting a product URL to the import form throws a 400 Bad Request error. On success, it redirects to a broken `/products/undefined/review` link.
+   - **Root Cause:** `ImportForm.tsx` sends `{ sourceUrl, adapter }` but the background BullMQ routing schema expects `{ url, supplierId, idempotencyKey }`. Additionally, the form expects the API to return the database product ID, but the API returns the queued `jobId`.
+   - **Fix Required:** Update `ImportForm.tsx` fields to align with the schema, and implement polling on `/api/jobs/[id]` to get the imported product ID.
+
+2. **ERR-023: Broken Navigation & 404 Routes**
+   - **Symptom:** Clicking navigation destinations results in Next.js 404 pages.
+   - **Affected Pages:** `/jobs`, `/repricing`, `/settings/general`, `/settings/marketplaces`, `/settings/suppliers`, `/profile`, and `/sign-out`.
+   - **Fix Required:** Build page shells (`page.tsx`) for these endpoints to hook into the backend APIs.
+
+3. **ERR-024: Non-functional Logout**
+   - **Symptom:** The "Log out" button redirects to a missing page `/sign-out` (404) and fails to destroy the NextAuth session.
+   - **Fix Required:** Wire the logout menu click to invoke `signOut()` from `next-auth/react` and redirect the user back to the sign-in page.
+
+---
+
+## 🚀 Recommended Next Steps
+
+1. **Resolve Critical Bugs First:**
+   - Align the [`ImportForm.tsx`](file:///c:/Users/jayst/Documents/GitHub/Jaydr%20GhostCart/src/components/import/ImportForm.tsx) payload structure and implement job polling to fix the import workflow (ERR-022).
+   - Wire up NextAuth [`signOut()`](file:///c:/Users/jayst/Documents/GitHub/Jaydr%20GhostCart/src/components/layout/TopNav.tsx) (ERR-024).
+   - Create page stubs for missing 404 routes (ERR-023).
+
+2. **Remediate Linter Issues:**
+   - Resolve unused variables and any type issues in the modified files to satisfy the strict Quality Gate build rules.
+
+3. **Dependency Upgrades:**
+   - Update `vitest`, `postcss`, `vite`, and `uuid` packages in [`package.json`](file:///c:/Users/jayst/Documents/GitHub/Jaydr%20GhostCart/package.json) to patch outstanding CVE security vulnerabilities.
+
+4. **Production Deployment Scaffolding (ERR-020):**
+   - Author a `Dockerfile.prod` and configure a production-ready Docker Compose layout with separate background workers.
