@@ -1,0 +1,86 @@
+# Jaydr GhostCart — Production Container Stack
+# Usage: docker-compose -f docker-compose.prod.yml up -d
+# Requires: .env containing production secrets
+
+version: "3.9"
+
+services:
+  # ─── Next.js Production Web Application ──────────────────────────────────────
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: ghostcart_web_prod
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://ghostcart:${POSTGRES_PASSWORD}@db:5432/ghostcart
+      REDIS_URL: redis://redis:6379
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+      NODE_ENV: production
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ─── BullMQ Background Worker ───────────────────────────────────────────────
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: ghostcart_worker_prod
+    command: npm run worker
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://ghostcart:${POSTGRES_PASSWORD}@db:5432/ghostcart
+      REDIS_URL: redis://redis:6379
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NODE_ENV: production
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ─── PostgreSQL Database ────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: ghostcart_db_prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ghostcart
+      POSTGRES_USER: ghostcart
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ghostcart_pgdata_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ghostcart -d ghostcart"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Redis Cache & BullMQ Backing Store ──────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: ghostcart_redis_prod
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - ghostcart_redisdata_prod:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  ghostcart_pgdata_prod:
+  ghostcart_redisdata_prod:

@@ -1,135 +1,158 @@
 'use client';
 
-import { useState } from 'react';
-import { Sparkles, FileSpreadsheet, Link2, CheckCircle2, Upload } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link2, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 
-type SourceType = 'mock' | 'csv' | 'url';
+interface SupplierOption {
+  id: string;
+  adapterId: string;
+  name: string;
+}
 
+interface ImportResult {
+  jobId: string;
+  status: string;
+}
+
+/**
+ * ImportProduct by URL from a configured supplier connection.
+ *
+ * @agent:investigator Fix 1 (ERR-022) - This form previously posted
+ * { sourceUrl, adapter } and read data.id, which never matched the
+ * product.import contract. It now posts { url, supplierId, idempotencyKey }
+ * to align with ProductImportSchema and consumes data.jobId (202 boundary).
+ * supplierId is a suppliers-row UUID from GET /api/suppliers.
+ */
 export default function ImportForm() {
-  const [sourceType, setSourceType] = useState<SourceType>('mock');
+  const [suppliers, setSuppliers] = useState<SupplierOption[]>([]);
+  const [suppliersLoading, setSuppliersLoading] = useState(true);
+  const [suppliersError, setSuppliersError] = useState<string | null>(null);
+  const [selectedSupplierId, setSelectedSupplierId] = useState('');
   const [sourceUrl, setSourceUrl] = useState('');
   const [isImporting, setIsImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [importResult, setImportResult] = useState<{ id: string } | null>(null);
+  const [importResult, setImportResult] = useState<ImportResult | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetch('/api/suppliers');
+        const data = await res.json();
+        if (!active) return;
+        if (!res.ok || !data.success) {
+          setSuppliersError(data.error || 'Failed to load suppliers');
+        } else {
+          setSuppliers(data.data ?? []);
+          if (data.data?.length) setSelectedSupplierId(data.data[0].id);
+        }
+      } catch {
+        if (active) setSuppliersError('Failed to load suppliers');
+      } finally {
+        if (active) setSuppliersLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setImportResult(null);
     setIsImporting(true);
-
     try {
-      const adapter = sourceType === 'mock' ? 'mock' : sourceType;
+      const idempotencyKey = crypto.randomUUID();
       const res = await fetch('/api/products', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ sourceUrl, adapter }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: sourceUrl, supplierId: selectedSupplierId, idempotencyKey }),
       });
-
       const data = await res.json();
-
       if (!res.ok || !data.success) {
         throw new Error(data.error || 'Failed to import product');
       }
-
-      setImportResult({ id: data.data.id });
-    } catch (err: any) {
-      setError(err.message || 'An error occurred during import');
+      setImportResult({ jobId: data.data.jobId, status: data.data.status || 'queued' });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred during import');
     } finally {
       setIsImporting(false);
     }
   };
-
-  const options = [
-    {
-      id: 'mock',
-      icon: Sparkles,
-      label: 'Mock Product',
-      description: 'Test with fixture data',
-    },
-    {
-      id: 'csv',
-      icon: FileSpreadsheet,
-      label: 'CSV Upload',
-      description: 'Import from CSV file',
-    },
-    {
-      id: 'url',
-      icon: Link2,
-      label: 'Product URL',
-      description: 'Paste supplier URL',
-    },
-  ];
 
   return (
     <div className="max-w-3xl">
       {importResult ? (
         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-6 flex flex-col items-center justify-center text-center">
           <CheckCircle2 className="w-12 h-12 text-emerald-500 mb-4" />
-          <h3 className="text-lg font-medium text-emerald-900 mb-2">Product imported successfully!</h3>
-          <p className="text-emerald-700 mb-6">The product has been imported and is ready for review.</p>
-          <Link href={`/products/${importResult.id}/review`} passHref legacyBehavior>
-            <Button variant="primary">Review Product</Button>
+          <h3 className="text-lg font-medium text-emerald-900 mb-2">Import queued</h3>
+          <p className="text-emerald-700 mb-1">
+            The product is being processed in the background.
+          </p>
+          <p className="text-xs text-emerald-600 mb-6">Job ID: {importResult.jobId}</p>
+          <Link href="/products" passHref legacyBehavior>
+            <Button variant="primary">View Products</Button>
           </Link>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-8">
-          <div className="space-y-4">
-            <label className="block text-sm font-medium text-neutral-700">Source Type</label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {options.map((option) => {
-                const Icon = option.icon;
-                const isSelected = sourceType === option.id;
-                return (
-                  <button
-                    key={option.id}
-                    type="button"
-                    onClick={() => setSourceType(option.id as SourceType)}
-                    className={`flex flex-col items-center p-4 rounded-xl text-left transition-all ${
-                      isSelected
-                        ? 'ring-2 ring-primary-500 border-primary-500 bg-primary-50'
-                        : 'border border-neutral-200 bg-white hover:border-neutral-300'
-                    }`}
-                  >
-                    <Icon className={`w-6 h-6 mb-3 ${isSelected ? 'text-primary-600' : 'text-neutral-500'}`} />
-                    <span className={`font-medium ${isSelected ? 'text-primary-900' : 'text-neutral-900'}`}>
-                      {option.label}
-                    </span>
-                    <span className={`text-xs mt-1 text-center ${isSelected ? 'text-primary-700' : 'text-neutral-500'}`}>
-                      {option.description}
-                    </span>
-                  </button>
-                );
-              })}
+          {suppliersLoading ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Loading suppliers
             </div>
-          </div>
+          ) : suppliersError ? (
+            <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+              <AlertCircle className="w-4 h-4" /> {suppliersError}
+            </div>
+          ) : suppliers.length === 0 ? (
+            <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+              <AlertCircle className="w-4 h-4" />
+              No suppliers configured. Add a supplier to import products.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <label className="block text-sm font-medium text-neutral-700">Supplier</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {suppliers.map((supplier) => {
+                  const isSelected = selectedSupplierId === supplier.id;
+                  return (
+                    <button
+                      key={supplier.id}
+                      type="button"
+                      onClick={() => setSelectedSupplierId(supplier.id)}
+                      className={`flex flex-col items-start p-4 rounded-xl border text-left transition-all ${
+                        isSelected
+                          ? 'ring-2 ring-primary-500 border-primary-500 bg-primary-50'
+                          : 'border-neutral-200 bg-white hover:border-neutral-300'
+                      }`}
+                    >
+                      <span className={`font-medium ${isSelected ? 'text-primary-900' : 'text-neutral-900'}`}>
+                        {supplier.name}
+                      </span>
+                      <span className="text-xs mt-1 text-neutral-500">
+                        Adapter: {supplier.adapterId}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <div className="space-y-4">
-            {sourceType === 'url' && (
-              <Input
-                label="Product URL"
-                placeholder="https://supplier.example.com/product/12345"
-                required
-                value={sourceUrl}
-                onChange={(e: any) => setSourceUrl(e.target.value)}
-              />
-            )}
-
-            {sourceType === 'csv' && (
-              <div className="bg-sky-50 border border-sky-200 rounded-lg p-4">
-                <div className="flex items-start">
-                  <Upload className="w-5 h-5 text-sky-500 mt-0.5 mr-3 flex-shrink-0" />
-                  <p className="text-sm text-sky-800">
-                    CSV import is available through the API. Use <code>POST /api/products</code> with adapter: csv
-                  </p>
-                </div>
-              </div>
-            )}
+            <Input
+              label="Product URL"
+              placeholder="https://supplier.example.com/product/12345"
+              required
+              value={sourceUrl}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSourceUrl(e.target.value)}
+              startContent={<Link2 className="w-4 h-4 text-muted-foreground" />}
+            />
           </div>
 
           {error && (
@@ -143,7 +166,7 @@ export default function ImportForm() {
               type="submit"
               variant="primary"
               isLoading={isImporting}
-              disabled={sourceType === 'url' && !sourceUrl.trim()}
+              disabled={!sourceUrl.trim() || !selectedSupplierId || isImporting}
             >
               Import Product
             </Button>

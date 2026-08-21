@@ -845,6 +845,30 @@ The CLI (`ghostcart`) serves as a terminal-native lightweight dashboard. It conn
 
 > **Note:** Apply the schema with `npm run db:migrate` (runner in `src/db/migrate.ts`). Requires `DATABASE_URL`; applies migrations `0001 → 0016` in order, each in a transaction.
 
+## 17. Investigation Findings & Fix Status (2026-08-19)
+
+Records the Investigator observability audit (ERR-022/023/024, SEC-007/008) and remediation progress. Sources: `.jules/investigator.md`, `.logs/errors.md`, `.logs/vulnerabilities.md`.
+
+| ID | Severity | Finding | Status | Owner |
+|----|----------|---------|--------|-------|
+| ERR-022 | Critical | ImportForm posted `{ sourceUrl, adapter }` and read `data.id`; `/api/products` expects `{ url, supplierId, idempotencyKey }` and returns `data.jobId` (400 + `/products/undefined` link). | ✅ FIXED 2026-08-19 — added `GET /api/suppliers`; ImportForm payload now matches `ProductImportSchema`; regression test added. | ui_builder / @agent:investigator |
+| ERR-023 | High | 7 nav targets point to pages that don't exist (404): `/jobs`, `/repricing`, `/settings/{general,marketplaces,suppliers}`, `/profile`, `/sign-out`; `/products` was orphaned via `/products/undefined`. | ✅ FIXED 2026-08-19 — added placeholder routes for `/jobs`, `/repricing`, `/settings/{general,marketplaces,suppliers}`, and `/profile`; `router.push('/sign-out')` retired (logout now ends the session, so no `/sign-out` route is needed); `/products` (Fix 1) already live. | ui_builder |
+| ERR-024 | High | Logout in `TopNav.tsx` calls `router.push('/sign-out')` (404) instead of terminating the session. | ✅ FIXED 2026-08-19 — TopNav now calls `signOut({ callbackUrl: '/sign-in' })` instead of `router.push('/sign-out')`. | ui_builder |
+| SEC-007 | High | Structured-logging boundary unenforced — ~40 files use raw `console.*` (incl. `/api/ebay/webhook` line 151 logging the full webhook payload). | ⏳ Fix 4 — pending. New `src/app/api/suppliers/route.ts` logs via `console.error` only in the catch path; tagged `@agent:investigator` for the `logger.ts` migration. | @agent:investigator |
+| SEC-008 | Moderate | Plaintext Google (stitch) + Magic API keys in local Cline MCP config (`~/.gemini/...` + repo `.inline/.cursor/.../settings`). | ⏳ Fix 5 — operator action (rotate keys; reference via env var). No repo code change. | operator |
+
+**Active-agent coordination:** the Stock & Price Sync worker agent owns `src/worker/index.ts`, `src/lib/repricing/engine.ts`, `src/lib/margin/calculator.ts`, `src/lib/queue/index.ts`, and `src/app/api/products/[id]/refresh`. **Fix 4** (structured-logging migration + webhook redaction) is deferred in those modules until the worker's tenancy refactor lands — claim files via `tasks/todo.md` before editing.
+
+## 18. Phase 2 Features: CSV Product Table Editor
+
+Implemented in `src/app/(dashboard)/products/editor/page.tsx` as part of Phase 2 Sub-Phase A.
+
+### Architecture
+- **State Management**: Uses local React `useState` to manage row data, cell selection (`activeCell`), and editing states instead of complex global state, keeping the component lightweight.
+- **Validation**: Schema-based validation using Zod (`ProductRowSchema`). Cross-row validation (like SKU uniqueness) is implemented via custom logic hooked into the Zod schema's `refine` methods or handled dynamically during edit operations.
+- **UI Components**: Relies on HeroUI for table structures and custom click-to-edit inputs triggered by the `activeCell` focus.
+- **Notable Quirks**: Zod imports (`import { z } from 'zod'`) must be placed at the top level of the file. Inline importing inside component functions triggers build errors (recorded in `.logs/errors.md`).
+
 <!-- END_OF_WIKI -->
 
 

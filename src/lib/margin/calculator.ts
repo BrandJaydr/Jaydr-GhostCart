@@ -8,6 +8,8 @@
  */
 
 import { db, withTenant } from '@/lib/db/index';
+import type { PoolClient } from 'pg';
+import { logger } from '@/lib/logger';
 
 export type RoundingRule = 'nearest' | 'up' | 'down';
 
@@ -51,16 +53,18 @@ export interface FeeStructure {
 export async function calculateMarketplaceFees(
   marketplace: string,
   sellingPriceCents: number,
+  client?: PoolClient,
 ): Promise<number> {
   try {
-    const result = await db.query(
+    const c = client || db;
+    const result = await c.query(
       'SELECT margin.calculate_marketplace_fees($1, $2) as fees',
       [marketplace, sellingPriceCents],
     );
 
     return (result.rows[0].fees as number) || 0;
   } catch (err) {
-    console.error('[margin-calculator] calculateMarketplaceFees error:', err);
+    logger.error('margin-calculator', 'calculateMarketplaceFees error', err);
     return 0; // Fail open
   }
 }
@@ -72,16 +76,18 @@ export async function calculateTax(
   countryCode: string,
   stateCode: string | null,
   priceCents: number,
+  client?: PoolClient,
 ): Promise<number> {
   try {
-    const result = await db.query(
+    const c = client || db;
+    const result = await c.query(
       'SELECT margin.calculate_tax($1, $2, $3) as tax',
       [countryCode, stateCode, priceCents],
     );
 
     return (result.rows[0].tax as number) || 0;
   } catch (err) {
-    console.error('[margin-calculator] calculateTax error:', err);
+    logger.error('margin-calculator', 'calculateTax error', err);
     return 0; // Fail open
   }
 }
@@ -93,18 +99,26 @@ export async function calculateShippingCost(
   tenantId: string,
   carrier: string | null,
   weightGrams: number | null,
+  client?: PoolClient,
 ): Promise<number> {
   try {
-    return await withTenant(tenantId, async (client) => {
-      const result = await client.query(
+    const executeQuery = async (c: PoolClient | typeof db) => {
+      const result = await c.query(
         'SELECT margin.calculate_shipping_cost($1, $2, $3) as shipping',
         [tenantId, carrier, weightGrams],
       );
-
       return (result.rows[0]?.shipping as number) || 0;
+    };
+
+    if (client) {
+      return await executeQuery(client);
+    }
+
+    return await withTenant(tenantId, async (c) => {
+      return await executeQuery(c);
     });
   } catch (err) {
-    console.error('[margin-calculator] calculateShippingCost error:', err);
+    logger.error('margin-calculator', 'calculateShippingCost error', err);
     return 0; // Fail open
   }
 }
@@ -127,7 +141,10 @@ export function applyRounding(valueCents: number, rule: RoundingRule = 'nearest'
 /**
  * Calculate margin with full breakdown
  */
-export async function calculateMargin(input: MarginInput): Promise<MarginResult> {
+export async function calculateMargin(
+  input: MarginInput,
+  client?: PoolClient,
+): Promise<MarginResult> {
   const {
     sellingPriceCents,
     costCents,
@@ -139,49 +156,60 @@ export async function calculateMargin(input: MarginInput): Promise<MarginResult>
     weightGrams = null,
   } = input;
 
-  // Calculate fees
-  const feesCents = await calculateMarketplaceFees(marketplace, sellingPriceCents);
+  const calculate = async (c?: PoolClient) => {
+    // Calculate fees
+    const feesCents = await calculateMarketplaceFees(marketplace, sellingPriceCents, c);
 
-  // Calculate tax
-  const taxCents = await calculateTax(countryCode, stateCode, sellingPriceCents);
+    // Calculate tax
+    const taxCents = await calculateTax(countryCode, stateCode, sellingPriceCents, c);
 
-  // Calculate shipping
-  let shippingCents = 0;
-  if (tenantId) {
-    shippingCents = await calculateShippingCost(tenantId, carrier, weightGrams);
-  }
+    // Calculate shipping
+    let shippingCents = 0;
+    if (tenantId) {
+      shippingCents = await calculateShippingCost(tenantId, carrier, weightGrams, c);
+    }
 
-  // Total cost = cost + fees + tax + shipping
-  const totalCostCents = costCents + feesCents + taxCents + shippingCents;
+    // Total cost = cost + fees + tax + shipping
+    const totalCostCents = costCents + feesCents + taxCents + shippingCents;
 
-  // Profit = selling price - total cost
-  const profitCents = sellingPriceCents - totalCostCents;
+    // Profit = selling price - total cost
+    const profitCents = sellingPriceCents - totalCostCents;
 
-  // Margin = (profit / selling price) * 100
-  let marginPercent = 0;
-  if (sellingPriceCents > 0) {
-    marginPercent = (profitCents / sellingPriceCents) * 100;
-  }
+    // Margin = (profit / selling price) * 100
+    let marginPercent = 0;
+    if (sellingPriceCents > 0) {
+      marginPercent = (profitCents / sellingPriceCents) * 100;
+    }
 
-  return {
-    marginPercent: Math.round(marginPercent * 100) / 100, // Round to 2 decimal places
-    profitCents,
-    totalCostCents,
-    breakdown: {
-      costCents,
-      feesCents,
-      taxCents,
-      shippingCents,
-    },
+    return {
+      marginPercent: Math.round(marginPercent * 100) / 100, // Round to 2 decimal places
+      profitCents,
+      totalCostCents,
+      breakdown: {
+        costCents,
+        feesCents,
+        taxCents,
+        shippingCents,
+      },
+    };
   };
+
+  if (tenantId && !client) {
+    return await withTenant(tenantId, async (c) => {
+      return await calculate(c);
+    });
+  }
+
+  return await calculate(client);
 }
 
 /**
  * Get fee structures for a marketplace
  */
-export async function getFeeStructures(marketplace: string): Promise<FeeStructure[]> {
+export async function getFeeStructures(marketplace: string, client?: PoolClient): Promise<FeeStructure[]> {
   try {
-    const result = await db.query(
+    const c = client || db;
+    const result = await c.query(
       `SELECT id, marketplace, fee_type, fee_name, fixed_amount_cents, percentage_rate, min_fee_cents, max_fee_cents
        FROM fee_structures
        WHERE marketplace = $1
@@ -202,7 +230,8 @@ export async function getFeeStructures(marketplace: string): Promise<FeeStructur
       maxFeeCents: row.max_fee_cents,
     }));
   } catch (err) {
-    console.error('[margin-calculator] getFeeStructures error:', err);
+    logger.error('margin-calculator', 'getFeeStructures error', err);
     return [];
   }
 }
+

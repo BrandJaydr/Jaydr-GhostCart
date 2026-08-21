@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Tooltip, Button } from '@heroui/react';
-import { Settings, Package, FileText, Clock, DollarSign, Store, Factory, LayoutDashboard, Upload, Menu } from 'lucide-react';
+import { Settings, Package, FileText, Clock, DollarSign, Store, Factory, LayoutDashboard, Upload, Menu, Sparkles } from 'lucide-react';
 
 export interface SidebarSection {
   title: string;
@@ -30,8 +30,10 @@ export function Sidebar({ isCollapsed = false, onToggle }: SidebarProps) {
       items: [
         { label: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
         { label: 'Import', href: '/import', icon: <Upload className="w-5 h-5" /> },
+        { label: 'Table Creator', href: '/products/editor', icon: <FileText className="w-5 h-5" /> },
         { label: 'Products', href: '/products', icon: <Package className="w-5 h-5" /> },
         { label: 'Listings', href: '/listings', icon: <FileText className="w-5 h-5" /> },
+        { label: 'Media Studio', href: '/studio', icon: <Sparkles className="w-5 h-5" /> },
       ],
     },
     {

@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Upload, Search, Filter } from 'lucide-react';
+import { useSearchParams, usePathname, useRouter } from 'next/navigation';
+import { Upload, Search } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Spinner } from '@/components/ui/Spinner';
 import { ProductCard } from '@/components/products/ProductCard';
+import { Button } from '@heroui/react';
 
 interface Product {
   id: string;
@@ -20,41 +22,50 @@ interface Product {
   confidenceScore?: number;
 }
 
-/**
- * 🏗️ Forge Scaffold: Products Catalog Page
- * Refactored to Island UI (pure Tailwind/Lucide, no Radix/HeroUI).
- * @agent:atlas - Implement pagination, actual search/filter logic, and state persistence.
- */
 export default function ProductsPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Load initial state from URL query parameters
+  const initialTab = (searchParams.get('tab') || 'all') as 'all' | 'pending_review' | 'approved' | 'rejected';
+  const initialSearch = searchParams.get('search') || '';
+  const initialPage = Number(searchParams.get('page') || '1');
+
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTab, setSelectedTab] = useState<'all' | 'pending_review' | 'approved' | 'rejected'>('all');
+  
+  const [selectedTab, setSelectedTab] = useState<'all' | 'pending_review' | 'approved' | 'rejected'>(initialTab);
+  const [searchQuery, setSearchQuery] = useState<string>(initialSearch);
+  const [currentPage, setCurrentPage] = useState<number>(initialPage);
 
   const fetchProducts = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/products');
+      // Retrieve products from API (fetches default limit)
+      // To perform thorough client-side search/filter/pagination, we query a higher limit
+      const res = await fetch('/api/products?limit=100');
       if (!res.ok) {
         throw new Error('Failed to fetch products');
       }
       const data = await res.json();
       
       const productsData = Array.isArray(data) ? data : (data.data || []);
-      const formattedProducts = productsData.map((p: any) => ({
-        id: p.id,
-        title: p.title || p.name || 'Unknown Product',
-        sourceUrl: p.sourceUrl || p.source_url || '',
-        adapter: p.adapter || p.supplier || 'Unknown Supplier',
-        supplierPriceCents: p.supplierPriceCents || p.supplier_price_cents || 0,
-        reviewStatus: p.reviewStatus || p.review_status || 'pending_review',
-        imageUrl: p.imageUrl || undefined,
-        confidenceScore: p.confidenceScore || 90 // Default for scaffold
+      const formattedProducts = productsData.map((p: Record<string, unknown>) => ({
+        id: String(p.id || ''),
+        title: String(p.title || p.name || 'Unknown Product'),
+        sourceUrl: String(p.sourceUrl || p.source_url || ''),
+        adapter: String(p.adapter || p.supplier || 'Unknown Supplier'),
+        supplierPriceCents: Number(p.supplierPriceCents || p.supplier_price_cents || 0),
+        reviewStatus: (p.reviewStatus || p.review_status || 'pending_review') as 'pending_review' | 'approved' | 'rejected',
+        imageUrl: p.imageUrl || p.primaryImageUrl ? String(p.imageUrl || p.primaryImageUrl) : undefined,
+        confidenceScore: Number(p.confidenceScore || p.confidence || 90)
       }));
       setProducts(formattedProducts);
-    } catch (err: any) {
-      setError(err.message || 'An error occurred while fetching products.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred while fetching products.');
     } finally {
       setIsLoading(false);
     }
@@ -64,14 +75,49 @@ export default function ProductsPage() {
     fetchProducts();
   }, []);
 
+  // Sync state back to URL query parameters
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (selectedTab !== 'all') params.set('tab', selectedTab);
+    if (searchQuery) params.set('search', searchQuery);
+    if (currentPage > 1) params.set('page', currentPage.toString());
+
+    const queryString = params.toString();
+    router.replace(`${pathname}${queryString ? `?${queryString}` : ''}`);
+  }, [selectedTab, searchQuery, currentPage, pathname, router]);
+
+  // Reset page count on filter/search changes
+  const handleTabChange = (tab: 'all' | 'pending_review' | 'approved' | 'rejected') => {
+    setSelectedTab(tab);
+    setCurrentPage(1);
+  };
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+  };
+
+  // Filter Products
   const filteredProducts = products.filter(product => {
-    if (selectedTab === 'all') return true;
-    return product.reviewStatus === selectedTab;
+    const matchesTab = selectedTab === 'all' || product.reviewStatus === selectedTab;
+    const matchesSearch = 
+      product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.adapter.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesTab && matchesSearch;
   });
+
+  // Pagination Logic
+  const itemsPerPage = 12;
+  const totalItems = filteredProducts.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+  const paginatedProducts = filteredProducts.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center min-h-[400px]">
+      <div className="flex-1 flex items-center justify-center min-h-[400px] bg-[#f3f1ef]">
         <Spinner />
       </div>
     );
@@ -79,7 +125,7 @@ export default function ProductsPage() {
 
   if (error) {
     return (
-      <div className="p-6">
+      <div className="p-6 bg-[#f3f1ef] min-h-screen">
         <ErrorState 
           title="Failed to load products" 
           message={error} 
@@ -90,7 +136,7 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto flex flex-col gap-6">
+    <div className="p-6 max-w-7xl mx-auto flex flex-col gap-6 min-h-screen bg-[#f3f1ef]" aria-label="Products Library">
       <PageHeader 
         title="Products" 
         subtitle="Manage your imported product catalog"
@@ -121,14 +167,14 @@ export default function ProductsPage() {
         />
       ) : (
         <div className="flex flex-col gap-6">
-          {/* Controls Bar Scaffold (Island UI style) */}
-          <div className="flex items-center justify-between bg-white p-2 rounded-lg border border-[#e0dbd8] shadow-sm">
-            <div className="flex gap-1">
+          {/* Controls Bar */}
+          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white p-3 rounded-xl border border-[#e0dbd8] shadow-sm">
+            <div className="flex gap-1 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
               {(['all', 'pending_review', 'approved', 'rejected'] as const).map((tab) => (
                 <button
                   key={tab}
-                  onClick={() => setSelectedTab(tab)}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  onClick={() => handleTabChange(tab)}
+                  className={`px-3 py-1.5 text-sm font-semibold rounded-lg transition-colors whitespace-nowrap ${
                     selectedTab === tab 
                       ? 'bg-[#f3f1ef] text-[#791228]' 
                       : 'text-muted-foreground hover:bg-gray-50'
@@ -139,25 +185,23 @@ export default function ProductsPage() {
               ))}
             </div>
             
-            <div className="flex items-center gap-2 pr-2">
-              <div className="relative">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="relative flex-1 sm:flex-initial">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input 
                   type="text" 
                   placeholder="Search products..." 
-                  className="pl-8 pr-3 py-1.5 text-sm border border-[#e0dbd8] rounded-md focus:outline-none focus:border-[#791228] focus:ring-1 focus:ring-[#791228]"
-                  disabled
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  className="pl-8 pr-3 py-1.5 w-full sm:w-60 text-sm border border-[#e0dbd8] rounded-lg focus:outline-none focus:border-[#791228] focus:ring-1 focus:ring-[#791228] bg-transparent text-[#0d0d0d]"
                 />
               </div>
-              <button className="p-1.5 border border-[#e0dbd8] rounded-md text-muted-foreground hover:bg-gray-50 transition-colors">
-                <Filter className="w-4 h-4" />
-              </button>
             </div>
           </div>
 
-          {/* Product Grid Scaffold */}
+          {/* Product Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredProducts.map((product) => (
+            {paginatedProducts.map((product) => (
               <ProductCard
                 key={product.id}
                 id={product.id}
@@ -173,8 +217,56 @@ export default function ProductsPage() {
           </div>
 
           {filteredProducts.length === 0 && (
-            <div className="py-12 text-center text-muted-foreground">
-              No products found for this filter.
+            <div className="py-20 text-center text-muted-foreground bg-white border border-[#e0dbd8] rounded-xl shadow-sm">
+              No products found matching your search criteria.
+            </div>
+          )}
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between border-t border-[#e0dbd8]/50 pt-6 mt-4 gap-4">
+              <span className="text-sm text-muted-foreground">
+                Showing <span className="font-semibold text-foreground">{Math.min(totalItems, (currentPage - 1) * itemsPerPage + 1)}</span> to{' '}
+                <span className="font-semibold text-foreground">{Math.min(totalItems, currentPage * itemsPerPage)}</span> of{' '}
+                <span className="font-semibold text-foreground">{totalItems}</span> products
+              </span>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="bordered"
+                  className="border-[#e0dbd8] hover:bg-gray-50 h-9 rounded-lg"
+                  onPress={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                <div className="flex gap-1 overflow-x-auto max-w-[200px] sm:max-w-none">
+                  {Array.from({ length: totalPages }).map((_, idx) => (
+                    <Button
+                      key={idx}
+                      size="sm"
+                      variant={currentPage === idx + 1 ? 'solid' : 'bordered'}
+                      className={`w-9 h-9 min-w-9 p-0 rounded-lg ${
+                        currentPage === idx + 1 
+                          ? 'bg-[#791228] text-white font-semibold shadow' 
+                          : 'border-[#e0dbd8] hover:bg-gray-50 text-foreground'
+                      }`}
+                      onPress={() => setCurrentPage(idx + 1)}
+                    >
+                      {idx + 1}
+                    </Button>
+                  ))}
+                </div>
+                <Button
+                  size="sm"
+                  variant="bordered"
+                  className="border-[#e0dbd8] hover:bg-gray-50 h-9 rounded-lg"
+                  onPress={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
             </div>
           )}
         </div>

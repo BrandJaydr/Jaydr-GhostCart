@@ -1,7 +1,11 @@
 import pg from 'pg';
 import type { PoolClient } from 'pg';
+import { validateEnv } from '../env.js';
 
 const { Pool } = pg;
+
+// Run security gates and environment validations on startup
+validateEnv();
 
 /**
  * PostgreSQL Database Client

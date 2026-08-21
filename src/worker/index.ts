@@ -23,8 +23,10 @@ import { randomUUID } from 'node:crypto';
 import { notify } from '../lib/alerts/index.js';
 import { calculateMargin } from '../lib/margin/calculator.js';
 import { isRepricingPaused, generateSuggestion } from '../lib/repricing/engine.js';
+import type { PoolClient } from 'pg';
+import { logger } from '../lib/logger.js';
 
-console.warn('[Worker] Starting GhostCart worker process...');
+logger.warn('worker', '[Worker] Starting GhostCart worker process...');
 
 // Initialize automated sync repeatable cron job
 void registerRepeatableSyncJobs();
@@ -52,20 +54,17 @@ function computeCompleteness(product: CanonicalProduct): number {
   return Math.round((sum / product.confidence.length) * 100) / 100;
 }
 
-/** Persist a normalized CanonicalProduct to PostgreSQL within a transaction. */
+/** Persist a normalized CanonicalProduct to PostgreSQL. */
 async function persistImport(
   product: CanonicalProduct,
   ctx: PersistContext,
+  client?: PoolClient,
 ): Promise<void> {
   const productId = randomUUID();
-  const client = await db.connect();
-  try {
-    await client.query('BEGIN');
-    await setTenantContextOn(client, product.tenantId);
-
+  const execute = async (c: PoolClient) => {
     // Core product record (canonical fields → migrated columns, incl. 0002 additions).
     // `user_corrections` is initialized empty so the correction workflow has a stable base.
-    await client.query(
+    await c.query(
       `INSERT INTO products
          (id, tenant_id, title, description, supplier_price_cents, currency,
           availability, primary_image_url, identifiers, additional_image_urls,
@@ -111,7 +110,7 @@ async function persistImport(
     // product_sources (raw_source_metadata preserved). The canonical supplierId
     // is the adapterId (text); resolve the UUID suppliers row by adapter_id.
     // Never fail the whole import for traceability.
-    const supplierRes = await client.query(
+    const supplierRes = await c.query(
       `SELECT id FROM suppliers WHERE tenant_id = $1 AND adapter_id = $2 LIMIT 1`,
       [product.tenantId, product.supplierId],
     );
@@ -119,14 +118,14 @@ async function persistImport(
 
     // ON CONFLICT (source_url) updates the existing row and keeps its original
     // id; read back the true id so product_sources references the right product.
-    const productRow = await client.query(
+    const productRow = await c.query(
       `SELECT id FROM products WHERE source_url = $1 LIMIT 1`,
       [product.sourceUrl],
     );
     const persistedProductId = productRow.rows[0]?.id ?? productId;
 
     if (supplierId) {
-      await client.query(
+      await c.query(
         `INSERT INTO product_sources
            (product_id, tenant_id, supplier_id, source_url, raw_source_metadata, created_at)
          VALUES ($1, $2, $3, $4, $5, now())`,
@@ -141,7 +140,7 @@ async function persistImport(
     }
 
     // Jobs table: upsert by idempotency_key (dedup).
-    await client.query(
+    await c.query(
       `INSERT INTO jobs
          (id, tenant_id, type, payload, idempotency_key, status, attempts,
           last_error, created_at, completed_at)
@@ -162,7 +161,7 @@ async function persistImport(
     );
 
     // Audit event — immutable (INSERT only, per Production Blueprint §6.1).
-    await client.query(
+    await c.query(
       `INSERT INTO audit_events
          (tenant_id, user_id, action, entity_type, entity_id, metadata, created_at)
        VALUES ($1, NULL, 'product.imported', 'products', $2, $3, now())`,
@@ -172,13 +171,24 @@ async function persistImport(
         JSON.stringify({ url: product.sourceUrl, supplierId: product.supplierId }),
       ],
     );
+  };
 
-    await client.query('COMMIT');
+  if (client) {
+    await execute(client);
+    return;
+  }
+
+  const conn = await db.connect();
+  try {
+    await conn.query('BEGIN');
+    await setTenantContextOn(conn, product.tenantId);
+    await execute(conn);
+    await conn.query('COMMIT');
   } catch (err) {
-    await client.query('ROLLBACK').catch(() => undefined);
+    await conn.query('ROLLBACK').catch(() => undefined);
     throw err;
   } finally {
-    client.release();
+    conn.release();
   }
 }
 
@@ -237,48 +247,50 @@ async function recordJobFailure(
 // @agent:atlas Implement job processor to call ISupplierAdapter.importProduct()
 // @agent:atlas Add: tenant_id propagation, audit event creation, error classification
 
+export const importProcessor = async (job: Job) => {
+  const { url, supplierId, tenantId, idempotencyKey } = job.data;
+
+  // 1. Resolve supplier adapter via the factory (@agent:atlas handoff).
+  const adapter = getSupplierAdapter(supplierId);
+  if (!adapter) {
+    throw new Error(`Unknown supplier adapter: ${supplierId}`);
+  }
+
+  // 2. Import & normalize to a CanonicalProduct (instrument duration).
+  const startedAt = Date.now();
+  const product = await adapter.importProduct(url, tenantId);
+  const durationMs = Date.now() - startedAt;
+
+  // 3. Persist — graceful degradation (Option C). If Postgres is unavailable
+  //    or @agent:archivist's schema TODOs aren't complete yet, the import
+  //    result is still returned so the job doesn't retry-loop.
+  let persisted = true;
+  try {
+    await persistImport(product, { jobId: job.id, tenantId, idempotencyKey, durationMs });
+  } catch (err) {
+    persisted = false;
+    const msg = `DB persistence failed for import ${job.id ?? '?'}: ${(err as Error).message}`;
+    logger.error('worker', msg, err);
+    // Best-effort audit of the persistence failure (won't throw if DB is down).
+    try {
+      await db.query(
+        `INSERT INTO audit_events
+           (tenant_id, user_id, action, entity_type, entity_id, metadata, created_at)
+         VALUES ($1, NULL, 'product.import_failed', 'products', NULL, $2, now())`,
+        [tenantId, JSON.stringify({ jobId: job.id, supplierId, url, error: msg })],
+      );
+    } catch {
+      /* DB unavailable — nothing more to do; result is in the job payload */
+    }
+  }
+
+  // 4. Result — always returned (graceful degradation per Option C).
+  return { productId: product.id, persisted };
+};
+
 const importWorker = new Worker(
   'product.import',
-  async (job) => {
-    const { url, supplierId, tenantId, idempotencyKey } = job.data;
-
-    // 1. Resolve supplier adapter via the factory (@agent:atlas handoff).
-    const adapter = getSupplierAdapter(supplierId);
-    if (!adapter) {
-      throw new Error(`Unknown supplier adapter: ${supplierId}`);
-    }
-
-    // 2. Import & normalize to a CanonicalProduct (instrument duration).
-    const startedAt = Date.now();
-    const product = await adapter.importProduct(url, tenantId);
-    const durationMs = Date.now() - startedAt;
-
-    // 3. Persist — graceful degradation (Option C). If Postgres is unavailable
-    //    or @agent:archivist's schema TODOs aren't complete yet, the import
-    //    result is still returned so the job doesn't retry-loop.
-    let persisted = true;
-    try {
-      await persistImport(product, { jobId: job.id, tenantId, idempotencyKey, durationMs });
-    } catch (err) {
-      persisted = false;
-      const msg = `DB persistence failed for import ${job.id ?? '?'}: ${(err as Error).message}`;
-      console.error(`[Worker] ${msg}`);
-      // Best-effort audit of the persistence failure (won't throw if DB is down).
-      try {
-        await db.query(
-          `INSERT INTO audit_events
-             (tenant_id, user_id, action, entity_type, entity_id, metadata, created_at)
-           VALUES ($1, NULL, 'product.import_failed', 'products', NULL, $2, now())`,
-          [tenantId, JSON.stringify({ jobId: job.id, supplierId, url, error: msg })],
-        );
-      } catch {
-        /* DB unavailable — nothing more to do; result is in the job payload */
-      }
-    }
-
-    // 4. Result — always returned (graceful degradation per Option C).
-    return { productId: product.id, persisted };
-  },
+  importProcessor,
   {
     connection: redis,
     concurrency: 5, // TODO: @agent:archivist tune based on DB pool size
@@ -338,25 +350,27 @@ importWorker.on('failed', (job, err) => {
 // ─── Product Refresh Worker ───────────────────────────────────────────────────
 // Stage 2: refreshes an already-imported product from its supplier feed by
 // re-running the adapter's fetchProduct and re-persisting (upsert).
-// Stage 4: Extended to handle stock/price refresh with change detection and logging.
-// ─── Product Refresh Worker ───────────────────────────────────────────────────
-// Stage 2: refreshes an already-imported product from its supplier feed by
-// re-running the adapter's fetchProduct and re-persisting (upsert).
 // Stage 4: Extended to handle stock/price refresh with change detection,
 // margin recalculations, repricing engine suggestions, alerts, and withTenant RLS.
-const refreshWorker = new Worker(
-  'product.refresh',
-  async (job) => {
-    const { productId, tenantId, supplierId, idempotencyKey, refreshType = 'both' } = job.data;
+export const refreshProcessor = async (job: Job) => {
+  const { productId, tenantId, supplierId, idempotencyKey, refreshType = 'both' } = job.data;
 
-    const adapter = getSupplierAdapter(supplierId);
-    if (!adapter) {
-      throw new Error(`Unknown supplier adapter: ${supplierId}`);
-    }
+  const adapter = getSupplierAdapter(supplierId);
+  if (!adapter) {
+    throw new Error(`Unknown supplier adapter: ${supplierId}`);
+  }
 
-    // Get current product data within tenant context
-    const currentProduct = await withTenant(tenantId, async (client) => {
-      return await client.query(
+  // 1. Fetch live product from supplier adapter first (outside transaction)
+  const product = await adapter.fetchProduct(productId, tenantId);
+
+  let persisted = true;
+  let priceChanged = false;
+  let stockChanged = false;
+
+  try {
+    await withTenant(tenantId, async (client) => {
+      // 2. Query current product details using the transaction client
+      const currentProduct = await client.query(
         `SELECT p.id, p.title, p.supplier_price_cents, p.current_stock,
                 l.id as listing_id, l.price_cents as listing_price_cents, l.marketplace
          FROM products p
@@ -364,132 +378,129 @@ const refreshWorker = new Worker(
          WHERE p.id = $1`,
         [productId],
       );
-    });
 
-    const oldPrice = (currentProduct.rowCount ?? 0) > 0 ? currentProduct.rows[0].supplier_price_cents : null;
-    const oldStock = (currentProduct.rowCount ?? 0) > 0 ? currentProduct.rows[0].current_stock : null;
-    const listingId = (currentProduct.rowCount ?? 0) > 0 ? currentProduct.rows[0].listing_id : null;
-    const listingPriceCents = (currentProduct.rowCount ?? 0) > 0 ? currentProduct.rows[0].listing_price_cents : null;
-    const listingMarketplace = (currentProduct.rowCount ?? 0) > 0 ? currentProduct.rows[0].marketplace : 'ebay';
+      const oldPrice = (currentProduct.rowCount ?? 0) > 0 ? currentProduct.rows[0].supplier_price_cents : null;
+      const oldStock = (currentProduct.rowCount ?? 0) > 0 ? currentProduct.rows[0].current_stock : null;
+      const listingId = (currentProduct.rowCount ?? 0) > 0 ? currentProduct.rows[0].listing_id : null;
+      const listingPriceCents = (currentProduct.rowCount ?? 0) > 0 ? currentProduct.rows[0].listing_price_cents : null;
+      const listingMarketplace = (currentProduct.rowCount ?? 0) > 0 ? currentProduct.rows[0].marketplace : 'ebay';
 
-    const product = await adapter.fetchProduct(productId, tenantId);
+      // 3. Persist the imported details using the client
+      await persistImport(product, { jobId: job.id, tenantId, idempotencyKey }, client);
 
-    let persisted = true;
-    let priceChanged = false;
-    let stockChanged = false;
+      // 4. Log price change if different
+      if (refreshType === 'price' || refreshType === 'both') {
+        const priceHistoryId = await client.query(
+          'SELECT products.log_price_change($1, $2, $3, $4, $5) as history_id',
+          [productId, oldPrice, product.supplierPriceCents, 'scheduled', null],
+        );
+        priceChanged = (priceHistoryId.rowCount ?? 0) > 0 && priceHistoryId.rows[0].history_id !== null;
 
-    try {
-      await persistImport(product, { jobId: job.id, tenantId, idempotencyKey });
+        // If price changed and there is an active listing, recalculate margin and evaluate repricing
+        if (priceChanged && listingId && listingPriceCents) {
+          const marginResult = await calculateMargin({
+            sellingPriceCents: listingPriceCents,
+            costCents: product.supplierPriceCents,
+            marketplace: listingMarketplace,
+            tenantId,
+          }, client);
 
-      await withTenant(tenantId, async (client) => {
-        // Log price change if different
-        if (refreshType === 'price' || refreshType === 'both') {
-          const priceHistoryId = await client.query(
-            'SELECT products.log_price_change($1, $2, $3, $4, $5) as history_id',
-            [productId, oldPrice, product.supplierPriceCents, 'scheduled', null],
-          );
-          priceChanged = (priceHistoryId.rowCount ?? 0) > 0 && priceHistoryId.rows[0].history_id !== null;
-
-          // If price changed and there is an active listing, recalculate margin and evaluate repricing
-          if (priceChanged && listingId && listingPriceCents) {
-            const marginResult = await calculateMargin({
-              sellingPriceCents: listingPriceCents,
-              costCents: product.supplierPriceCents,
-              marketplace: listingMarketplace,
-              tenantId,
-            });
-
-            // Alert if margin falls below safe threshold (< 5% or negative)
-            if (marginResult.marginPercent < 5) {
-              await notify({
-                tenantId,
-                alertType: 'repricing.margin_risk',
-                severity: marginResult.marginPercent < 0 ? 'critical' : 'warning',
-                message: `Low profit margin warning: Product "${product.title}" margin is ${marginResult.marginPercent}% on ${listingMarketplace}.`,
-                payload: {
-                  productId,
-                  listingId,
-                  marginPercent: marginResult.marginPercent,
-                  profitCents: marginResult.profitCents,
-                  supplierPriceCents: product.supplierPriceCents,
-                },
-              });
-            }
-
-            // Check if repricing is paused before generating suggestions
-            const paused = await isRepricingPaused(tenantId);
-            if (!paused) {
-              await generateSuggestion({
-                tenantId,
-                listingId,
-                currentPriceCents: listingPriceCents,
-                costCents: product.supplierPriceCents,
-              });
-            }
-          }
-        }
-
-        // Log stock change if different
-        if (refreshType === 'stock' || refreshType === 'both') {
-          const newStock = product.availability === 'in_stock' ? 100 : 0;
-          const stockChangedResult = await client.query(
-            'SELECT products.log_stock_change($1, $2, $3, $4, $5) as changed',
-            [productId, oldStock, newStock, 'scheduled', null],
-          );
-          stockChanged = (stockChangedResult.rowCount ?? 0) > 0 && stockChangedResult.rows[0].changed;
-
-          // Out-of-stock warning alert
-          if (product.availability === 'out_of_stock' || newStock === 0) {
+          // Alert if margin falls below safe threshold (< 5% or negative)
+          if (marginResult.marginPercent < 5) {
             await notify({
               tenantId,
-              alertType: 'stock.out_of_stock',
-              severity: 'warning',
-              message: `Supplier out of stock: Product "${product.title}" is currently out of stock.`,
+              alertType: 'repricing.margin_risk',
+              severity: marginResult.marginPercent < 0 ? 'critical' : 'warning',
+              message: `Low profit margin warning: Product "${product.title}" margin is ${marginResult.marginPercent}% on ${listingMarketplace}.`,
               payload: {
                 productId,
-                supplierId,
-                oldStock,
+                listingId,
+                marginPercent: marginResult.marginPercent,
+                profitCents: marginResult.profitCents,
+                supplierPriceCents: product.supplierPriceCents,
               },
             });
           }
+
+          // Check if repricing is paused before generating suggestions
+          const paused = await isRepricingPaused(tenantId, client);
+          if (!paused) {
+            await generateSuggestion({
+              tenantId,
+              listingId,
+              currentPriceCents: listingPriceCents,
+              costCents: product.supplierPriceCents,
+            }, client);
+          }
         }
+      }
 
-        await client.query(
-          `UPDATE products SET last_refreshed_at = now(), review_status = review_status
-            WHERE id = $1`,
-          [productId],
+      // 5. Log stock change if different
+      if (refreshType === 'stock' || refreshType === 'both') {
+        const newStock = product.availability === 'in_stock' ? 100 : 0;
+        const stockChangedResult = await client.query(
+          'SELECT products.log_stock_change($1, $2, $3, $4, $5) as changed',
+          [productId, oldStock, newStock, 'scheduled', null],
         );
+        stockChanged = (stockChangedResult.rowCount ?? 0) > 0 && stockChangedResult.rows[0].changed;
 
-        // Audit event for refresh
-        await client.query(
-          `INSERT INTO audit_events
-             (tenant_id, user_id, action, entity_type, entity_id, metadata, created_at)
-           VALUES ($1, NULL, 'product.refreshed', 'products', $2, $3, now())`,
-          [
+        // Out-of-stock warning alert
+        if (product.availability === 'out_of_stock' || newStock === 0) {
+          await notify({
             tenantId,
-            productId,
-            JSON.stringify({
-              refreshType,
-              priceChanged,
-              stockChanged,
-              oldPrice,
-              newPrice: product.supplierPriceCents,
-            }),
-          ],
-        );
-      });
-    } catch (err) {
-      persisted = false;
-      console.error(`[Worker] Refresh persist failed for ${job.id}:`, (err as Error).message);
-    }
+            alertType: 'stock.out_of_stock',
+            severity: 'warning',
+            message: `Supplier out of stock: Product "${product.title}" is currently out of stock.`,
+            payload: {
+              productId,
+              supplierId,
+              oldStock,
+            },
+          });
+        }
+      }
 
-    return { productId, persisted, priceChanged, stockChanged };
-  },
+      await client.query(
+        `UPDATE products SET last_refreshed_at = now(), review_status = review_status
+          WHERE id = $1`,
+        [productId],
+      );
+
+      // Audit event for refresh
+      await client.query(
+        `INSERT INTO audit_events
+           (tenant_id, user_id, action, entity_type, entity_id, metadata, created_at)
+         VALUES ($1, NULL, 'product.refreshed', 'products', $2, $3, now())`,
+        [
+          tenantId,
+          productId,
+          JSON.stringify({
+            refreshType,
+            priceChanged,
+            stockChanged,
+            oldPrice,
+            newPrice: product.supplierPriceCents,
+          }),
+        ],
+      );
+    });
+  } catch (err) {
+    persisted = false;
+    logger.error('worker', `Refresh persist failed for ${job.id}`, err);
+    throw err; // Rethrow to trigger BullMQ retries and DLQ behavior
+  }
+
+  return { productId, persisted, priceChanged, stockChanged };
+};
+
+const refreshWorker = new Worker(
+  'product.refresh',
+  refreshProcessor,
   { connection: redis, concurrency: 5 },
 );
 
 refreshWorker.on('failed', (job, err) => {
-  console.error(`[Worker] Refresh job ${job?.id} failed:`, err.message);
+  logger.error('worker', `Refresh job ${job?.id} failed: ${err.message}`);
   if (job && job.attemptsMade >= (job.opts?.attempts ?? 3)) {
     void (async () => {
       const { tenantId, supplierId, productId } = job.data ?? {};
@@ -501,7 +512,7 @@ refreshWorker.on('failed', (job, err) => {
           [tenantId, job.id, JSON.stringify({ supplierId, productId }), err.message, job.attemptsMade],
         );
       } catch (e) {
-        console.error('[Worker] Could not write DLQ for refresh:', (e as Error).message);
+        logger.error('worker', `Could not write DLQ for refresh: ${(e as Error).message}`);
       }
       await notify({
         tenantId: tenantId ?? null,
@@ -522,54 +533,57 @@ refreshWorker.on('failed', (job, err) => {
 
 // ─── Automated Sync Scheduler Worker ──────────────────────────────────────────
 // Runs periodically to query products that are stale and enqueues them for refresh.
+export const syncSchedulerProcessor = async (job: Job) => {
+  logger.warn('worker', `Running scheduled stock/price sync pass (job ${job.id})...`);
+  
+  // Find products requiring sync (refreshed > 6 hours ago or never refreshed)
+  const staleProducts = await db.query(
+    `SELECT p.id, p.tenant_id, p.supplier_id
+     FROM products p
+     JOIN tenants t ON p.tenant_id = t.id
+     WHERE t.suspended_at IS NULL 
+       AND (p.last_refreshed_at IS NULL 
+         OR p.last_refreshed_at < now() - INTERVAL '6 hours')
+     ORDER BY p.last_refreshed_at ASC NULLS FIRST
+     LIMIT 100`,
+  );
+
+  let enqueuedCount = 0;
+  for (let i = 0; i < staleProducts.rows.length; i++) {
+    const row = staleProducts.rows[i];
+    await refreshQueue.add(
+      'product.refresh',
+      {
+        productId: row.id,
+        tenantId: row.tenant_id,
+        supplierId: row.supplier_id,
+        idempotencyKey: `sync-${row.id}-${Date.now()}`,
+        refreshType: 'both',
+      },
+      {
+        delay: i * 200, // 200ms delay between dispatches to prevent supplier spikes
+      },
+    );
+    enqueuedCount++;
+  }
+
+  logger.warn('worker', `Scheduled sync pass completed. Enqueued ${enqueuedCount} refresh jobs.`);
+  return { enqueuedCount };
+};
+
 const syncSchedulerWorker = new Worker(
   'product.sync_scheduler',
-  async (job) => {
-    console.warn(`[Worker] Running scheduled stock/price sync pass (job ${job.id})...`);
-    
-    // Find products requiring sync (refreshed > 6 hours ago or never refreshed)
-    const staleProducts = await db.query(
-      `SELECT p.id, p.tenant_id, p.supplier_id
-       FROM products p
-       JOIN tenants t ON p.tenant_id = t.id
-       WHERE p.last_refreshed_at IS NULL 
-          OR p.last_refreshed_at < now() - INTERVAL '6 hours'
-       ORDER BY p.last_refreshed_at ASC NULLS FIRST
-       LIMIT 100`,
-    );
-
-    let enqueuedCount = 0;
-    for (let i = 0; i < staleProducts.rows.length; i++) {
-      const row = staleProducts.rows[i];
-      await refreshQueue.add(
-        'product.refresh',
-        {
-          productId: row.id,
-          tenantId: row.tenant_id,
-          supplierId: row.supplier_id,
-          idempotencyKey: `sync-${row.id}-${Date.now()}`,
-          refreshType: 'both',
-        },
-        {
-          delay: i * 250, // 250ms delay between dispatches to prevent supplier spikes
-        },
-      );
-      enqueuedCount++;
-    }
-
-    console.warn(`[Worker] Scheduled sync pass completed. Enqueued ${enqueuedCount} refresh jobs.`);
-    return { enqueuedCount };
-  },
+  syncSchedulerProcessor,
   { connection: redis, concurrency: 1 },
 );
 
 syncSchedulerWorker.on('failed', (job, err) => {
-  console.error(`[Worker] Sync scheduler job ${job?.id} failed:`, err.message);
+  logger.error('worker', `Sync scheduler job ${job?.id} failed: ${err.message}`);
 });
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
-  console.warn('[Worker] Shutting down...');
+  logger.warn('worker', '[Worker] Shutting down...');
   await Promise.allSettled([
     importWorker.close(),
     refreshWorker.close(),

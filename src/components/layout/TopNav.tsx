@@ -2,8 +2,9 @@
 
 import { type Key } from 'react';
 import { useRouter } from 'next/navigation';
+import { signOut } from 'next-auth/react';
 import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from '@heroui/react';
-import { Search, Bell, User, LogOut, Settings, Moon, Plus, Command } from 'lucide-react';
+import { Search, Bell, User, LogOut, Settings, Moon, Plus, Command, Menu } from 'lucide-react';
 
 export interface TopNavProps {
   isSidebarCollapsed: boolean;
@@ -11,19 +12,29 @@ export interface TopNavProps {
   onOpenCommandPalette?: () => void;
 }
 
-export function TopNav({ onSidebarToggle, onOpenCommandPalette }: TopNavProps) {
+export function TopNav({ isSidebarCollapsed: _isSidebarCollapsed, onSidebarToggle, onOpenCommandPalette }: TopNavProps) {
   const router = useRouter();
 
   const handleMenuAction = (key: Key) => {
     if (key === 'profile') router.push('/profile');
     else if (key === 'settings') router.push('/settings/general');
-    else if (key === 'logout') router.push('/sign-out');
+    else if (key === 'logout') void signOut({ callbackUrl: '/sign-in' });
   };
 
   return (
     <div className="flex w-full justify-between items-center bg-transparent gap-4 h-full">
       {/* Search Island (Command Palette Trigger) */}
-      <div className="flex-1 flex items-center">
+      <div className="flex-1 flex items-center gap-2">
+        <Button
+          isIconOnly
+          variant="light"
+          onPress={onSidebarToggle}
+          radius="full"
+          className="md:hidden text-foreground"
+          aria-label="Toggle navigation"
+        >
+          <Menu className="w-5 h-5" />
+        </Button>
         <button
           type="button"
           onClick={onOpenCommandPalette}

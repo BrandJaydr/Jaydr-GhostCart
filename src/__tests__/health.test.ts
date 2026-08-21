@@ -16,7 +16,7 @@ describe('GET /api/health', () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body).toEqual({ status: 'ok' });
+    expect(body.status).toBe('ok');
   });
 
   it('returns a JSON content-type response', async () => {

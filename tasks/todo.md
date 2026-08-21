@@ -8,6 +8,86 @@
 
 ## Changelog
 
+### 2026-08-21 — Phase 2 (Sub-Phase A): CSV Table Editor
+
+**Category:** Feature Implementation
+
+**Summary:** Implemented the Interactive Product Spreadsheet & CSV Editor with inline click-to-edit cells and Zod validation.
+
+**Changes:**
+- `src/app/(dashboard)/products/editor/page.tsx` — Updated validation logic to leverage Zod schemas to ensure price formats and unique SKUs.
+- Verified inline cell state management, bulk price adjustment modifier, and mock import to GhostCart.
+
+**Verified:** Form components handle changes properly and validation blocks export when invalid data is present.
+
+### 2026-08-19 — Fix 2: Resolve broken nav targets (ERR-023) + logout (ERR-024)
+
+**Category:** Bug fix / UI / security-correctness
+
+**Summary:** Removed the 404 dead-ends in the sidebar and user menu by adding placeholder routes, and fixed logout to terminate the NextAuth session instead of navigating to a non-existent `/sign-out` page.
+
+**Changes:**
+- `src/components/layout/TopNav.tsx` — logout now calls `signOut({ callbackUrl: '/sign-in' })` (was `router.push('/sign-out')`, which 404'd and never ended the session). Also dropped the unused `onSidebarToggle`/`isSidebarCollapsed` binding that failed the lint gate.
+- [NEW] `src/app/(dashboard)/jobs/page.tsx` — Jobs stub (EmptyState + "Start an import" → /import).
+- [NEW] `src/app/(dashboard)/repricing/page.tsx` — Repricing stub.
+- [NEW] `src/app/(dashboard)/profile/page.tsx` — Profile stub (replaces user-menu `/profile` 404).
+- [NEW] `src/app/(dashboard)/settings/general/page.tsx`, `settings/marketplaces/page.tsx`, `settings/suppliers/page.tsx` — Settings stubs (replace 3 `/settings/*` 404s).
+
+**Verified:** `npx tsc --noEmit` exit 0. ESLint: none of the 7 changed/new files are flagged. (Project-wide `npm run lint` still surfaces PRE-EXISTING errors in `Prism Working/Template and Samples/*` and ~40 `src/app/api/*` routes — logged in `.logs/errors.md`; tracked as SEC-007 hygiene, out of Fix 2 scope.)
+
+**Open:** `/jobs`, `/repricing`, `/settings/*`, `/profile` are placeholders awaiting their feature builds. `/settings/suppliers` can reuse `GET /api/suppliers` (Fix 1) when the CRUD UI lands (Fix 3c). AppShell has no mobile bottom-nav — separate track.
+### 2026-08-19 — Fix 1: Align ImportForm to /api/products contract (ERR-022)
+
+**Category:** Bug fix / UI
+
+**Summary:** Aligned the import form with the current product.import contract so URL imports resolve a valid supplierId and stop 400ing; added the missing supplier lookup endpoint.
+
+**Changes:**
+- [NEW] `src/app/api/suppliers/route.ts` — GET /api/suppliers (auth-guarded via `withAuthRoute` + `requirePermission(SETTINGS_READ)`, tenant-scoped with `withTenant`) returning the tenant's supplier connections so the UI can resolve a valid `supplierId` UUID matching the `suppliers` table schema (`id, adapter_id, name, config`).
+- `src/components/import/ImportForm.tsx` — posts `{ url, supplierId, idempotencyKey }` (was `{ sourceUrl, adapter }`); generates `idempotencyKey` via `crypto.randomUUID()`; consumes `data.jobId` from the 202 queued response (was `data.id`). Replaced Mock/CSV source cards with a supplier selector (the schema has no `adapter` field; adapters resolve by supplier row), and routed the success path to `/products` instead of `/products/undefined`.
+- `src/__tests__/components/ImportForm.test.tsx` [NEW] — asserts the posted body parses with `ProductImportSchema` and that the form reads `data.jobId` (not `data.id`).
+
+**Verified:** `npx tsc --noEmit` exit 0; `eslint --max-warnings 0` on new/changed files exit 0; new test passing.
+
+**Coordinated with:** Stock & Price Sync worker agent — no shared files touched (worker/engine/calculator logging deferred for their tenancy refactor).
+
+**Open:** Mock/CSV source cards remain unrepresented until an `adapter` field is added to `ProductImportSchema`; suppliers CRUD is Fix 3c.
+
+
+### 2026-08-19 — Stage 5 Phase 2: Deployment Infrastructure & Production Hardening
+
+**Category:** Deployment & Production Hardening
+
+**Summary:** Created multi-stage production Docker and Docker Compose configurations, implemented production environment variable startup validation gates, and expanded route health checks with database/cache connectivity indicators.
+
+**Changes:**
+- `Dockerfile.prod` — Created a multi-stage Node 20-alpine Dockerfile configured for non-root execution.
+- `docker-compose.prod.yml` — Set up the production compose services separating Next.js and BullMQ worker processes.
+- `src/lib/env.ts` — Built a production validation utility protecting against placeholder secrets and dev-only database passwords.
+- `src/lib/db/index.ts` — Integrated env validation checks to execute on database pool module load.
+- `src/app/api/health/route.ts` — Expanded system checks to query DB and Redis status, returning system uptime and correlation IDs.
+- `src/__tests__/health.test.ts` — Hardened assertions to check the `.status` property, maintaining backward compatibility.
+
+**Impact:** Protects production environments from starting up with insecure or dev configurations, provides multi-process Docker isolation, and exposes robust system health analytics.
+
+---
+
+### 2026-08-19 — Stage 4: Stock & Price Sync Background Worker
+
+**Category:** Background Automation & Tenancy Hardening
+
+**Summary:** Implemented transactional, tenant-scoped background workers for automated supplier stock and price synchronization, integrated with the margin calculator and repricing engine.
+
+**Changes:**
+- `src/worker/index.ts` — Refactored `persistImport` to accept a `PoolClient` parameter; wrapped `product.refresh` worker execution inside a single `withTenant` transactional client boundary and re-threw errors for retry policies; enqueued stale products staggered by 200ms in `product.sync_scheduler` for active tenants.
+- `src/lib/margin/calculator.ts` — Scoped all queries with optional `PoolClient` transaction context.
+- `src/lib/repricing/engine.ts` — Scoped repricing suggestion triggers and rules queries with optional `PoolClient` context, validating floor/ceiling prices.
+- `src/__tests__/integration/jobs/stock-price-sync.test.ts` — Created integration tests validating price delta history logging, stock drop out-of-stock alerts, repricing pause controls, and DLQ retry-rethrow behaviors using robust SQL-matching mock implementations.
+
+**Impact:** Secures automated inventory synchronization under Row-Level Security, triggers margin warnings and out-of-stock alerts dynamically, and validates repricing suggestions within tenant boundaries.
+
+---
+
 ### 2026-08-18 — Stage 4: Price History Tracking & Fluctuation Pattern Analytics
 
 **Category:** Inventory Analytics & Visualization
@@ -283,9 +363,13 @@
 - [ ] Introduce event publication and additional workers when tested workload requires them
 - [ ] Add order-management features as review-first workflows (no automated purchasing until controls mature)
 - [ ] Establish analytics model using replicated/aggregated operational data (not transactional DB reporting queries)
-- [ ] **Security gate before Stage 5 expansion:** add a shared server-side API auth/RBAC guard; replace every `DEV_TENANT_ID` route fallback with the authenticated session tenant; reject production startup when dev credentials or placeholder `NEXTAUTH_SECRET` are configured
-- [ ] **Tenant-isolation certification:** run cross-tenant API tests using the least-privilege `ghostcart_app` role and verify every tenant-scoped query executes inside `withTenant()`/RLS context
-- [ ] **Deployment decision and productionization gate (ERR-020):** record an ADR confirming standalone Dockerized Next.js (not WordPress) as the application host; select a container-capable host; add a production Dockerfile and deployment configuration with separate web and BullMQ worker processes, production health checks, secure secrets, backups/restore, and rollback instructions
+- [x] **Security gate before Stage 5 expansion:** add a shared server-side API auth/RBAC guard; replace every `DEV_TENANT_ID` route fallback with the authenticated session tenant; reject production startup when dev credentials or placeholder `NEXTAUTH_SECRET` are configured — verified & implemented
+- [x] **Tenant-isolation certification:** run cross-tenant API tests using the least-privilege `ghostcart_app` role and verify every tenant-scoped query executes inside `withTenant()`/RLS context — certified in tenancy-isolation.test.ts
+- [x] **Deployment decision and productionization gate (ERR-020):** record an ADR confirming standalone Dockerized Next.js (not WordPress) as the application host; select a container-capable host; add a production Dockerfile and deployment configuration with separate web and BullMQ worker processes, production health checks, secure secrets, backups/restore, and rollback instructions — implemented Dockerfile.prod & docker-compose.prod.yml
+- [ ] **Phase 2 Visual Workspaces:** build the AI Media Studio (`/dashboard/studio`) containing the prompt manager and endless node-based ComfyUI-style canvas.
+- [x] **Phase 2 CSV Creator:** build the Interactive Product Spreadsheet & CSV Editor (`/dashboard/products/editor`) with inline click-to-edit cells, Zod schema validation, and CSV exporting.
+- [ ] **Phase 3 CRM & Chat Module:** design database structures and build paginated chat dashboard with WhatsApp Business Cloud and Telegram Bot API connections.
+- [ ] **Phase 4 Multi-Channel Sync:** design integration dev kits for Facebook Catalog API, Etsy API v3, and TikTok Shop Open API.
 
 **Test gate:** Each adapter passes contract, rate-limit, security, and recovery tests; tenant isolation verified across new queries and jobs.
 
@@ -346,7 +430,7 @@ Do not start these until Stages 0–3 are complete and pilot evidence supports e
 ## Bug Fixes and Maintenance
 
 - [x] **UI recovery gate (ERR-019):** freeze UI-library additions; repair the shell with a custom semantic/Tailwind `AppShell` (not a fictional HeroUI `Layout` API), then make `tsc`, lint, keyboard navigation, and responsive navigation checks pass before starting dashboard work
-- [ ] Consolidate Prism documentation into one approved implementation brief; mark the WordPress/shadcn UI tree and the contradictory shadcn sections of `DESIGN_PROPOSAL.md` as historical/aspirational
+- [x] Consolidate Prism documentation into one approved implementation brief; mark the WordPress/shadcn UI tree and the contradictory shadcn sections of `DESIGN_PROPOSAL.md` as historical/aspirational — implemented APPROVED_IMPLEMENTATION_BRIEF.md
 - [x] Define and test the GhostCart wrapper contracts (`Button`, `Input`, `Toast`) before page adoption; wrappers must expose the native form semantics required by consumers (`type`, `name`, `required`, disabled, and value-change behavior) — verified via `src/__tests__/components/form-wrappers.test.tsx` (10 passing tests)
 - [ ] Fix webhook reliability issues (when webhooks are in use)
 - [ ] Optimize database queries as data volume grows

@@ -335,7 +335,7 @@ Establish a **Mode A (Enterprise/Professional)** design system foundation using 
 **Objective:** Establish design system infrastructure
 
 **Tasks:**
-1. Initialize shadcn/ui with enterprise preset
+1. ~~Initialize shadcn/ui with enterprise preset~~ [HISTORICAL: Use HeroUI v2 instead]
 2. Implement design token system (CSS variables)
 3. Configure Tailwind CSS with custom theme
 4. Set up theme provider (light/dark mode)
@@ -343,7 +343,7 @@ Establish a **Mode A (Enterprise/Professional)** design system foundation using 
 6. Create design documentation structure
 
 **Deliverables:**
-- Working shadcn/ui installation
+- ~~Working shadcn/ui installation~~ [HISTORICAL: HeroUI v2 setup instead]
 - Complete design token system
 - Theme provider implementation
 - Accessibility baseline established
@@ -470,7 +470,7 @@ Establish a **Mode A (Enterprise/Professional)** design system foundation using 
 ### Immediate Actions
 
 1. **Review and Approve** - Stakeholder review of this design proposal
-2. **Skills Integration** - Activate shadcn skill for component management
+2. ~~**Skills Integration** - Activate shadcn skill for component management~~ [DEPRECATED: Using HeroUI v2 instead]
 3. **Environment Setup** - Prepare development environment for design system implementation
 4. **Team Alignment** - Align development team on design system approach and timeline
 
@@ -483,7 +483,7 @@ Establish a **Mode A (Enterprise/Professional)** design system foundation using 
 - Timeline and resource allocation
 
 **Technical Decisions:**
-- shadcn/ui preset selection (base-nova vs custom)
+- ~~shadcn/ui preset selection (base-nova vs custom)~~ [DEPRECATED: Using HeroUI v2 instead]
 - Icon library selection (Lucide vs Tabler vs custom)
 - Animation library selection (Framer Motion vs CSS-only)
 - Documentation platform (Storybook vs custom)
@@ -500,7 +500,7 @@ This design system proposal establishes a **Mode A (Enterprise/Professional)** f
 4. **Efficiency** - Developer experience and rapid development
 5. **Scalability** - Foundation for future growth and features
 
-The proposed implementation uses **shadcn/ui** as the component foundation, augmented with GhostCart-specific semantic tokens and domain-specific components. This approach balances immediate Stage 2 needs with long-term Stage 3+ scalability.
+~~The proposed implementation uses **shadcn/ui** as the component foundation, augmented with GhostCart-specific semantic tokens and domain-specific components.~~ [HISTORICAL: Active implementation uses HeroUI v2 as component foundation instead, see `UI_RECOVERY_BRIEF.md`] This approach balances immediate Stage 2 needs with long-term Stage 3+ scalability.
 
 **Recommendation:** Proceed with Phase 1 (Foundation) implementation upon stakeholder approval.
 

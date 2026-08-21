@@ -13,7 +13,7 @@ Jaydr GhostCart is a high-performance e-commerce management platform designed fo
 GhostCart bridges supplier catalog management with major online marketplaces:
 - **Supported Marketplaces (Roadmap):** eBay, Amazon (SP-API), Facebook Marketplace, Etsy, Shopify.
 - **Supplier Integration:** CSV/Feed Ingestion, Supplier APIs, and custom browser automation adapters.
-- **Core Capabilities:** Multi-tenant catalog management, AI listing generation/optimization, real-time repricing guardrails, and audit logging.
+- **Core Capabilities:** Multi-tenant catalog management, Interactive CSV Product Table Editor (inline schema validation), AI listing generation/optimization, real-time repricing guardrails, and audit logging.
 
 ---
 

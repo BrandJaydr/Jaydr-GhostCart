@@ -2,22 +2,42 @@
  * Stock & Price Sync Integration Tests
  *
  * Validates deterministic margin calculations under tenant context,
- * repricing suggestion triggers, and pause controls.
+ * repricing suggestion triggers, pause controls, and background workers.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { Job } from 'bullmq';
 
-const { mockQuery, mockDb } = vi.hoisted(() => {
+const { mockQuery, mockDb, mockNotify, mockFetchProduct, mockSupplierAdapter } = vi.hoisted(() => {
   const mockQuery = vi.fn();
   const mockDb = { query: mockQuery };
-  return { mockQuery, mockDb };
+  const mockNotify = vi.fn();
+  const mockFetchProduct = vi.fn();
+  const mockSupplierAdapter = {
+    fetchProduct: mockFetchProduct,
+  };
+  return { mockQuery, mockDb, mockNotify, mockFetchProduct, mockSupplierAdapter };
 });
 
 vi.mock('@/lib/db/index', () => ({
   db: mockDb,
-  withTenant: vi.fn(async (_tenantId: string, work: (client: any) => Promise<any>) => work(mockDb)),
+  withTenant: vi.fn(async (_tenantId: string, work: (client: unknown) => Promise<unknown>) => work(mockDb)),
   DEV_TENANT_ID: '00000000-0000-0000-0000-000000000001',
   setTenantContextOn: vi.fn(async () => undefined),
+}));
+
+vi.mock('@/lib/queue/index', () => ({
+  redis: {},
+  refreshQueue: { add: vi.fn() },
+  registerRepeatableSyncJobs: vi.fn(),
+}));
+
+vi.mock('@/lib/alerts/index', () => ({
+  notify: mockNotify,
+}));
+
+vi.mock('@/lib/adapters/factory', () => ({
+  getSupplierAdapter: vi.fn(() => mockSupplierAdapter),
 }));
 
 import { calculateMargin, calculateShippingCost } from '@/lib/margin/calculator';
@@ -27,6 +47,7 @@ import {
   generateSuggestion,
   getRepricingRules,
 } from '@/lib/repricing/engine';
+import { refreshProcessor } from '@/worker/index';
 
 const TEST_TENANT_ID = '00000000-0000-0000-0000-000000000001';
 const TEST_LISTING_ID = '11111111-1111-1111-1111-111111111111';
@@ -115,6 +136,18 @@ describe('Stock & Price Sync Engine & Tenancy Tests', () => {
     });
 
     it('generates repricing suggestions within tenant context', async () => {
+      // generateSuggestion rule lookup and bounds validation
+      mockQuery.mockResolvedValueOnce({
+        rows: [{
+          floor_price_cents: 1000,
+          ceiling_price_cents: 10000,
+          margin_target_percent: 15,
+          beat_by_cents: 0,
+          beat_by_percent: 0,
+          enabled: true,
+        }],
+        rowCount: 1,
+      });
       mockQuery.mockResolvedValueOnce({
         rows: [{ suggestion_id: 'sugg-999' }],
         rowCount: 1,
@@ -160,4 +193,231 @@ describe('Stock & Price Sync Engine & Tenancy Tests', () => {
       expect(rules[0].marginTargetPercent).toBe(15);
     });
   });
+
+  describe('Worker Processors Integration', () => {
+    const mockJob = {
+      id: 'job-123',
+      data: {
+        productId: 'prod-abc',
+        tenantId: TEST_TENANT_ID,
+        supplierId: 'ebay',
+        idempotencyKey: 'key-123',
+        refreshType: 'both',
+      },
+    } as unknown as Job;
+
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    it('performs price delta detection, updates history, and evaluates repricing', async () => {
+      // 1. Mock fetchProduct from adapter: supplierPriceCents = 2500 (price changed)
+      mockFetchProduct.mockResolvedValueOnce({
+        id: 'prod-abc',
+        tenantId: TEST_TENANT_ID,
+        supplierId: 'ebay',
+        title: 'Test Item',
+        supplierPriceCents: 2500,
+        availability: 'in_stock',
+        sourceUrl: 'https://example.com/source',
+      });
+
+      mockQuery.mockImplementation(async (sql: string) => {
+        if (sql.includes('SELECT p.id, p.title, p.supplier_price_cents')) {
+          return {
+            rows: [{
+              id: 'prod-abc',
+              title: 'Test Item',
+              supplier_price_cents: 2000,
+              current_stock: 10,
+              listing_id: TEST_LISTING_ID,
+              listing_price_cents: 4999,
+              marketplace: 'ebay'
+            }],
+            rowCount: 1,
+          };
+        }
+        if (sql.includes('SELECT id FROM suppliers')) {
+          return { rows: [{ id: 'supp-uuid' }], rowCount: 1 };
+        }
+        if (sql.includes('SELECT id FROM products WHERE source_url')) {
+          return { rows: [{ id: 'prod-abc' }], rowCount: 1 };
+        }
+        if (sql.includes('log_price_change')) {
+          return { rows: [{ history_id: 'price-hist-uuid' }], rowCount: 1 };
+        }
+        if (sql.includes('calculate_marketplace_fees')) {
+          return { rows: [{ fees: 500 }], rowCount: 1 };
+        }
+        if (sql.includes('calculate_tax')) {
+          return { rows: [{ tax: 300 }], rowCount: 1 };
+        }
+        if (sql.includes('calculate_shipping_cost')) {
+          return { rows: [{ shipping: 600 }], rowCount: 1 };
+        }
+        if (sql.includes('is_paused')) {
+          return { rows: [{ paused: false }], rowCount: 1 };
+        }
+        if (sql.includes('FROM repricing.repricing_rules') || sql.includes('FROM repricing_rules')) {
+          return {
+            rows: [{
+              floor_price_cents: 1000,
+              ceiling_price_cents: 10000,
+              margin_target_percent: 15,
+              beat_by_cents: 0,
+              beat_by_percent: 0,
+              enabled: true,
+            }],
+            rowCount: 1,
+          };
+        }
+        if (sql.includes('generate_suggestion')) {
+          return { rows: [{ suggestion_id: 'sugg-uuid-123' }], rowCount: 1 };
+        }
+        if (sql.includes('log_stock_change')) {
+          return { rows: [{ changed: true }], rowCount: 1 };
+        }
+        return { rows: [], rowCount: 0 };
+      });
+
+      const result = await refreshProcessor(mockJob);
+
+      expect(result.persisted).toBe(true);
+      expect(result.priceChanged).toBe(true);
+      expect(mockFetchProduct).toHaveBeenCalledWith('prod-abc', TEST_TENANT_ID);
+      // Assert suggestion was triggered
+      expect(mockQuery).toHaveBeenCalledWith(
+        expect.stringContaining('repricing.generate_suggestion'),
+        [TEST_TENANT_ID, TEST_LISTING_ID, 4999, 2500, null]
+      );
+    });
+
+    it('performs stock delta detection, logs change, and triggers out-of-stock alert', async () => {
+      // 1. Mock fetchProduct from adapter: out of stock
+      mockFetchProduct.mockResolvedValueOnce({
+        id: 'prod-abc',
+        tenantId: TEST_TENANT_ID,
+        supplierId: 'ebay',
+        title: 'Test Item',
+        supplierPriceCents: 2000,
+        availability: 'out_of_stock',
+        sourceUrl: 'https://example.com/source',
+      });
+
+      mockQuery.mockImplementation(async (sql: string) => {
+        if (sql.includes('SELECT p.id, p.title, p.supplier_price_cents')) {
+          return {
+            rows: [{
+              id: 'prod-abc',
+              title: 'Test Item',
+              supplier_price_cents: 2000,
+              current_stock: 10,
+              listing_id: null,
+              listing_price_cents: null,
+              marketplace: 'ebay'
+            }],
+            rowCount: 1,
+          };
+        }
+        if (sql.includes('SELECT id FROM suppliers')) {
+          return { rows: [{ id: 'supp-uuid' }], rowCount: 1 };
+        }
+        if (sql.includes('SELECT id FROM products WHERE source_url')) {
+          return { rows: [{ id: 'prod-abc' }], rowCount: 1 };
+        }
+        if (sql.includes('log_stock_change')) {
+          return { rows: [{ changed: true }], rowCount: 1 };
+        }
+        return { rows: [], rowCount: 0 };
+      });
+
+      const result = await refreshProcessor(mockJob);
+
+      expect(result.stockChanged).toBe(true);
+      // Assert stock alert notification was dispatched
+      expect(mockNotify).toHaveBeenCalledWith(expect.objectContaining({
+        alertType: 'stock.out_of_stock',
+        severity: 'warning',
+        tenantId: TEST_TENANT_ID,
+      }));
+    });
+
+    it('respects repricing pause states and suppresses suggestions when paused', async () => {
+      // 1. Mock fetchProduct: supplierPriceCents = 2500 (price changed)
+      mockFetchProduct.mockResolvedValueOnce({
+        id: 'prod-abc',
+        tenantId: TEST_TENANT_ID,
+        supplierId: 'ebay',
+        title: 'Test Item',
+        supplierPriceCents: 2500,
+        availability: 'in_stock',
+        sourceUrl: 'https://example.com/source',
+      });
+
+      mockQuery.mockImplementation(async (sql: string) => {
+        if (sql.includes('SELECT p.id, p.title, p.supplier_price_cents')) {
+          return {
+            rows: [{
+              id: 'prod-abc',
+              title: 'Test Item',
+              supplier_price_cents: 2000,
+              current_stock: 10,
+              listing_id: TEST_LISTING_ID,
+              listing_price_cents: 4999,
+              marketplace: 'ebay'
+            }],
+            rowCount: 1,
+          };
+        }
+        if (sql.includes('SELECT id FROM suppliers')) {
+          return { rows: [{ id: 'supp-uuid' }], rowCount: 1 };
+        }
+        if (sql.includes('SELECT id FROM products WHERE source_url')) {
+          return { rows: [{ id: 'prod-abc' }], rowCount: 1 };
+        }
+        if (sql.includes('log_price_change')) {
+          return { rows: [{ history_id: 'price-hist-uuid' }], rowCount: 1 };
+        }
+        if (sql.includes('calculate_marketplace_fees')) {
+          return { rows: [{ fees: 500 }], rowCount: 1 };
+        }
+        if (sql.includes('calculate_tax')) {
+          return { rows: [{ tax: 300 }], rowCount: 1 };
+        }
+        if (sql.includes('calculate_shipping_cost')) {
+          return { rows: [{ shipping: 600 }], rowCount: 1 };
+        }
+        if (sql.includes('is_paused')) {
+          return { rows: [{ paused: true }], rowCount: 1 };
+        }
+        return { rows: [], rowCount: 0 };
+      });
+
+      await refreshProcessor(mockJob);
+
+      // Verify that repricing.generate_suggestion was NOT called
+      const generateCalls = mockQuery.mock.calls.filter(c =>
+        typeof c[0] === 'string' && c[0].includes('repricing.generate_suggestion')
+      );
+      expect(generateCalls).toHaveLength(0);
+    });
+
+    it('rethrows database errors to trigger BullMQ retries instead of swallowing them', async () => {
+      // Mock lookup query to fail
+      mockQuery.mockRejectedValueOnce(new Error('Postgres connection failure'));
+
+      // Mock fetchProduct
+      mockFetchProduct.mockResolvedValueOnce({
+        id: 'prod-abc',
+        tenantId: TEST_TENANT_ID,
+        supplierId: 'ebay',
+        title: 'Test Item',
+        supplierPriceCents: 2000,
+        availability: 'in_stock',
+      });
+
+      await expect(refreshProcessor(mockJob)).rejects.toThrow('Postgres connection failure');
+    });
+  });
 });
+

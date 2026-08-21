@@ -1,0 +1,38 @@
+# Jaydr GhostCart — Production Dockerfile
+# Multi-stage build for minimal production image footprint and security.
+
+# Stage 1: Install production dependencies
+FROM node:20-alpine AS deps
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --ignore-scripts
+
+# Stage 2: Build Next.js application
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN npm run build
+
+# Stage 3: Production Runner
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+
+# Run under the non-root user 'node' for security hardening
+USER node
+
+# Copy build artifacts, node_modules, and files required by ts-node worker
+COPY --from=builder --chown=node:node /app/package.json ./package.json
+COPY --from=builder --chown=node:node /app/package-lock.json ./package-lock.json
+COPY --from=builder --chown=node:node /app/node_modules ./node_modules
+COPY --from=builder --chown=node:node /app/.next ./.next
+COPY --from=builder --chown=node:node /app/public ./public
+COPY --from=builder --chown=node:node /app/src ./src
+COPY --from=builder --chown=node:node /app/tsconfig.json ./tsconfig.json
+
+EXPOSE 3000
+
+# Default command starts the Next.js production web server
+# Overridden in docker-compose.prod.yml for the background worker service
+CMD ["npm", "run", "start"]
