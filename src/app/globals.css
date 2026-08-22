@@ -109,6 +109,24 @@
     --border: #333333;
   }
 
+  .warm-cream-burgundy-2 {
+    --background: #ffffff;
+    --surface: #ffffff;
+    --surface-elevated: #f4f4f5;
+    --foreground: #000000;
+    --muted-foreground: #6b7280;
+    --border: #e0dbd8;
+  }
+
+  .warm-cream-burgundy-2-dark {
+    --background: #000000;
+    --surface: #18181b;
+    --surface-elevated: #27272a;
+    --foreground: #ffffff;
+    --muted-foreground: #6b7280;
+    --border: #e0dbd8;
+  }
+
   * {
     @apply border-border;
   }

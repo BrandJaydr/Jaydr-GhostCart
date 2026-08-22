@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from '@heroui/react';
 import { Search, Bell, User, LogOut, Settings, Moon, Plus, Command, Menu } from 'lucide-react';
+import { ThemeSwitcher } from '@/components/ui/ThemeSwitcher';
 
 export interface TopNavProps {
   isSidebarCollapsed: boolean;
@@ -74,6 +75,8 @@ export function TopNav({ isSidebarCollapsed: _isSidebarCollapsed, onSidebarToggl
           </Button>
           <span className="absolute top-2 right-2 w-2 h-2 bg-primary-500 rounded-full border border-background"></span>
         </div>
+
+        <ThemeSwitcher />
 
         <Dropdown placement="bottom-end">
           <DropdownTrigger>

@@ -1,6 +1,6 @@
 import pg from 'pg';
 import type { PoolClient } from 'pg';
-import { validateEnv } from '../env.js';
+import { validateEnv } from '../env';
 
 const { Pool } = pg;
 

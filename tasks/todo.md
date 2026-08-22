@@ -8,6 +8,42 @@
 
 ## Changelog
 
+### 2026-08-22 — Theme Selector: Dynamic Theme Selection Infrastructure
+
+**Category:** Feature Implementation / UX
+
+**Summary:** Integrated `next-themes` and built a client-side theme selection dropdown in the Top Navigation bar, supporting dynamic swapping between "Cream & Burgundy", "Light Mode", and "Dark Mode".
+
+**Changes:**
+- `src/app/providers.tsx` — Wrapped `<HeroUIProvider>` inside `<NextThemesProvider>` to manage client-side active theme states and sync with localStorage.
+- `src/app/layout.tsx` — Configured `suppressHydrationWarning` and dynamic body styles.
+- [NEW] `src/components/ui/ThemeSwitcher.tsx` — Built dropdown selector widget with hydration safety guards.
+- `src/components/layout/TopNav.tsx` — Placed the `<ThemeSwitcher />` dropdown inside the top navigation panel.
+- Verified TypeScript compilation and rules verification pass successfully.
+
+### 2026-08-22 — Theme Override: Warm Cream and Burgundy 2
+
+**Category:** UI / Styling
+
+**Summary:** Integrated the "Warm Cream and Burgundy 2" color palette configuration as a custom HeroUI theme, standardizing dynamic theme variables and updating the root layout to use the new theme class by default.
+
+**Changes:**
+- `tailwind.config.ts` — Defined `"warm-cream-burgundy-2"` (light) and `"warm-cream-burgundy-2-dark"` themes inside `heroui()` plugin configurations. Updated standard Tailwind colors to resolve dynamically using `@heroui/theme` CSS variables via `color-mix`.
+- `src/app/globals.css` — Mapped custom CSS variables (`--background`, `--foreground`, `--border`, `--surface`, `--surface-elevated`) under `.warm-cream-burgundy-2` and `.warm-cream-burgundy-2-dark` selectors to align custom Tailwind components with HeroUI primitives.
+- `src/app/layout.tsx` — Applied the `warm-cream-burgundy-2` class to the root `<html>` element, enabling the new theme by default.
+- Verified compilation and rules check exit with code 0.
+
+### 2026-08-21 — Phase 2 (Sub-Phase B): AI Media Studio
+
+**Category:** Feature Implementation
+
+**Summary:** Restructured the AI Media Studio with a dual-mode tab interface: a user-friendly "Create" tab (image-to-image product mockup generator with drag-and-drop file upload, custom base64 reader, style presets, aspect ratio selectors, and backend generation route) as the primary/default view, and an "Advanced Canvas" tab (relabeling the ComfyUI-style infinite node graph).
+
+**Changes:**
+- `src/app/(dashboard)/studio/page.tsx` — Rewrote the studio component to host the two mode tabs under a clean layout styled with Cream & Burgundy tokens. Created a custom drag-and-drop area for image uploading, instructions field, style preset and aspect ratio drop-downs. Wired generation action to `/api/ai/generate-image`.
+- [NEW] `src/app/api/ai/generate-image/route.ts` — Implemented image generation API endpoint secured with `withAuthRoute`, returning mock images from a dictionary after a simulated latency delay, providing a clean integration hook for external AI providers.
+- Verified TypeScript compilation and rules verification check pass with zero errors.
+
 ### 2026-08-21 — Phase 2 (Sub-Phase A): CSV Table Editor
 
 **Category:** Feature Implementation

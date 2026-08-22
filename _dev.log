@@ -1,0 +1,90 @@
+
+> jaydr-ghostcart@0.1.1 dev
+> next dev
+
+ ⚠ Port 3000 is in use, trying 3001 instead.
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3001
+  - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 25.8s
+ ○ Compiling /sign-in ...
+ ✓ Compiled / in 131.9s (4189 modules)
+ GET / 307 in 29980ms
+ ○ Compiling /dashboard ...
+ ⨯ ./src/lib/db/index.ts:3:1
+Module not found: Can't resolve '../env.js'
+[0m [90m 1 |[39m [36mimport[39m pg [36mfrom[39m [32m'pg'[39m[33m;[39m[0m
+[0m [90m 2 |[39m [36mimport[39m type { [33mPoolClient[39m } [36mfrom[39m [32m'pg'[39m[33m;[39m[0m
+[0m[31m[1m>[22m[39m[90m 3 |[39m [36mimport[39m { validateEnv } [36mfrom[39m [32m'../env.js'[39m[33m;[39m[0m
+[0m [90m   |[39m [31m[1m^[22m[39m[0m
+[0m [90m 4 |[39m[0m
+[0m [90m 5 |[39m [36mconst[39m { [33mPool[39m } [33m=[39m pg[33m;[39m[0m
+[0m [90m 6 |[39m[0m
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./src/lib/auth/config.ts
+./src/app/(dashboard)/layout.tsx
+ ⨯ ./src/lib/db/index.ts:3:1
+Module not found: Can't resolve '../env.js'
+[0m [90m 1 |[39m [36mimport[39m pg [36mfrom[39m [32m'pg'[39m[33m;[39m[0m
+[0m [90m 2 |[39m [36mimport[39m type { [33mPoolClient[39m } [36mfrom[39m [32m'pg'[39m[33m;[39m[0m
+[0m[31m[1m>[22m[39m[90m 3 |[39m [36mimport[39m { validateEnv } [36mfrom[39m [32m'../env.js'[39m[33m;[39m[0m
+[0m [90m   |[39m [31m[1m^[22m[39m[0m
+[0m [90m 4 |[39m[0m
+[0m [90m 5 |[39m [36mconst[39m { [33mPool[39m } [33m=[39m pg[33m;[39m[0m
+[0m [90m 6 |[39m[0m
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./src/lib/auth/config.ts
+./src/app/(dashboard)/layout.tsx
+ ⨯ ./src/lib/db/index.ts:3:1
+Module not found: Can't resolve '../env.js'
+[0m [90m 1 |[39m [36mimport[39m pg [36mfrom[39m [32m'pg'[39m[33m;[39m[0m
+[0m [90m 2 |[39m [36mimport[39m type { [33mPoolClient[39m } [36mfrom[39m [32m'pg'[39m[33m;[39m[0m
+[0m[31m[1m>[22m[39m[90m 3 |[39m [36mimport[39m { validateEnv } [36mfrom[39m [32m'../env.js'[39m[33m;[39m[0m
+[0m [90m   |[39m [31m[1m^[22m[39m[0m
+[0m [90m 4 |[39m[0m
+[0m [90m 5 |[39m [36mconst[39m { [33mPool[39m } [33m=[39m pg[33m;[39m[0m
+[0m [90m 6 |[39m[0m
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./src/lib/auth/config.ts
+./src/app/(dashboard)/layout.tsx
+ GET /dashboard 500 in 22533ms
+ ⨯ ./src/lib/env.ts:1:1
+Module not found: Can't resolve './logger.js'
+[0m[31m[1m>[22m[39m[90m 1 |[39m [36mimport[39m { logger } [36mfrom[39m [32m'./logger.js'[39m[33m;[39m[0m
+[0m [90m   |[39m [31m[1m^[22m[39m[0m
+[0m [90m 2 |[39m[0m
+[0m [90m 3 |[39m [90m/**[39m[0m
+[0m [90m 4 |[39m [90m * Validate environment variables for production environments.[39m[0m
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./src/lib/db/index.ts
+./src/lib/auth/config.ts
+./src/app/(dashboard)/layout.tsx
+ GET /sign-in 500 in 62ms
+ ✓ Compiled /_error in 3.9s (2124 modules)
+ ✓ Compiled in 6.4s (2411 modules)
+ ✓ Compiled in 1341ms (2363 modules)
+ ✓ Compiled in 445ms (2363 modules)
+ ○ Compiling /sign-in ...
+ ✓ Compiled /sign-in in 4.5s (2123 modules)
+ GET /sign-in 200 in 5842ms
+[?25h
+
+C:\Users\jayst\Documents\GitHub\Jaydr GhostCart>
+
+C:\Users\jayst\Documents\GitHub\Jaydr GhostCart>The syntax of the command is incorrect.
+
+C:\Users\jayst\Documents\GitHub\Jaydr GhostCart>

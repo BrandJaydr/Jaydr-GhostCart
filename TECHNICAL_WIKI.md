@@ -859,15 +859,47 @@ Records the Investigator observability audit (ERR-022/023/024, SEC-007/008) and 
 
 **Active-agent coordination:** the Stock & Price Sync worker agent owns `src/worker/index.ts`, `src/lib/repricing/engine.ts`, `src/lib/margin/calculator.ts`, `src/lib/queue/index.ts`, and `src/app/api/products/[id]/refresh`. **Fix 4** (structured-logging migration + webhook redaction) is deferred in those modules until the worker's tenancy refactor lands — claim files via `tasks/todo.md` before editing.
 
-## 18. Phase 2 Features: CSV Product Table Editor
+## 18. Phase 2 Features: CSV Product Table Editor & AI Media Studio
 
+### 18.1 CSV Product Table Editor
 Implemented in `src/app/(dashboard)/products/editor/page.tsx` as part of Phase 2 Sub-Phase A.
 
-### Architecture
 - **State Management**: Uses local React `useState` to manage row data, cell selection (`activeCell`), and editing states instead of complex global state, keeping the component lightweight.
 - **Validation**: Schema-based validation using Zod (`ProductRowSchema`). Cross-row validation (like SKU uniqueness) is implemented via custom logic hooked into the Zod schema's `refine` methods or handled dynamically during edit operations.
 - **UI Components**: Relies on HeroUI for table structures and custom click-to-edit inputs triggered by the `activeCell` focus.
 - **Notable Quirks**: Zod imports (`import { z } from 'zod'`) must be placed at the top level of the file. Inline importing inside component functions triggers build errors (recorded in `.logs/errors.md`).
+
+### 18.2 AI Media Studio (Dual-Mode)
+Implemented in `src/app/(dashboard)/studio/page.tsx` as part of Phase 2 Sub-Phase B.
+
+- **Dual-Mode Tabs**:
+  1. **Create (Default)**: User-friendly Image-to-Image mockup generator (upload photo → input text prompt → select style preset and aspect ratio → generate mockup). Uses standard HTML5 Drag and Drop + standard File Input, base64 preview encoding, and calls the backend proxy route.
+  2. **Advanced Canvas (Power User)**: A ComfyUI / LangFlow-style infinite nodes canvas containing draggable card-nodes (`Supplier Image Source`, `Background Style Prompt`, `Studio Lighting Config`, `AI Media Generator`, and `Output Enhanced Image`) connected via SVG bezier paths. Pans and zooms via React state scaling.
+- **Backend API Route**: `POST /api/ai/generate-image`
+  - Auth-gated via `withAuthRoute` for tenant isolation and caller identification.
+  - Expects `{ sourceImage: string, prompt: string, style?: string, aspectRatio?: string, productId?: string }`.
+  - Currently runs in **demo/mock mode** with simulated processing latency, serving as a clean integration point. To plug in a production AI provider (like fal.ai Flux-to-Flux or Replicate API), proxy requests in this route utilizing env-configured keys.
+
+### 18.3 Warm Cream and Burgundy 2 Theme Configuration
+Implemented across `tailwind.config.ts`, `src/app/globals.css`, and `src/app/layout.tsx`.
+
+- **Visual Palette Overhaul**: 
+  - Standardizes dynamic theme-switching by binding Tailwind extended colors directly to `@heroui/theme` generated CSS variables (e.g., `primary` maps to `var(--heroui-primary)` via `color-mix`).
+  - Active brand colors shift to a more optimized and rich color scale: Default base Burgundy (`#791228`) and Primary base Deep Burgundy (`#55121e`) with mapped light/dark modes.
+  - Secondary colors represent the border/surface tone (`#e0dbd8`), and Success colors represent the base background tone (`#f3f1ef`).
+- **Activation**:
+  - The root layout (`src/app/layout.tsx`) binds `className="warm-cream-burgundy-2 text-foreground bg-background"` to the `<html>` element.
+  - Global CSS variables mapping layout properties (e.g., `--background`, `--foreground`, `--border`, `--surface`, `--surface-elevated`) are overridden under `.warm-cream-burgundy-2` and `.warm-cream-burgundy-2-dark` selectors in `src/app/globals.css` to keep custom Tailwind components perfectly in sync with HeroUI primitives.
+
+### 18.4 Dynamic Theme Selection Infrastructure
+Implemented via `next-themes` and a custom switcher component.
+
+- **Infrastructure**:
+  - `Providers` wrapper (`src/app/providers.tsx`) wraps the application layout with `<NextThemesProvider>` (configured with `attribute="class"`, default theme `"warm-cream-burgundy-2"`, and registered themes `['light', 'dark', 'warm-cream-burgundy-2']`).
+  - Added `suppressHydrationWarning` to the root `<html>` tag in `src/app/layout.tsx` to handle hydration state safety gracefully during initial client-side theme resolution.
+- **Theme Switcher Component**:
+  - Built as a client component ([`src/components/ui/ThemeSwitcher.tsx`](file:///c:/Users/jayst/Documents/GitHub/Jaydr%20GhostCart/src/components/ui/ThemeSwitcher.tsx)) that consumes `useTheme()` hooks. Handles client mount checks (`mounted` check) to prevent SSR mismatch.
+  - Placed directly inside the Top Navigation bar ([`src/components/layout/TopNav.tsx`](file:///c:/Users/jayst/Documents/GitHub/Jaydr%20GhostCart/src/components/layout/TopNav.tsx)) for easy global accessibility.
 
 <!-- END_OF_WIKI -->
 

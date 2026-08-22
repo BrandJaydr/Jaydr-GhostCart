@@ -85,6 +85,8 @@ export default function CSVEditorPage() {
       inputRef.current.focus();
       inputRef.current.select();
     }
+  }, [activeCell]);
+
   const validateRow = (row: LocalProductRow): Record<string, string> => {
     const rowErrors: Record<string, string> = {};
     

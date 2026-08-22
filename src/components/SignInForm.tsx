@@ -53,7 +53,7 @@ export default function SignInForm() {
         autoComplete="email"
         placeholder="admin@ghostcart.dev"
         value={email}
-        onChange={(e: any) => setEmail(e.target.value)}
+        onValueChange={setEmail}
       />
 
       <Input
@@ -63,7 +63,7 @@ export default function SignInForm() {
         autoComplete="current-password"
         placeholder="Enter your password"
         value={password}
-        onChange={(e: any) => setPassword(e.target.value)}
+        onValueChange={setPassword}
       />
 
       <Button

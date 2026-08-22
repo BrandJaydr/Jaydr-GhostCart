@@ -67,7 +67,8 @@ export function Input({
   ...rest
 }: InputProps) {
   const mergedClassNames = {
-    label: `text-xs font-semibold text-neutral-600 dark:text-neutral-400 mb-1.5 ${rest.classNames?.label || ''}`,
+    base: `flex flex-col ${rest.classNames?.base || ''}`,
+    label: `text-xs font-semibold text-neutral-600 dark:text-neutral-400 ${rest.classNames?.label || ''}`,
     input: `text-sm ${rest.classNames?.input || ''}`,
     inputWrapper: `border-neutral-200 hover:border-neutral-400 focus-within:border-primary-500 dark:border-neutral-700 dark:hover:border-neutral-500 dark:focus-within:border-primary-400 ${rest.classNames?.inputWrapper || ''}`,
     ...(rest.classNames || {})
