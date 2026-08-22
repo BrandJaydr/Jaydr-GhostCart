@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
@@ -51,7 +52,7 @@ export default function SignInForm() {
         type="email"
         required
         autoComplete="email"
-        placeholder="admin@ghostcart.dev"
+        placeholder="dev@ghostcart.local"
         value={email}
         onValueChange={setEmail}
       />
@@ -75,6 +76,15 @@ export default function SignInForm() {
       >
         {isLoading ? 'Signing in...' : 'Sign in'}
       </Button>
+
+      <div className="flex items-center justify-between text-sm">
+        <Link href="/signup" className="font-semibold text-primary-600 hover:underline">
+          Create account
+        </Link>
+        <Link href="/forgot-password" className="font-semibold text-primary-600 hover:underline">
+          Forgot password?
+        </Link>
+      </div>
     </form>
   );
 }

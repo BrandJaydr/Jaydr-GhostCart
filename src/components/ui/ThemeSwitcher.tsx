@@ -3,100 +3,173 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from 'next-themes';
 import {
-  Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownSection,
+  DropdownItem,
+  Button,
+  Switch,
 } from '@heroui/react';
-import { Palette, Sun, Moon, Sparkles } from 'lucide-react';
+import { ChevronDown, Check } from 'lucide-react';
 
+// ─── Custom Sun & Moon SVG Icons from HeroUI Specification ───────────────────
+export const MoonIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    aria-hidden="true"
+    focusable="false"
+    height="1em"
+    role="presentation"
+    viewBox="0 0 24 24"
+    width="1em"
+    {...props}
+  >
+    <path
+      d="M21.53 15.93c-.16-.27-.61-.69-1.73-.49a8.46 8.46 0 01-1.88.13 8.409 8.409 0 01-5.91-2.82 8.068 8.068 0 01-1.44-8.66c.44-1.01.13-1.54-.09-1.76s-.77-.55-1.83-.11a10.318 10.318 0 00-6.32 10.21 10.475 10.475 0 007.04 8.99 10 10 0 002.89.55c.16.01.32.02.48.02a10.5 10.5 0 008.47-4.27c.67-.93.49-1.519.32-1.79z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
+export const SunIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    aria-hidden="true"
+    focusable="false"
+    height="1em"
+    role="presentation"
+    viewBox="0 0 24 24"
+    width="1em"
+    {...props}
+  >
+    <g fill="currentColor">
+      <path d="M19 12a7 7 0 11-7-7 7 7 0 017 7z" />
+      <path d="M12 22.96a.969.969 0 01-1-.96v-.08a1 1 0 012 0 1.038 1.038 0 01-1 1.04zm7.14-2.82a1.024 1.024 0 01-.71-.29l-.13-.13a1 1 0 011.41-1.41l.13.13a1 1 0 010 1.41.984.984 0 01-.7.29zm-14.28 0a1.024 1.024 0 01-.71-.29 1 1 0 010-1.41l.13-.13a1 1 0 011.41 1.41l-.13.13a1 1 0 01-.7.29zM22 13h-.08a1 1 0 010-2 1.038 1.038 0 011.04 1 .969.969 0 01-.96 1zM2.08 13H2a1 1 0 010-2 1.038 1.038 0 011.04 1 .969.969 0 01-.96 1zm16.93-7.01a1.024 1.024 0 01-.71-.29 1 1 0 010-1.41l.13-.13a1 1 0 011.41 1.41l-.13.13a.984.984 0 01-.7.29zm-14.02 0a1.024 1.024 0 01-.71-.29l-.13-.14a1 1 0 011.41-1.41l.13.13a1 1 0 010 1.41.97.97 0 01-.7.3zM12 3.04a.969.969 0 01-1-.96V2a1 1 0 012 0 1.038 1.038 0 01-1 1.04z" />
+    </g>
+  </svg>
+);
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+type BaseTheme = 'default' | 'cream-burgundy';
+type Mode = 'light' | 'dark';
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function parseTheme(theme: string | undefined): { base: BaseTheme; mode: Mode } {
+  switch (theme) {
+    case 'dark':                       return { base: 'default',        mode: 'dark' };
+    case 'warm-cream-burgundy-2':      return { base: 'cream-burgundy', mode: 'light' };
+    case 'warm-cream-burgundy-2-dark': return { base: 'cream-burgundy', mode: 'dark' };
+    default:                           return { base: 'default',        mode: 'light' };
+  }
+}
+
+function buildTheme(base: BaseTheme, mode: Mode): string {
+  if (base === 'cream-burgundy') {
+    return mode === 'dark' ? 'warm-cream-burgundy-2-dark' : 'warm-cream-burgundy-2';
+  }
+  return mode; // 'light' | 'dark'
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
 export function ThemeSwitcher() {
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
 
-  // Avoid hydration mismatch by waiting until mounted on client
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => { setMounted(true); }, []);
 
-  if (!mounted) {
-    return (
-      <Button 
-        variant="bordered" 
-        size="sm" 
-        className="border-[#e0dbd8] text-[#0d0d0d] font-semibold h-9 rounded-lg"
-        isIconOnly
-      >
-        <Palette className="w-4 h-4 text-[#6b7280]" />
-      </Button>
-    );
-  }
+  const { base, mode } = mounted
+    ? parseTheme(theme)
+    : { base: 'default' as BaseTheme, mode: 'light' as Mode };
 
-  const getThemeIcon = (themeName: string | undefined) => {
-    switch (themeName) {
-      case 'light':
-        return <Sun className="w-4 h-4 text-amber-500" />;
-      case 'dark':
-        return <Moon className="w-4 h-4 text-indigo-400" />;
-      case 'warm-cream-burgundy-2':
-        return <Sparkles className="w-4 h-4 text-[#791228]" />;
-      default:
-        return <Palette className="w-4 h-4 text-muted-foreground" />;
-    }
+  const handleBaseChange = (newBase: BaseTheme) => setTheme(buildTheme(newBase, mode));
+  const handleModeToggle = () => {
+    const newMode = mode === 'light' ? 'dark' : 'light';
+    setTheme(buildTheme(base, newMode));
   };
 
-  const getThemeLabel = (themeName: string | undefined) => {
-    switch (themeName) {
-      case 'light':
-        return 'Light Mode';
-      case 'dark':
-        return 'Dark Mode';
-      case 'warm-cream-burgundy-2':
-        return 'Cream & Burgundy';
-      default:
-        return 'System';
-    }
-  };
+  const triggerLabel = mounted
+    ? (base === 'cream-burgundy' ? 'Cream & Burgundy' : 'Default')
+    : 'Theme';
 
   return (
-    <Dropdown placement="bottom-end">
+    <Dropdown
+      backdrop="blur"
+      placement="bottom-end"
+      classNames={{
+        content: "p-1.5 border border-border bg-surface shadow-2xl rounded-2xl min-w-[230px]",
+      }}
+    >
       <DropdownTrigger>
         <Button
           variant="bordered"
           size="sm"
-          className="border-[#e0dbd8] hover:border-[#791228]/50 text-[#0d0d0d] font-semibold h-9 rounded-lg flex items-center gap-1.5 min-w-[140px]"
-          startContent={getThemeIcon(theme)}
+          aria-label="Theme selector"
+          className="border-border bg-surface text-foreground font-semibold h-9 rounded-lg flex items-center gap-2 min-w-[160px] px-3"
+          endContent={<ChevronDown className="w-3.5 h-3.5 opacity-50 shrink-0" />}
         >
-          <span>{getThemeLabel(theme)}</span>
+          <span className="flex-1 text-left text-sm truncate">{triggerLabel}</span>
         </Button>
       </DropdownTrigger>
+
       <DropdownMenu
-        aria-label="Theme Selection Options"
+        aria-label="Theme selection"
         variant="flat"
-        onAction={(key) => setTheme(key as string)}
-        classNames={{
-          base: "border border-[#e0dbd8] rounded-xl shadow-md p-1 bg-white",
-          list: "gap-1",
+        disallowEmptySelection
+        selectionMode="single"
+        selectedKeys={new Set([base])}
+        onSelectionChange={(keys) => {
+          const selected = Array.from(keys)[0] as string;
+          if (selected === 'default' || selected === 'cream-burgundy') {
+            handleBaseChange(selected);
+          }
         }}
+        className="w-full"
       >
-        <DropdownItem
-          key="warm-cream-burgundy-2"
-          startContent={<Sparkles className="w-4 h-4 text-[#791228]" />}
-          className="rounded-lg text-xs"
-        >
-          Cream & Burgundy
-        </DropdownItem>
-        <DropdownItem
-          key="light"
-          startContent={<Sun className="w-4 h-4 text-amber-500" />}
-          className="rounded-lg text-xs"
-        >
-          Light Mode
-        </DropdownItem>
-        <DropdownItem
-          key="dark"
-          startContent={<Moon className="w-4 h-4 text-indigo-400" />}
-          className="rounded-lg text-xs"
-        >
-          Dark Mode
-        </DropdownItem>
+        <DropdownSection title="Theme" showDivider>
+          <DropdownItem
+            key="default"
+            color="primary"
+            className={base === 'default' ? 'font-semibold text-primary' : 'text-foreground'}
+          >
+            Default
+          </DropdownItem>
+          <DropdownItem
+            key="cream-burgundy"
+            color="primary"
+            className={base === 'cream-burgundy' ? 'font-semibold text-primary' : 'text-foreground'}
+          >
+            Cream & Burgundy
+          </DropdownItem>
+          <DropdownItem key="cs-1" isDisabled className="opacity-40 cursor-not-allowed text-muted-foreground">
+            Coming Soon
+          </DropdownItem>
+          <DropdownItem key="cs-2" isDisabled className="opacity-40 cursor-not-allowed text-muted-foreground">
+            Coming Soon
+          </DropdownItem>
+        </DropdownSection>
+
+        <DropdownSection>
+          <DropdownItem
+            key="mode-toggle"
+            closeOnSelect={false}
+            isReadOnly
+            textValue="Theme Mode Toggle"
+            className="cursor-default py-2 hover:!bg-transparent focus:!bg-transparent data-[hover=true]:!bg-transparent"
+          >
+            <div className="flex items-center justify-between w-full">
+              <span className="text-sm font-medium text-foreground">
+                {mode === 'dark' ? 'Dark Mode' : 'Light Mode'}
+              </span>
+              <Switch
+                size="sm"
+                color="primary"
+                isSelected={mode === 'dark'}
+                onValueChange={handleModeToggle}
+                startContent={<SunIcon className="w-3.5 h-3.5 text-warning" />}
+                endContent={<MoonIcon className="w-3.5 h-3.5 text-primary" />}
+              />
+            </div>
+          </DropdownItem>
+        </DropdownSection>
       </DropdownMenu>
     </Dropdown>
   );

@@ -54,7 +54,7 @@ export function Sidebar({ isCollapsed = false, onToggle }: SidebarProps) {
   ];
 
   return (
-    <nav className="flex flex-col h-full bg-transparent">
+    <nav className="flex flex-col h-full bg-transparent overflow-visible">
       {/* Brand & Toggle */}
       <div className="p-4 flex items-center h-16 shrink-0 mt-4">
         <Button
@@ -89,12 +89,12 @@ export function Sidebar({ isCollapsed = false, onToggle }: SidebarProps) {
                 const linkContent = (
                   <Link
                     href={item.href}
-                    className={`flex items-center gap-4 mx-4 rounded-xl transition-all duration-300 ${
+                    className={`${
                       isCollapsed ? 'justify-center p-3' : 'px-4 py-3'
                     } ${
                       isActive
-                        ? 'bg-primary-500 text-white font-medium shadow-md shadow-primary-500/20'
-                        : 'text-muted-foreground hover:bg-surface hover:text-foreground hover:shadow-sm'
+                        ? 'gc-sidebar-active'
+                        : 'gc-sidebar-item'
                     }`}
                     aria-label={item.label}
                   >
@@ -111,7 +111,7 @@ export function Sidebar({ isCollapsed = false, onToggle }: SidebarProps) {
                     showArrow={true}
                     offset={18}
                     classNames={{
-                      content: "bg-primary-600 text-white border border-primary-700 shadow-lg text-xs rounded-lg px-3 py-1.5",
+                      content: "bg-surface text-foreground border border-border shadow-lg text-xs rounded-lg px-3 py-1.5 font-medium",
                     }}
                   >
                     {linkContent}

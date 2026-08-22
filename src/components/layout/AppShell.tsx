@@ -26,7 +26,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="flex h-screen bg-background p-4 gap-6 overflow-hidden">
       {/* Sidebar - Floating Icons Container */}
       <aside
-        className={`hidden md:flex flex-col transition-all duration-300 flex-shrink-0 overflow-visible ${
+        className={`hidden md:flex flex-col transition-all duration-300 flex-shrink-0 overflow-visible rounded-2xl border border-border bg-surface shadow-md ${
           isSidebarCollapsed ? 'w-20' : 'w-64'
         }`}
       >
@@ -42,7 +42,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
           />
         </header>
-        <main className="flex-1 overflow-auto pb-6">{children}</main>
+        <main className="flex-1 overflow-auto pb-6 gc-island">{children}</main>
       </div>
 
       {/* Global Command Palette */}

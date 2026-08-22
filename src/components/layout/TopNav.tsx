@@ -2,9 +2,9 @@
 
 import { type Key } from 'react';
 import { useRouter } from 'next/navigation';
-import { signOut } from 'next-auth/react';
-import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from '@heroui/react';
-import { Search, Bell, User, LogOut, Settings, Moon, Plus, Command, Menu } from 'lucide-react';
+import { useSession, signOut } from 'next-auth/react';
+import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, User } from '@heroui/react';
+import { Search, Bell, LogOut, Settings, Plus, Command, Menu, Store, Factory, Clock } from 'lucide-react';
 import { ThemeSwitcher } from '@/components/ui/ThemeSwitcher';
 
 export interface TopNavProps {
@@ -15,12 +15,19 @@ export interface TopNavProps {
 
 export function TopNav({ isSidebarCollapsed: _isSidebarCollapsed, onSidebarToggle, onOpenCommandPalette }: TopNavProps) {
   const router = useRouter();
+  const { data: session } = useSession();
 
   const handleMenuAction = (key: Key) => {
     if (key === 'profile') router.push('/profile');
     else if (key === 'settings') router.push('/settings/general');
+    else if (key === 'marketplaces') router.push('/settings/marketplaces');
+    else if (key === 'suppliers') router.push('/settings/suppliers');
+    else if (key === 'jobs') router.push('/jobs');
     else if (key === 'logout') void signOut({ callbackUrl: '/sign-in' });
   };
+
+  const userEmail = session?.user?.email || 'dev@ghostcart.local';
+  const userName = session?.user?.name || (session?.user?.email ? session.user.email.split('@')[0] : 'Admin User');
 
   return (
     <div className="flex w-full justify-between items-center bg-transparent gap-4 h-full">
@@ -39,7 +46,7 @@ export function TopNav({ isSidebarCollapsed: _isSidebarCollapsed, onSidebarToggl
         <button
           type="button"
           onClick={onOpenCommandPalette}
-          className="w-full max-w-lg bg-surface hover:bg-surface-elevated border border-border shadow-sm rounded-full h-12 px-5 flex items-center justify-between text-muted-foreground transition-all duration-200 group text-left"
+          className="gc-search-trigger group"
           aria-label="Open Command Palette"
         >
           <div className="flex items-center gap-3">
@@ -56,9 +63,6 @@ export function TopNav({ isSidebarCollapsed: _isSidebarCollapsed, onSidebarToggl
 
       {/* Floating Right Icons */}
       <div className="flex items-center gap-1 sm:gap-2">
-        <Button isIconOnly variant="light" radius="full" aria-label="Dark Mode">
-          <Moon className="w-5 h-5 text-foreground" />
-        </Button>
         <Button
           isIconOnly
           variant="solid"
@@ -78,24 +82,52 @@ export function TopNav({ isSidebarCollapsed: _isSidebarCollapsed, onSidebarToggl
 
         <ThemeSwitcher />
 
-        <Dropdown placement="bottom-end">
+        <Dropdown
+          placement="bottom-end"
+          classNames={{
+            content: "p-1.5 border border-border bg-surface shadow-2xl rounded-2xl min-w-[240px]",
+          }}
+        >
           <DropdownTrigger>
-            <Button variant="light" radius="full" className="px-2 gap-3 h-12 flex items-center ml-2">
-              <div className="w-9 h-9 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold overflow-hidden border border-border">
-                G
-              </div>
-              <span className="hidden sm:block text-sm font-semibold text-foreground">GhostCart</span>
-            </Button>
+            <User
+              as="button"
+              avatarProps={{
+                isBordered: true,
+                color: 'primary',
+                src: 'https://i.pravatar.cc/150?u=a042581f4e29026024d',
+                name: userName.substring(0, 2).toUpperCase(),
+                showFallback: true,
+                className: 'w-8 h-8 sm:w-9 sm:h-9 text-xs font-bold',
+              }}
+              className="transition-transform cursor-pointer ml-1 sm:ml-2 text-left"
+              description={<span className="hidden lg:inline text-xs text-muted-foreground">{userEmail}</span>}
+              name={<span className="hidden sm:inline font-semibold text-sm text-foreground capitalize">{userName}</span>}
+            />
           </DropdownTrigger>
-          <DropdownMenu aria-label="User menu" onAction={handleMenuAction}>
-            <DropdownItem key="profile" startContent={<User className="w-4 h-4" />}>
-              My Profile
+          <DropdownMenu aria-label="User Actions" variant="flat" onAction={handleMenuAction}>
+            <DropdownItem key="profile" className="h-14 gap-2" textValue={`Signed in as ${userEmail}`}>
+              <p className="font-semibold text-xs text-muted-foreground">Signed in as</p>
+              <p className="font-bold text-sm text-foreground">{userEmail}</p>
             </DropdownItem>
             <DropdownItem key="settings" startContent={<Settings className="w-4 h-4" />}>
-              Settings
+              My Settings
             </DropdownItem>
-            <DropdownItem key="logout" className="text-danger" startContent={<LogOut className="w-4 h-4" />}>
-              Log out
+            <DropdownItem key="marketplaces" startContent={<Store className="w-4 h-4" />}>
+              Marketplace Integrations
+            </DropdownItem>
+            <DropdownItem key="suppliers" startContent={<Factory className="w-4 h-4" />}>
+              Supplier Feeds
+            </DropdownItem>
+            <DropdownItem key="jobs" startContent={<Clock className="w-4 h-4" />}>
+              Job Activity & Queues
+            </DropdownItem>
+            <DropdownItem
+              key="logout"
+              color="danger"
+              className="text-danger"
+              startContent={<LogOut className="w-4 h-4" />}
+            >
+              Log Out
             </DropdownItem>
           </DropdownMenu>
         </Dropdown>

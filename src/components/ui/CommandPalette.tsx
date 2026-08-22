@@ -247,19 +247,19 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-2xl bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col text-foreground animate-in zoom-in-95 duration-150">
+      <div className="w-full max-w-2xl gc-command-modal flex flex-col text-foreground animate-in zoom-in-95 duration-150">
         {/* Search Header */}
-        <div className="flex items-center px-4 py-3.5 border-b border-border gap-3">
-          <Search className="w-5 h-5 text-muted-foreground shrink-0" />
+        <div className="flex items-center px-4 py-3.5 border-b gap-3 gc-cmd-search-header">
+          <Search className="w-5 h-5 shrink-0 gc-cmd-search-icon" />
           <input
             ref={inputRef}
             type="text"
             placeholder="Type a command or search..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-base"
+            className="flex-1 bg-transparent border-none outline-none text-base gc-cmd-search-input"
           />
-          <kbd className="px-2 py-1 bg-neutral-100 dark:bg-neutral-800 border border-border rounded-md text-xs text-muted-foreground font-mono">
+          <kbd className="px-2 py-1 rounded-md text-xs font-mono gc-cmd-esc-key">
             ESC
           </kbd>
         </div>
@@ -290,11 +290,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                           type="button"
                           onClick={() => item.perform()}
                           onMouseEnter={() => setSelectedIndex(itemIndex)}
-                          className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-all ${
-                            isSelected
-                              ? 'bg-primary-500 text-white font-medium shadow-sm'
-                              : 'text-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800'
-                          }`}
+                          className={isSelected ? 'gc-cmd-item-selected' : 'gc-cmd-item'}
                         >
                           <div className="flex items-center gap-3 min-w-0">
                             <span className={isSelected ? 'text-white' : 'text-muted-foreground'}>
@@ -305,7 +301,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                               {item.subtitle && (
                                 <p
                                   className={`text-xs mt-1 truncate ${
-                                    isSelected ? 'text-white/80' : 'text-muted-foreground'
+                                    isSelected ? 'text-white/85' : 'text-muted-foreground'
                                   }`}
                                 >
                                   {item.subtitle}
@@ -329,7 +325,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
         </div>
 
         {/* Footer Shortcut Hints */}
-        <div className="px-4 py-2.5 bg-neutral-50 dark:bg-neutral-900 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
+        <div className="px-4 py-2.5 bg-surface/50 border-t border-border/80 flex items-center justify-between text-xs text-muted-foreground">
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1">
               <kbd className="px-1.5 py-0.5 bg-surface border border-border rounded font-mono">↑</kbd>

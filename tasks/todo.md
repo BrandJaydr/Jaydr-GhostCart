@@ -8,6 +8,42 @@
 
 ## Changelog
 
+### 2026-08-22 — UI Architecture: Design Lock & Official HeroUI Component Integration
+
+**Category:** UI Architecture / Design System & Compliance
+
+**Summary:** Established an immutable Design Lock (`DESIGN_LOCK.md`) freezing HeroUI v2 component primitives and theme specifications, and upgraded the Theme Switcher and TopNav User Profile components to 100% official HeroUI component implementations.
+
+**Changes:**
+- [NEW] `Prism Working/DESIGN_LOCK.md` — Formally locked component library standard to HeroUI v2.8.10 (`@heroui/react`) and froze Cream & Burgundy dual-mode theme tokens.
+- `src/components/ui/ThemeSwitcher.tsx` — Rebuilt using HeroUI `<Dropdown backdrop="blur">`, `<DropdownMenu variant="faded">`, and HeroUI `<Switch>` with custom SVG `SunIcon` and `MoonIcon`.
+- `src/components/layout/TopNav.tsx` — Rebuilt user menu using HeroUI `<User>` / `<Avatar>` (`isBordered={true}`, `color="primary"`) with session details and full navigation actions.
+- `.logs/errors.md` — Documented `ERR-033` Post-Mortem regarding CSS variable opacity syntax resolution with `color-mix`.
+- `tasks/plan.md` — Formatted and verified Triple Pass Protocol execution.
+
+**Verified:** `npx tsc --noEmit` exit 0 (zero errors); `npm run rules:verify` passed successfully.
+
+### 2026-08-22 — Auth: Self-service sign-up + password recovery (ERR-030)
+
+**Category:** Feature Implementation / Security-correctness
+
+**Summary:** Closed the auth dead-end — the sign-in page previously had no registration or recovery path (and showed a stale `admin@ghostcart.dev / any password` hint that never worked; creds are `dev@ghostcart.local` + `DEV_SEED_PASSWORD`).
+
+**Changes:**
+- [NEW] `src/lib/auth/password.ts` — `hashPassword()` (`sha256:<salt>:<digest>`, compatible with existing `verifyPassword` paths) + signed stateless reset tokens (HMAC-SHA256, 30-min TTL).
+- [NEW] `src/app/api/auth/signup/route.ts` — public registration (zod `SignupSchema`), email-uniqueness check, hashed password insert into `DEV_TENANT_ID` via `withTenant`; returns 201.
+- [NEW] `src/app/api/auth/forgot-password/route.ts` — recovery start; returns/logs a dev-only reset link (email delivery deferred to notifications track; always 200 to avoid user enumeration).
+- [NEW] `src/app/api/auth/reset-password/route.ts` — recovery completion; verifies the signed token, sets the new hashed password.
+- [NEW] `/signup`, `/forgot-password`, `/reset-password` pages + `SignupForm`, `ForgotPasswordForm`, `ResetPasswordForm`.
+- `src/components/SignInForm.tsx` — added "Create account" + "Forgot password?" links; corrected placeholder.
+- `src/app/(auth)/sign-in/page.tsx` — corrected dev-credentials hint.
+- `.env` — `NEXTAUTH_URL=http://localhost:3002` (server runs on 3002; 3000 is occupied by a non-app process).
+- [NEW] `src/__tests__/auth/password.test.ts` — 8 unit tests (hash format, token round-trip/tamper, schemas).
+
+**Verified:** `npx tsc --noEmit` exit 0; eslint clean on all new/changed files; `vitest` 8/8 pass.
+
+**Open:** signups join the shared dev tenant (per-tenant provisioning is Stage 5 — requires a `tenants` INSERT RLS policy); production password-reset delivery needs the notifications/email track.
+
 ### 2026-08-22 — Theme Selector: Dynamic Theme Selection Infrastructure
 
 **Category:** Feature Implementation / UX

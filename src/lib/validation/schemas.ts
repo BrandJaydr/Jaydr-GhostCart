@@ -56,3 +56,24 @@ export type ListingListQuery = z.infer<typeof ListingListQuerySchema>;
 export type ProductImportInput = z.infer<typeof ProductImportSchema>;
 export type ListingCreateInput = z.infer<typeof ListingCreateSchema>;
 export type ListingUpdateInput = z.infer<typeof ListingUpdateSchema>;
+
+// ─── Auth (public self-service) ────────────────────────────────────────────────
+
+export const SignupSchema = z.object({
+  email: z.string().email({ message: 'Enter a valid email address' }),
+  password: z.string().min(8, { message: 'Password must be at least 8 characters' }),
+  name: z.string().min(1).max(120).optional(),
+});
+
+export const ForgotPasswordSchema = z.object({
+  email: z.string().email({ message: 'Enter a valid email address' }),
+});
+
+export const ResetPasswordSchema = z.object({
+  token: z.string().min(1, { message: 'Reset token is required' }),
+  password: z.string().min(8, { message: 'Password must be at least 8 characters' }),
+});
+
+export type SignupInput = z.infer<typeof SignupSchema>;
+export type ForgotPasswordInput = z.infer<typeof ForgotPasswordSchema>;
+export type ResetPasswordInput = z.infer<typeof ResetPasswordSchema>;

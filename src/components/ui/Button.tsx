@@ -1,4 +1,7 @@
 import { Button as HeroUIButton } from '@heroui/react';
+import { motion } from 'framer-motion';
+// Cast to any to avoid TypeScript incompatibility with HeroUIButton props
+const MotionButton = motion(HeroUIButton) as any;
 import type { ButtonProps as HeroUIButtonProps } from '@heroui/react';
 
 export interface ButtonProps extends Omit<HeroUIButtonProps, 'color' | 'size' | 'onPress' | 'variant'> {
@@ -46,20 +49,21 @@ export function Button({
   const getVariantStyles = () => {
     switch (variant) {
       case 'primary':
-        return 'bg-primary-500 text-white font-semibold hover:bg-primary-600 data-[disabled=true]:bg-border data-[disabled=true]:text-muted-foreground data-[disabled=true]:opacity-100 disabled:bg-border disabled:text-muted-foreground disabled:opacity-100';
+        return 'bg-primary-500 text-white font-semibold border border-border hover:border-2 hover:border-border dark:hover:border-white data-[disabled=true]:bg-border data-[disabled=true]:text-muted-foreground data-[disabled=true]:opacity-100 disabled:bg-border disabled:text-muted-foreground disabled:opacity-100';
       case 'secondary':
-        return 'bg-surface text-foreground font-medium border border-border hover:bg-border/50 data-[disabled=true]:opacity-60';
+        return 'bg-surface text-foreground font-medium border border-border hover:border-2 hover:border-border dark:hover:border-white data-[disabled=true]:opacity-60';
       case 'danger':
-        return 'bg-danger text-white font-medium hover:bg-danger-600 data-[disabled=true]:opacity-60';
+        return 'bg-danger text-white font-medium border border-border hover:border-2 hover:border-border dark:hover:border-white data-[disabled=true]:opacity-60';
       case 'ghost':
-        return 'text-foreground hover:bg-surface data-[disabled=true]:opacity-60';
+        return 'text-foreground border border-border hover:border-2 hover:border-border dark:hover:border-white data-[disabled=true]:opacity-60';
       default:
         return '';
     }
   };
 
+
   return (
-    <HeroUIButton
+    <MotionButton
       color={colorMap[variant] as 'primary' | 'secondary' | 'danger' | 'default'}
       variant={variantMap[variant] as 'solid' | 'ghost'}
       size={size}
@@ -72,8 +76,11 @@ export function Button({
       form={form}
       className={`${getVariantStyles()} ${className}`}
       {...rest}
+      whileHover={size === 'sm' ? { rotate: 5 } : { scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      transition={{ duration: 0.2 }}
     >
       {children}
-    </HeroUIButton>
+    </MotionButton>
   );
 }

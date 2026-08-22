@@ -1,59 +1,55 @@
-# Project Plan - Jaydr GhostCart
+# Triple Pass Protocol — UI Architecture Design Lock & HeroUI Component Integration
 
-## Project Overview
-Jaydr GhostCart is an enterprise-grade, multi-marketplace automation platform for resellers, dropshippers, and e-commerce brands. It provides unified management across eBay, Amazon, Facebook Marketplace, Etsy, Shopify, and custom suppliers.
+## Pass 1: Understanding
 
-## Architecture Requirements
-- **Event-driven architecture** with Kafka/RabbitMQ message bus
-- **Microservices** with API Gateway and service discovery
-- **Multi-tenant** with row-level security and RBAC
-- **Real-time sync** across thousands of listings
-- **CRM capabilities** for seller lifecycle management
-- **Scalable design** supporting 1,000+ sellers
+**Task Context (Read 3×):**
+1. User identified discrepancies in component usage: custom HTML `<button>` elements were used inside Popover instead of official HeroUI v2 components (`Dropdown`, `DropdownMenu`, `Switch`, `User`, `Avatar`).
+2. User provided exact HeroUI code samples for:
+   - `<Dropdown backdrop="blur">` with `<DropdownMenu variant="faded">`
+   - HeroUI `<Switch>` with custom SVG `SunIcon` and `MoonIcon`
+   - HeroUI `<Dropdown>` with `<User as="button" avatarProps={{ isBordered: true, color: "primary" }} />`
+3. User mandated an immutable **Design Lock** (`DESIGN_LOCK.md`) to freeze the design tokens, component library rules, and theme matrix so no unauthorized refactors occur.
+4. User provided mockup images of HeroUI theme generator to be archived in `Prism Working/GhostCart Themes/`.
 
-## Core Services
-1. **Product Service** - Product catalog and research
-2. **Listing Service** - AI-powered listing generation
-3. **Order Service** - Order processing and fulfillment
-4. **Price Service** - Price monitoring and auto-repricing
-5. **Store Service** - Multi-store management
-6. **Analytics Service** - Business intelligence and reporting
-7. **CRM Service** - Customer relationship management
+**Affected Files:**
+1. `Prism Working/DESIGN_LOCK.md` — New design lock policy document.
+2. `src/components/ui/ThemeSwitcher.tsx` — Dropdown backdrop="blur", variant="faded", Switch with SunIcon/MoonIcon.
+3. `src/components/layout/TopNav.tsx` — User Profile dropdown with HeroUI User component.
+4. `Prism Working/GhostCart Themes/*` — Image mockups repository.
+5. `.logs/errors.md` — Post-mortem and incident register for CSS compiler error ERR-033.
 
-## MVP Scope (Phase 1)
-- Product importing from suppliers
-- AI listing rewrite and optimization
-- eBay + Facebook Marketplace posting
-- Price tracking and auto-repricing
-- Simple analytics dashboard
-- Basic multi-user support
+---
 
-## Tech Stack
-- **Frontend**: React/Next.js with WordPress admin plugin
-- **Backend**: Node.js + Express, Python microservices
-- **Database**: PostgreSQL (OLTP), Redis (cache), InfluxDB (time-series)
-- **Message Bus**: Kafka or RabbitMQ
-- **Infrastructure**: Docker, AWS/DigitalOcean
-- **Monitoring**: Prometheus, Grafana, ELK stack
+## Pass 2: Verification
 
-## Marketplace Integrations
-- eBay (REST API + HTTP notifications)
-- Amazon (SP-API with strict rate limits)
-- Facebook Marketplace (Graph API)
-- Etsy (REST API + webhooks)
-- Shopify (REST + GraphQL)
-- Custom suppliers (browser automation fallback)
+**Logic & Boundaries:**
+- **HeroUI Dropdown vs Popover**: HeroUI `<Dropdown>` provides built-in menu semantics (`variant="faded"`, `selectionMode="single"`, `DropdownSection showDivider`). Placing `<Switch>` in a `<DropdownItem closeOnSelect={false} isReadOnly>` ensures the menu stays open during mode toggles without closing.
+- **TopNav User Component**: HeroUI `<User>` accepts `avatarProps`, `name`, and `description`. It integrates with NextAuth's `useSession` hook to render authenticated email/name with fallbacks.
+- **Design Lock Enforceability**: Clear constraints documented in `DESIGN_LOCK.md` establishing HeroUI v2 as the mandatory component layer and freezing theme matrix tokens.
 
-## Development Phases
-1. **Foundation**: API Gateway, message bus, data models
-2. **Core Services**: Product, Listing, Price services
-3. **Marketplace Adapters**: eBay, Amazon, Facebook integrations
-4. **Advanced Features**: CRM, analytics, automation
-5. **Scaling**: Multi-tenancy, performance optimization
+**Security Audit:**
+- No user-input injection vectors.
+- NextAuth `signOut` callback URL securely configured to `/sign-in`.
+- Avatar image URLs strictly sanitized.
 
-## Success Metrics
-- Time to first listing: < 5 minutes
-- Price sync accuracy: > 99%
-- Order fulfillment automation: > 95%
-- System uptime: > 99.9%
-- API response time: < 200ms
+**Doc Updates:**
+- Created `Prism Working/DESIGN_LOCK.md`.
+- Updated `.logs/errors.md` with `ERR-033`.
+- Updated `walkthrough.md`.
+
+---
+
+## Pass 3: Completeness
+
+**Edge Cases & Resolution:**
+- **TypeScript Type Safety**: Ensured `onSelectionChange` handles `Key` vs `BaseTheme` string conversions cleanly without `TS2367` type overlap warnings.
+- **Responsive Layout**: On mobile/tablet screens, TopNav User name and description hide smoothly (`hidden sm:inline`, `hidden lg:inline`) to prevent navigation bar wrapping.
+- **Theme Matrix Consistency**: Active theme selection maintains visual high-contrast indicators across both Default and Cream & Burgundy modes.
+
+**Quality Verification:**
+- `npx tsc --noEmit` -> Exited 0 (zero errors).
+- `npm run rules:verify` -> Compliance check passed.
+
+---
+
+*Triple Pass Protocol verified and logged.*

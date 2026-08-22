@@ -25,7 +25,8 @@ export default function SignInPage() {
         
         <div className="mt-8 bg-neutral-100 rounded-lg p-3">
           <p className="text-sm text-neutral-500 text-center">
-            Dev credentials: admin@ghostcart.dev / any password
+            Dev sign-in: <span className="font-mono">dev@ghostcart.local</span> · password from{' '}
+            <span className="font-mono">.env</span> → <span className="font-mono">DEV_SEED_PASSWORD</span>
           </p>
         </div>
       </div>

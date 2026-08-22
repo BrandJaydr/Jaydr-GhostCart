@@ -36,17 +36,19 @@ export interface InputProps extends Omit<HeroUIInputProps, 'label' | 'errorMessa
   step?: number | string
   /** Form attribute */
   form?: string
-  /** Label placement style */
+  /** Label placement style — kept for API compatibility, label always renders above */
   labelPlacement?: 'inside' | 'outside' | 'outside-left';
 }
 
 /**
  * Input — Hero UI implementation
- * Renders an input with label, error message, and helper text support.
+ * Renders a label as a native <label> element above the HeroUI input to
+ * guarantee the label never overlaps with the placeholder, regardless of
+ * HeroUI's internal label placement behaviour.
  */
 export function Input({
   label,
-  labelPlacement = 'outside',
+  labelPlacement: _labelPlacement,
   error,
   helperText,
   value,
@@ -66,38 +68,50 @@ export function Input({
   variant = 'bordered',
   ...rest
 }: InputProps) {
+  // Derive a stable id for the label htmlFor if none was provided
+  const inputId = id ?? (label ? `input-${label.toLowerCase().replace(/\s+/g, '-')}` : undefined);
+
   const mergedClassNames = {
-    base: `flex flex-col ${rest.classNames?.base || ''}`,
-    label: `text-xs font-semibold text-neutral-600 dark:text-neutral-400 ${rest.classNames?.label || ''}`,
     input: `text-sm ${rest.classNames?.input || ''}`,
-    inputWrapper: `border-neutral-200 hover:border-neutral-400 focus-within:border-primary-500 dark:border-neutral-700 dark:hover:border-neutral-500 dark:focus-within:border-primary-400 ${rest.classNames?.inputWrapper || ''}`,
-    ...(rest.classNames || {})
+    inputWrapper: `border-border bg-surface hover:border-2 hover:border-border focus-within:border-2 focus-within:border-border dark:hover:border-white dark:focus-within:border-white ${rest.classNames?.inputWrapper || ''}`,
+    ...(rest.classNames || {}),
   };
 
   return (
-    <HeroUIInput
-      label={label}
-      labelPlacement={labelPlacement}
-      errorMessage={error}
-      description={helperText}
-      value={value}
-      onValueChange={onValueChange}
-      placeholder={placeholder}
-      size={size}
-      isDisabled={disabled}
-      type={type}
-      id={id}
-      isInvalid={!!error}
-      name={name}
-      isRequired={required}
-      autoComplete={autoComplete}
-      min={min}
-      max={max}
-      step={step}
-      form={form}
-      variant={variant}
-      classNames={mergedClassNames}
-      {...rest}
-    />
+    <div className="flex flex-col gap-1.5">
+      {label && (
+        <label
+          htmlFor={inputId}
+          className="text-xs font-semibold text-neutral-600 dark:text-neutral-400"
+        >
+          {label}
+          {required && <span className="text-red-500 ml-0.5" aria-hidden="true">*</span>}
+        </label>
+      )}
+      <HeroUIInput
+        label={undefined}
+        labelPlacement="outside"
+        errorMessage={error}
+        description={helperText}
+        value={value}
+        onValueChange={onValueChange}
+        placeholder={placeholder}
+        size={size}
+        isDisabled={disabled}
+        type={type}
+        id={inputId}
+        isInvalid={!!error}
+        name={name}
+        isRequired={required}
+        autoComplete={autoComplete}
+        min={min}
+        max={max}
+        step={step}
+        form={form}
+        variant={variant}
+        classNames={mergedClassNames}
+        {...rest}
+      />
+    </div>
   );
 }
