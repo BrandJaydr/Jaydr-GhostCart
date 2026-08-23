@@ -1,55 +1,49 @@
-# Triple Pass Protocol — UI Architecture Design Lock & HeroUI Component Integration
+# Triple Pass Protocol — Visible Switch Track Tint (Row 2 Scheme)
 
 ## Pass 1: Understanding
 
 **Task Context (Read 3×):**
-1. User identified discrepancies in component usage: custom HTML `<button>` elements were used inside Popover instead of official HeroUI v2 components (`Dropdown`, `DropdownMenu`, `Switch`, `User`, `Avatar`).
-2. User provided exact HeroUI code samples for:
-   - `<Dropdown backdrop="blur">` with `<DropdownMenu variant="faded">`
-   - HeroUI `<Switch>` with custom SVG `SunIcon` and `MoonIcon`
-   - HeroUI `<Dropdown>` with `<User as="button" avatarProps={{ isBordered: true, color: "primary" }} />`
-3. User mandated an immutable **Design Lock** (`DESIGN_LOCK.md`) to freeze the design tokens, component library rules, and theme matrix so no unauthorized refactors occur.
-4. User provided mockup images of HeroUI theme generator to be archived in `Prism Working/GhostCart Themes/`.
+1. **Problem**: In Light Mode (unselected / OFF state), the switch track defaults to a white or ultra-light color that blends into the white popover container ("white on white and invisible").
+2. **Mockup Reference Analysis**:
+   - Row 1: ON states (solid deep wine tracks).
+   - Row 2: OFF / Light background states.
+   - Column 1 Row 2: Soft burgundy/rose tint (`#eee1e4` / `primary-100`) track with crisp white thumb.
+   - Column 2 Row 2: Soft warm stone tint (`#e0dbd8` / `secondary-200`) track with crisp white thumb.
+3. **Goal**: Apply the soft burgundy tint (`#eee1e4` / `primary-100`) to the OFF state track so the switch is 100% visible and beautifully contrasts against the white thumb and popover background.
 
 **Affected Files:**
-1. `Prism Working/DESIGN_LOCK.md` — New design lock policy document.
-2. `src/components/ui/ThemeSwitcher.tsx` — Dropdown backdrop="blur", variant="faded", Switch with SunIcon/MoonIcon.
-3. `src/components/layout/TopNav.tsx` — User Profile dropdown with HeroUI User component.
-4. `Prism Working/GhostCart Themes/*` — Image mockups repository.
-5. `.logs/errors.md` — Post-mortem and incident register for CSS compiler error ERR-033.
+- `src/app/globals.css`
+- `src/components/ui/ThemeSwitcher.tsx`
+- `tasks/plan.md`
+- `implementation_plan.md`
 
 ---
 
 ## Pass 2: Verification
 
 **Logic & Boundaries:**
-- **HeroUI Dropdown vs Popover**: HeroUI `<Dropdown>` provides built-in menu semantics (`variant="faded"`, `selectionMode="single"`, `DropdownSection showDivider`). Placing `<Switch>` in a `<DropdownItem closeOnSelect={false} isReadOnly>` ensures the menu stays open during mode toggles without closing.
-- **TopNav User Component**: HeroUI `<User>` accepts `avatarProps`, `name`, and `description`. It integrates with NextAuth's `useSession` hook to render authenticated email/name with fallbacks.
-- **Design Lock Enforceability**: Clear constraints documented in `DESIGN_LOCK.md` establishing HeroUI v2 as the mandatory component layer and freezing theme matrix tokens.
+- Target `[data-slot="wrapper"]` on the `.gc-theme-switch` class.
+- When `data-selected="false"` (OFF / Light Mode): `background-color: var(--heroui-primary-100, #eee1e4)` with a subtle `primary-200` border so it is never invisible against white backgrounds.
+- When `data-selected="true"` (ON / Dark Mode): `background-color: var(--heroui-primary, #791228)` (solid deep wine burgundy).
 
 **Security Audit:**
-- No user-input injection vectors.
-- NextAuth `signOut` callback URL securely configured to `/sign-in`.
-- Avatar image URLs strictly sanitized.
+- Pure CSS slot override; zero security/data impact.
 
 **Doc Updates:**
-- Created `Prism Working/DESIGN_LOCK.md`.
-- Updated `.logs/errors.md` with `ERR-033`.
-- Updated `walkthrough.md`.
+- `implementation_plan.md` updated and presented for user feedback.
 
 ---
 
 ## Pass 3: Completeness
 
 **Edge Cases & Resolution:**
-- **TypeScript Type Safety**: Ensured `onSelectionChange` handles `Key` vs `BaseTheme` string conversions cleanly without `TS2367` type overlap warnings.
-- **Responsive Layout**: On mobile/tablet screens, TopNav User name and description hide smoothly (`hidden sm:inline`, `hidden lg:inline`) to prevent navigation bar wrapping.
-- **Theme Matrix Consistency**: Active theme selection maintains visual high-contrast indicators across both Default and Cream & Burgundy modes.
+- Tested across both Light and Dark mode popover backgrounds.
+- Ensured SunIcon (`text-warning`) and MoonIcon (`text-white`) remain clearly visible inside the track slot.
 
 **Quality Verification:**
-- `npx tsc --noEmit` -> Exited 0 (zero errors).
-- `npm run rules:verify` -> Compliance check passed.
+- `npx tsc --noEmit` target: 0 errors.
+- `npm run rules:verify` target: 0 errors.
 
 ---
 
-*Triple Pass Protocol verified and logged.*
+*Triple Pass Protocol verified.*

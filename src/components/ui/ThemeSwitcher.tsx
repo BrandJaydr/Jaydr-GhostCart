@@ -49,7 +49,7 @@ export const SunIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type BaseTheme = 'default' | 'cream-burgundy';
+type BaseTheme = 'default' | 'cream-burgundy' | 'cherry-blossom';
 type Mode = 'light' | 'dark';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -58,6 +58,8 @@ function parseTheme(theme: string | undefined): { base: BaseTheme; mode: Mode } 
     case 'dark':                       return { base: 'default',        mode: 'dark' };
     case 'warm-cream-burgundy-2':      return { base: 'cream-burgundy', mode: 'light' };
     case 'warm-cream-burgundy-2-dark': return { base: 'cream-burgundy', mode: 'dark' };
+    case 'cherry-blossom':             return { base: 'cherry-blossom', mode: 'light' };
+    case 'cherry-blossom-dark':        return { base: 'cherry-blossom', mode: 'dark' };
     default:                           return { base: 'default',        mode: 'light' };
   }
 }
@@ -65,6 +67,9 @@ function parseTheme(theme: string | undefined): { base: BaseTheme; mode: Mode } 
 function buildTheme(base: BaseTheme, mode: Mode): string {
   if (base === 'cream-burgundy') {
     return mode === 'dark' ? 'warm-cream-burgundy-2-dark' : 'warm-cream-burgundy-2';
+  }
+  if (base === 'cherry-blossom') {
+    return mode === 'dark' ? 'cherry-blossom-dark' : 'cherry-blossom';
   }
   return mode; // 'light' | 'dark'
 }
@@ -87,27 +92,25 @@ export function ThemeSwitcher() {
   };
 
   const triggerLabel = mounted
-    ? (base === 'cream-burgundy' ? 'Cream & Burgundy' : 'Default')
+    ? (base === 'cream-burgundy' ? 'Cream & Burgundy' : base === 'cherry-blossom' ? 'Cherry Blossom' : 'Default')
     : 'Theme';
 
   return (
     <Dropdown
-      backdrop="blur"
       placement="bottom-end"
       classNames={{
         content: "p-1.5 border border-border bg-surface shadow-2xl rounded-2xl min-w-[230px]",
       }}
     >
       <DropdownTrigger>
-        <Button
-          variant="bordered"
-          size="sm"
+        <button
+          type="button"
           aria-label="Theme selector"
-          className="border-border bg-surface text-foreground font-semibold h-9 rounded-lg flex items-center gap-2 min-w-[160px] px-3"
-          endContent={<ChevronDown className="w-3.5 h-3.5 opacity-50 shrink-0" />}
+          className="gc-trigger-bordered min-w-[160px] group cursor-pointer"
         >
           <span className="flex-1 text-left text-sm truncate">{triggerLabel}</span>
-        </Button>
+          <ChevronDown className="w-3.5 h-3.5 text-foreground group-hover:text-primary transition-colors shrink-0" />
+        </button>
       </DropdownTrigger>
 
       <DropdownMenu
@@ -118,7 +121,7 @@ export function ThemeSwitcher() {
         selectedKeys={new Set([base])}
         onSelectionChange={(keys) => {
           const selected = Array.from(keys)[0] as string;
-          if (selected === 'default' || selected === 'cream-burgundy') {
+          if (selected === 'default' || selected === 'cream-burgundy' || selected === 'cherry-blossom') {
             handleBaseChange(selected);
           }
         }}
@@ -128,22 +131,23 @@ export function ThemeSwitcher() {
           <DropdownItem
             key="default"
             color="primary"
-            className={base === 'default' ? 'font-semibold text-primary' : 'text-foreground'}
+            className={base === 'default' ? 'bg-primary text-white font-semibold data-[hover=true]:bg-primary data-[hover=true]:text-white' : 'text-foreground'}
           >
             Default
           </DropdownItem>
           <DropdownItem
             key="cream-burgundy"
             color="primary"
-            className={base === 'cream-burgundy' ? 'font-semibold text-primary' : 'text-foreground'}
+            className={base === 'cream-burgundy' ? 'bg-primary text-white font-semibold data-[hover=true]:bg-primary data-[hover=true]:text-white' : 'text-foreground'}
           >
             Cream & Burgundy
           </DropdownItem>
-          <DropdownItem key="cs-1" isDisabled className="opacity-40 cursor-not-allowed text-muted-foreground">
-            Coming Soon
-          </DropdownItem>
-          <DropdownItem key="cs-2" isDisabled className="opacity-40 cursor-not-allowed text-muted-foreground">
-            Coming Soon
+          <DropdownItem
+            key="cherry-blossom"
+            color="primary"
+            className={base === 'cherry-blossom' ? 'bg-primary text-white font-semibold data-[hover=true]:bg-primary data-[hover=true]:text-white' : 'text-foreground'}
+          >
+            Cherry Blossom
           </DropdownItem>
         </DropdownSection>
 
@@ -164,8 +168,13 @@ export function ThemeSwitcher() {
                 color="primary"
                 isSelected={mode === 'dark'}
                 onValueChange={handleModeToggle}
-                startContent={<SunIcon className="w-3.5 h-3.5 text-warning" />}
-                endContent={<MoonIcon className="w-3.5 h-3.5 text-primary" />}
+                startContent={<SunIcon className="w-3.5 h-3.5 text-amber-500" />}
+                endContent={<MoonIcon className="w-3.5 h-3.5 text-white" />}
+                classNames={{
+                  wrapper: "bg-[#e0dbd8] dark:bg-[#3a0f17] data-[selected=true]:!bg-[#55121e] border border-[#d1a9b0] transition-colors",
+                  thumb: "bg-white shadow-md",
+                }}
+                aria-label="Toggle dark mode"
               />
             </div>
           </DropdownItem>

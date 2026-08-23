@@ -15,16 +15,16 @@
  */
 
 import { Worker, type Job } from 'bullmq';
-import { redis, refreshQueue, registerRepeatableSyncJobs } from '../lib/queue/index.js';
-import { db, withTenant, setTenantContextOn } from '../lib/db/index.js';
-import { getSupplierAdapter } from '../lib/adapters/factory.js';
-import type { CanonicalProduct } from '../lib/types/canonical.js';
+import { redis, refreshQueue, registerRepeatableSyncJobs } from '../lib/queue/index';
+import { db, withTenant, setTenantContextOn } from '../lib/db/index';
+import { getSupplierAdapter } from '../lib/adapters/factory';
+import type { CanonicalProduct } from '../lib/types/canonical';
 import { randomUUID } from 'node:crypto';
-import { notify } from '../lib/alerts/index.js';
-import { calculateMargin } from '../lib/margin/calculator.js';
-import { isRepricingPaused, generateSuggestion } from '../lib/repricing/engine.js';
+import { notify } from '../lib/alerts/index';
+import { calculateMargin } from '../lib/margin/calculator';
+import { isRepricingPaused, generateSuggestion } from '../lib/repricing/engine';
 import type { PoolClient } from 'pg';
-import { logger } from '../lib/logger.js';
+import { logger } from '../lib/logger';
 
 logger.warn('worker', '[Worker] Starting GhostCart worker process...');
 
@@ -250,10 +250,14 @@ async function recordJobFailure(
 export const importProcessor = async (job: Job) => {
   const { url, supplierId, tenantId, idempotencyKey } = job.data;
 
-  // 1. Resolve supplier adapter via the factory (@agent:atlas handoff).
-  const adapter = getSupplierAdapter(supplierId);
+  // 1. Resolve the supplier row (by UUID) and look up its adapter by adapterId.
+  const supplierResult = await db.query<{ adapter_id: string }>(
+    `SELECT adapter_id FROM suppliers WHERE id = $1 AND tenant_id = $2 LIMIT 1`,
+    [supplierId, tenantId],
+  );
+  const adapter = getSupplierAdapter(supplierResult.rows[0]?.adapter_id ?? '');
   if (!adapter) {
-    throw new Error(`Unknown supplier adapter: ${supplierId}`);
+    throw new Error(`Unknown supplier adapter for supplierId ${supplierId}`);
   }
 
   // 2. Import & normalize to a CanonicalProduct (instrument duration).

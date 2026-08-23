@@ -7,8 +7,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <NextThemesProvider
       attribute="class"
-      defaultTheme="warm-cream-burgundy-2"
-      themes={['light', 'dark', 'warm-cream-burgundy-2', 'warm-cream-burgundy-2-dark']}
+      defaultTheme="cherry-blossom"
+      themes={['light', 'dark', 'warm-cream-burgundy-2', 'cherry-blossom', 'cherry-blossom-dark']}
     >
       <HeroUIProvider>
         {children}

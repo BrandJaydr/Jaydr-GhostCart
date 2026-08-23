@@ -118,6 +118,24 @@
     --border: #e0dbd8;
   }
 
+  .cherry-blossom {
+    --background: #faf8f6;
+    --surface: #ffffff;
+    --surface-elevated: #f8f4f0;
+    --foreground: #1a0509;
+    --muted-foreground: #6b7280;
+    --border: #e9e2d9;
+  }
+
+  .cherry-blossom-dark {
+    --background: #0d0708;
+    --surface: #1a0509;
+    --surface-elevated: #2a0a10;
+    --foreground: #f5e6e8;
+    --muted-foreground: #a68478;
+    --border: #d3ba95;
+  }
+
   .warm-cream-burgundy-2-dark {
     --background: #000000;
     --surface: #18181b;
@@ -170,75 +188,160 @@
   /* Theme shade matrix & interactive utilities (fully dynamic based on active theme) */
   .gc-command-modal {
     @apply rounded-2xl border border-border shadow-2xl overflow-hidden;
+    background: rgba(243, 241, 239, 0.9);
     background: color-mix(in srgb, var(--background) 90%, transparent);
+    -webkit-backdrop-filter: blur(16px);
     backdrop-filter: blur(16px);
+  }
+  .gc-trigger-bordered {
+    @apply border border-border bg-surface text-foreground font-semibold rounded-xl transition-all duration-200 shadow-sm flex items-center gap-2 px-3 h-9;
+  }
+  .gc-trigger-bordered:hover {
+    background: rgba(121, 18, 40, 0.1);
+    background: color-mix(in srgb, var(--heroui-primary, #791228) 10%, transparent);
+    border-color: var(--heroui-primary, #791228);
+  }
+  /* Row 2 Column 2 Theme Switch Track Scheme */
+  .gc-theme-switch [data-slot="wrapper"] {
+    background-color: var(--heroui-secondary-200, #e0dbd8) !important;
+    border: 1px solid rgba(229, 225, 223, 0.8);
+    border: 1px solid color-mix(in srgb, var(--heroui-secondary-400, #e5e1df) 80%, transparent);
+    transition: all 0.2s ease-in-out;
+  }
+  .gc-theme-switch[data-selected="true"] [data-slot="wrapper"] {
+    background-color: var(--heroui-primary, #55121e) !important;
+    border-color: transparent;
   }
   .gc-search-trigger {
     @apply w-full max-w-lg border border-border shadow-sm rounded-full h-12 px-5 flex items-center justify-between transition-all duration-200 text-left;
     color: var(--muted-foreground);
+    background: rgba(243, 244, 246, 0.5);
     background: color-mix(in srgb, var(--heroui-default-100, #f3f4f6) 50%, transparent);
   }
   .gc-search-trigger:hover {
+    background: rgba(121, 18, 40, 0.1);
     background: color-mix(in srgb, var(--heroui-primary, #791228) 10%, transparent);
-    border-color: color-mix(in srgb, var(--heroui-primary, #791228) 50%, transparent);
+    border-color: var(--heroui-primary, #791228);
   }
   .gc-sidebar-item {
     @apply flex items-center gap-4 mx-4 rounded-xl transition-all duration-200 border-2 border-transparent;
+    color: rgba(13, 13, 13, 0.75);
     color: color-mix(in srgb, var(--foreground) 75%, transparent);
   }
   .gc-sidebar-item:hover {
-    background: color-mix(in srgb, var(--heroui-primary, #791228) 10%, transparent);
-    border-color: color-mix(in srgb, var(--heroui-primary, #791228) 50%, transparent);
-    color: var(--foreground);
+    background: #ffffff;
+    border-color: #55121e;
+    color: #0d0d0d;
   }
   .gc-sidebar-active {
     @apply flex items-center gap-4 mx-4 rounded-xl transition-all duration-200 border-2 border-transparent font-medium shadow-md;
-    background: var(--heroui-primary, #791228);
-    color: var(--heroui-primary-foreground, #ffffff);
+    background: #55121e;
+    color: #ffffff;
+  }
+  .gc-sidebar-active svg,
+  .gc-sidebar-active span {
+    color: #ffffff;
+  }
+  /* Cherry Blossom theme-specific sidebar styling */
+  .cherry-blossom .gc-sidebar-item:hover {
+    background: #ffffff;
+    border-color: #C3979F;
+    color: #1a0509;
+  }
+  .cherry-blossom .gc-sidebar-item:hover svg,
+  .cherry-blossom .gc-sidebar-item:hover span {
+    color: #1a0509;
+  }
+  .cherry-blossom .gc-sidebar-active {
+    background: #C3979F;
+    color: #1a0509;
+    border-color: #a87a82;
+  }
+  .cherry-blossom .gc-sidebar-active svg,
+  .cherry-blossom .gc-sidebar-active span {
+    color: #1a0509;
+  }
+  /* Cherry Blossom theme-specific command palette styling */
+  .cherry-blossom .gc-cmd-item-selected {
+    background: #e8d4d8;
+    color: #1a0509;
+    border-color: #d1a9b0;
+  }
+  .cherry-blossom .gc-cmd-item-selected svg,
+  .cherry-blossom .gc-cmd-item-selected span,
+  .cherry-blossom .gc-cmd-item-selected p {
+    color: #1a0509;
+  }
+  .cherry-blossom .gc-cmd-search-header {
+    background-color: #d1a9b0;
+    border-color: #ba7e88;
+  }
+  .cherry-blossom .gc-cmd-search-icon {
+    color: #1a0509;
+  }
+  .cherry-blossom .gc-cmd-search-input {
+    color: #1a0509;
+  }
+  .cherry-blossom .gc-cmd-search-input::placeholder,
+  .cherry-blossom .gc-cmd-search-input::-webkit-input-placeholder,
+  .cherry-blossom .gc-cmd-search-input::-moz-placeholder {
+    color: #6b7280;
+  }
+  .cherry-blossom .gc-cmd-esc-key {
+    background-color: #ba7e88;
+    color: #1a0509;
+    border: 1px solid #a86573;
   }
   .gc-cmd-item {
     @apply w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-all duration-150 border-2 border-transparent;
+    color: rgba(13, 13, 13, 0.8);
     color: color-mix(in srgb, var(--foreground) 80%, transparent);
   }
   .gc-cmd-item:hover {
+    background: rgba(121, 18, 40, 0.1);
     background: color-mix(in srgb, var(--heroui-primary, #791228) 10%, transparent);
+    border-color: rgba(121, 18, 40, 0.5);
     border-color: color-mix(in srgb, var(--heroui-primary, #791228) 50%, transparent);
     color: var(--foreground);
   }
   .gc-cmd-item-selected {
     @apply w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-all duration-150 border-2 border-transparent font-medium shadow-sm;
-    background: #C3979F;
-    color: #000000;
-    border-color: #a87a82;
+    background: var(--heroui-primary, #791228);
+    color: var(--heroui-primary-foreground, #ffffff);
+    border-color: var(--heroui-primary, #791228);
   }
   .gc-cmd-item-selected svg,
   .gc-cmd-item-selected span,
   .gc-cmd-item-selected p {
-    color: #000000;
+    color: var(--heroui-primary-foreground, #ffffff);
   }
   .gc-cmd-search-header {
-    background-color: #C3979F;
-    border-color: #a87a82;
+    background-color: rgba(121, 18, 40, 0.15);
+    background-color: color-mix(in srgb, var(--heroui-primary, #791228) 15%, transparent);
+    border-color: rgba(121, 18, 40, 0.3);
+    border-color: color-mix(in srgb, var(--heroui-primary, #791228) 30%, transparent);
   }
   .gc-cmd-search-icon {
-    color: #000000;
+    color: var(--foreground);
   }
   .gc-cmd-search-input {
-    color: #000000;
+    color: var(--foreground);
   }
   .gc-cmd-search-input::placeholder {
-    color: #6b7280;
+    color: var(--muted-foreground);
   }
   .gc-cmd-search-input::-webkit-input-placeholder {
-    color: #6b7280;
+    color: var(--muted-foreground);
   }
   .gc-cmd-search-input::-moz-placeholder {
-    color: #6b7280;
+    color: var(--muted-foreground);
   }
   .gc-cmd-esc-key {
-    background-color: #a87a82;
-    color: #000000;
-    border: 1px solid #9b6e76;
+    background-color: rgba(121, 18, 40, 0.2);
+    background-color: color-mix(in srgb, var(--heroui-primary, #791228) 20%, transparent);
+    color: var(--foreground);
+    border: 1px solid rgba(121, 18, 40, 0.4);
+    border: 1px solid color-mix(in srgb, var(--heroui-primary, #791228) 40%, transparent);
   }
 }
 @layer utilities {

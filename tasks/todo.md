@@ -8,6 +8,95 @@
 
 ## Changelog
 
+### 2026-08-22 — Theme System: Cream & Burgundy Sidebar Color Refinement
+
+**Category:** UI Architecture / Design System Polishing
+
+**Summary:** Refined the "Cream and Burgundy" theme sidebar colors in light mode to match image specifications, using burgundy (#55121e) for selected state and white with burgundy border for hover state to improve visual contrast and theme alignment.
+
+**Changes:**
+- `src/app/globals.css` — Updated `.gc-sidebar-item:hover` to use white background (#ffffff) with burgundy border (#55121e) and dark text (#0d0d0d) for contrast (option 3 from image).
+- `src/app/globals.css` — Updated `.gc-sidebar-active` to use burgundy background (#55121e) with white text (#ffffff) for selected state (option 2 from image).
+- Removed dynamic CSS variable approaches in favor of fixed burgundy colors for better theme consistency.
+- Cherry Blossom theme remains functional with its own styling.
+
+**Verified:** Color changes apply to Cream & Burgundy theme only; proper contrast maintained for accessibility.
+
+### 2026-08-22 — Import pipeline: make URL imports actually work (ERR-036)
+
+**Category:** Bug fix / Pipeline
+
+**Summary:** Fixed the import pipeline end-to-end. The button's request always succeeded (202 queued), but three downstream breaks meant no product was ever created.
+
+**Changes:**
+- `src/worker/index.ts` — (a) fixed `.js`→extensionless import specifiers (ts-node --esm is broken on Node 24; see ERR-028 pattern); (b) `importProcessor` now resolves `suppliers.adapter_id` from the job's `supplierId` UUID (+tenant guard) before calling the adapter factory — previously it passed the UUID as an adapterId.
+- [NEW] `src/db/migrations/0018_drop_stale_review_check.sql` — drops the legacy TEXT-era `products_review_status_check` that 0014 forgot to remove when converting `review_status` to an enum; it rejected every `'pending_review'` insert (23514).
+- Worker run command (until the owner formalizes it): `npx tsx --env-file=.env src/worker/index.ts`.
+
+**Verified:** Live E2E with a real AliExpress URL — login → POST /api/products 202 (both suppliers) → worker processed mock-supplier job to completion → product persisted (`review_status='pending_review'`, source_url = AliExpress link).
+
+**Open / coordination:**
+- Real AliExpress data requires an `aliexpress` adapter in `factory.ts` + a matching supplier row (only `mock`/`csv` exist; csv correctly errors on non-CSV URLs → DLQ).
+- `refreshProcessor` (~line 360) has the same supplierId-as-adapterId pattern — same fix needed there (sync worker owner).
+- Sync scheduler cron fails every 30 min (`column p.supplier_id does not exist`) — sync worker owner.
+
+### 2026-08-22 — Theme System: Cherry Blossom Theme Duplication and Burgundy Emphasis
+
+**Category:** UI Architecture / Design System Expansion
+
+**Summary:** Duplicated the "warm-cream-burgundy-2" theme as "Cherry Blossom" with enhanced burgundy (#55121E) and cream emphasis, created theme-specific sidebar and command palette styling, and established it as the new default theme.
+
+**Changes:**
+- `tailwind.config.ts` — Added "cherry-blossom" (light) and "cherry-blossom-dark" (dark) HeroUI theme configurations with burgundy-focused color palette; primary colors emphasize #55121E with cream secondary tones; enhanced cream backgrounds (#faf8f6) and warm accent colors.
+- `src/app/globals.css` — Added CSS custom properties for `.cherry-blossom` and `.cherry-blossom-dark` themes; created theme-specific sidebar styling (.cherry-blossom .gc-sidebar-item:hover with white background and #C3979F border, .cherry-blossom .gc-sidebar-active with #C3979F background); added command palette styling (#e8d4d8 search header, #d1a9b0 selected items); restored warm-cream-burgundy-2-dark CSS variables after removal.
+- `src/app/providers.tsx` — Registered "cherry-blossom" and "cherry-blossom-dark" in NextThemesProvider themes array; set "cherry-blossom" as the new default theme; removed warm-cream-burgundy-2-dark from themes array per user deletion.
+- `src/app/layout.tsx` — Added `className="cherry-blossom"` to html element to ensure Cherry Blossom theme applies on initial load.
+- `src/components/ui/ThemeSwitcher.tsx` — Added "cherry-blossom" as BaseTheme option; updated parseTheme and buildTheme functions to handle Cherry Blossom themes; added "Cherry Blossom" dropdown item replacing "Coming Soon" placeholders; updated trigger label logic.
+- Original "warm-cream-burgundy-2" theme preserved and remains functional in theme switcher.
+
+**Verified:** `npx tsc --noEmit` exit 0 (zero errors); theme duplication maintains existing theme functionality.
+
+### 2026-08-22 — UI Architecture: Visible Switch Track Implementation (Row 2, Column 2)
+
+**Category:** UI Architecture / Design Alignment
+
+**Summary:** Resolved the white-on-white invisible switch track issue by implementing the Row 2 Column 2 color scheme (`#e0dbd8` warm stone track for OFF state, `#55121e` solid deep burgundy for ON state). Fixed TS1117 duplicate theme key error in `tailwind.config.ts`.
+
+**Changes:**
+- `src/app/globals.css` — Created `.gc-theme-switch` slot styles for `[data-slot="wrapper"]` using `#e0dbd8` track in OFF state and `#55121e` track in ON state.
+- `src/components/ui/ThemeSwitcher.tsx` — Applied `className="gc-theme-switch"` to HeroUI `<Switch>`.
+- `tailwind.config.ts` — Removed duplicate `warm-cream-burgundy-2-dark` theme definition block.
+
+**Verified:** `npx tsc --noEmit` exit 0 (zero errors); `npm run rules:verify` passed successfully.
+
+### 2026-08-22 — Import: Fix Import Product button (ERR-035)
+
+**Category:** Bug fix
+
+**Summary:** The Import Product button never enabled after typing a URL because `ImportForm` used the wrong Input prop (`onChange` instead of `onValueChange`).
+
+**Changes:**
+- `src/components/import/ImportForm.tsx` — `onChange={(e) => setSourceUrl(e.target.value)}` → `onValueChange={setSourceUrl}` (1 line). Input wrapper only exposes `onValueChange` (HeroUI), so the previous prop silently never fired.
+
+**Verified:** eslint clean on file; no new tsc errors introduced by this change.
+
+**Coordination note:** `npx tsc --noEmit` is currently red on `tailwind.config.ts:555` (duplicate `warm-cream-burgundy-2-dark` key) — from the concurrent theme work, not this diff. Owning UI dev should fix/merge.
+
+### 2026-08-22 — UI Architecture: Theme-Aware Trigger Outline Scheme (Row 2 Bordered Scheme)
+
+**Category:** UI Architecture / Design System Alignment
+
+**Summary:** Standardized trigger elements across the application to match the HeroUI Bordered Container Scheme (Row 2 mockup), featuring a subtle light border at rest and a bold Burgundy (`#791228`) border outline on hover in Cream & Burgundy mode.
+
+**Changes:**
+- `src/app/globals.css` — Created `.gc-trigger-bordered` utility class with `border border-border` at rest and `border-color: var(--heroui-primary, #791228)` on hover; aligned `.gc-search-trigger` hover border.
+- `src/components/ui/ThemeSwitcher.tsx` — Applied `.gc-trigger-bordered` to the trigger button and added hover transition to the chevron icon.
+- `tasks/plan.md` — Verified Triple Pass Protocol.
+- `implementation_plan.md` — Documented approved user implementation plan artifact.
+- `walkthrough.md` — Created walkthrough artifact.
+
+**Verified:** `npx tsc --noEmit` exit 0 (zero errors); `npm run rules:verify` passed successfully.
+
 ### 2026-08-22 — UI Architecture: Design Lock & Official HeroUI Component Integration
 
 **Category:** UI Architecture / Design System & Compliance

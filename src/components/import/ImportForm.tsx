@@ -150,7 +150,7 @@ export default function ImportForm() {
               placeholder="https://supplier.example.com/product/12345"
               required
               value={sourceUrl}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSourceUrl(e.target.value)}
+              onValueChange={setSourceUrl}
               startContent={<Link2 className="w-4 h-4 text-muted-foreground" />}
             />
           </div>
