@@ -8,6 +8,41 @@
 
 ## Changelog
 
+### 2026-08-24 — URL product import: HTML scraper adapter, worker service, and tooling fixes
+
+**Category:** Feature / Pipeline / Ops
+
+**Summary:** Made pasting a product-page URL on the Import page actually import real data. Added a generic `html` supplier adapter that extracts product info from any public product page via JSON-LD (schema.org/Product) → OpenGraph → meta-tag fallbacks, registered it in the adapter factory, seeded it as a supplier for the dev tenant, made the import form auto-select it, added a BullMQ worker service to docker-compose, and fixed the `ts-node --esm` worker/migrate scripts that crash on Node 24.
+
+**Changes:**
+- [NEW] `src/lib/adapters/html.adapter.ts` — `HtmlProductAdapter` implements `ISupplierAdapter`; extracts title/description/images/price/currency/availability/identifiers; injectable `fetcher` for tests; deterministic product ID from source URL (same scheme as CSV adapter).
+- `src/lib/adapters/factory.ts` — registered `html` adapter (available adapterIds: `mock`, `csv`, `html`).
+- [NEW] `src/db/migrations/0019_html_supplier.sql` — seeds the `html` supplier for the dev tenant (idempotent).
+- `src/components/import/ImportForm.tsx` — auto-selects the `html` supplier when present so a pasted URL imports via the scraper instead of the mock fixture.
+- `docker-compose.yml` — added a `worker` service (`ghostcart_worker`) that runs the BullMQ workers; `docker-compose up` now starts app + worker + db + redis.
+- `package.json` — added `tsx` devDependency; `worker` → `tsx --env-file=.env src/worker/index.ts`; `db:migrate` → `tsx src/db/migrate.ts` (replaces `ts-node --esm`, which is broken on Node ≥22 — ERR-028/ERR-036 pattern).
+- [NEW] `src/__tests__/adapters/html.adapter.test.ts` — 7 unit tests covering JSON-LD extraction, OpenGraph fallback, error handling, and factory registration.
+
+**Verified:** `npx tsc --noEmit` exit 0; `npx vitest run src/__tests__/adapters/html.adapter.test.ts` 7/7 pass; eslint clean on all touched files. Lint failures elsewhere are pre-existing (ERR-009/ERR-010 debt).
+
+**Notes / AliExpress:** AliExpress has an official Open Platform API (`api.findAeProductById`, affiliate search) but it requires `app_key`/`app_secret` credentials that are not configured. The `html` adapter works on pages that embed JSON-LD Product schema (many Shopify/WooCommerce stores and some marketplaces); a dedicated AliExpress affiliate-API adapter is future work once credentials exist.
+
+### 2026-08-22 — Theme System: Command Palette Module Color Refinement
+
+**Category:** UI Architecture / Design System Polishing
+
+**Summary:** Applied burgundy border around command palette dropdown module with white background and black text by default, muted burgundy search header with black text, and muted burgundy hover effect for Cream & Burgundy theme.
+
+**Changes:**
+- `src/app/globals.css` — Added `.warm-cream-burgundy-2 .gc-command-modal` with burgundy border (#55121e) and white background.
+- `src/app/globals.css` — Updated search header to muted burgundy background (rgba(85, 18, 30, 0.15)) with black text (#0d0d0d).
+- `src/app/globals.css` — Updated default command palette items to black text (#0d0d0d) for better contrast.
+- `src/app/globals.css` — Updated hover state to muted burgundy background (rgba(85, 18, 30, 0.15)) with burgundy border (#55121e).
+- `src/app/globals.css` — Updated selected state to burgundy background (#55121e) with white text (#ffffff).
+- Cherry Blossom theme maintains its own styling with consistent pinkish burgundy colors (#C3979F, #e8d4d8).
+
+**Verified:** Color changes apply to Cream & Burgundy theme only; proper contrast maintained for accessibility; Cherry Blossom theme remains functional.
+
 ### 2026-08-22 — Theme System: Cream & Burgundy Sidebar Color Refinement
 
 **Category:** UI Architecture / Design System Polishing

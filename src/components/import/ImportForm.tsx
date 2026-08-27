@@ -47,7 +47,16 @@ export default function ImportForm() {
           setSuppliersError(data.error || 'Failed to load suppliers');
         } else {
           setSuppliers(data.data ?? []);
-          if (data.data?.length) setSelectedSupplierId(data.data[0].id);
+          // Prefer the `html` adapter (universal product-page scraper) so a
+          // pasted URL actually imports; fall back to the first supplier.
+          const htmlSupplier = data.data?.find(
+            (s: SupplierOption) => s.adapterId === 'html',
+          );
+          if (htmlSupplier) {
+            setSelectedSupplierId(htmlSupplier.id);
+          } else if (data.data?.length) {
+            setSelectedSupplierId(data.data[0].id);
+          }
         }
       } catch {
         if (active) setSuppliersError('Failed to load suppliers');

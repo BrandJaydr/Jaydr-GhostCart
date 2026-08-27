@@ -1,6 +1,7 @@
 import type { ISupplierAdapter } from './supplier.interface';
 import { mockAdapter } from './mock.adapter';
 import { csvAdapter } from './csv.adapter';
+import { htmlAdapter } from './html.adapter';
 
 /**
  * Adapter Registry / Factory — Stage 2
@@ -12,11 +13,13 @@ import { csvAdapter } from './csv.adapter';
  *
  * Stage 2: registers the first real authorized adapters:
  *   - `csv`  — user-provided CSV catalog feed
+ *   - `html` — generic product-page scraper (JSON-LD/OpenGraph)
  *   - `mock` — kept as a dev fixture (never used in production flows)
  */
 const adapters = new Map<string, ISupplierAdapter>([
   ['mock', mockAdapter],
   ['csv', csvAdapter],
+  ['html', htmlAdapter],
 ]);
 
 /** Resolve a supplier adapter by its `adapterId` (e.g. 'mock', 'csv'). */

@@ -69,6 +69,31 @@ services:
         condition: service_healthy
     # @agent:forge Update Dockerfile.dev once Node/pnpm base image is confirmed
 
+  # ─── Background Worker (BullMQ) — product.import / product.refresh ──────────
+  # Consumes the durable queue written by POST /api/products. Must run for
+  # URL/CSV imports to actually persist. Separate process from the web app
+  # (Production Blueprint §3.1 — "single worker process and durable queue").
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: ghostcart_worker
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://ghostcart:${POSTGRES_PASSWORD:-ghostcart_dev}@db:5432/ghostcart
+      REDIS_URL: redis://redis:6379
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NODE_ENV: development
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: ["npx", "tsx", "src/worker/index.ts"]
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
 volumes:
   ghostcart_pgdata:
   ghostcart_redisdata:

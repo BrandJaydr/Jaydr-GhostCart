@@ -12,7 +12,7 @@
 
 > **Frontend compatibility notice (verified 2026-08-12):** Actual package versions are **Next.js 14.2.5, React 18.3.1, and HeroUI v2.8.10**. `tailwind.config.ts` reflects an intended Tailwind v3 setup, but `tailwindcss` is absent from the root manifest and lockfile. Treat Tailwind as an incomplete integration, not an installed runtime, until ERR-019 is resolved. The implementation authority is [UI Recovery Brief](Prism%20Working/UI_RECOVERY_BRIEF.md).
 
-> **Deployment notice (verified 2026-08-12):** GhostCart is a standalone Docker-first modular monolith, not a WordPress plugin. The checked-in Compose file is for local development only and runs `app`, PostgreSQL, and Redis; production hosting is not configured. See ERR-020 and `tasks/todo.md` for the productionization gate.
+> **Deployment notice (verified 2026-08-12):** GhostCart is a standalone Docker-first modular monolith, not a WordPress plugin. The checked-in Compose file is for local development only and runs `app`, `worker` (BullMQ), PostgreSQL, and Redis; production hosting is not configured. See ERR-020 and `tasks/todo.md` for the productionization gate.
 
 ---
 
@@ -29,13 +29,13 @@ Per the [Production Blueprint and Delivery Guide](Docs/Production%20Blueprint%20
 GhostCart follows a **Modular Monolith** delivery model, not an early microservices rollout.
 The current repository has commenced **Stage 5** security gates (Stages 2–4 verified complete 2026-08). See §14/§15 for the verification log. Implemented:
 
-- Real supplier adapter implementations (CSV, eBay)
+- Real supplier adapter implementations (CSV, eBay, HTML product-page scraper)
 - Stock/price refresh system with change detection (migration 0009)
 - Margin calculation system (migration 0010)
 - Repricing system with guardrails (migration 0011)
 - AI-powered listing analysis and optimization
 - Enhanced RLS policies and audit trails (including 0017 alert_events RLS)
-- 17 database migrations (0001–0017)
+- 19 database migrations (0001–0019)
 - API route tenancy hardening and RBAC middleware (`withAuthRoute`, `withTenant`) for Products, Listings, and Jobs routes
 
 The Stage 1 thin vertical slice remains the foundation:
@@ -93,7 +93,7 @@ Next.js Web + API Server (src/app/)
 - **Frontend & API:** React 18.3 / Next.js 14.2 (App Router, TypeScript)
 - **Database:** PostgreSQL 16 (multi-tenant, tenant_id columns, RLS implemented, 15 migrations)
 - **Queue:** BullMQ backed by Redis 7 (import + refresh workers)
-- **Background worker:** separate Node process (`npm run worker`) using `ts-node --esm`
+- **Background worker:** separate Node process (`npm run worker`) using `tsx --env-file=.env src/worker/index.ts` (ERR-028/ERR-036 pattern: `ts-node --esm` crashes on Node ≥22).
 - **AI Services:** Ollama/VLLM integration with cache management
 - **Containerization:** Docker Compose (db, redis, app services)
 - **Testing:** Vitest (unit) + Playwright (E2E)
@@ -230,7 +230,7 @@ Jaydr-GhostCart/
 
 | File | Purpose | Key Details |
 |---|---|---|
-| `package.json` | npm manifest, deps & scripts | **Scripts:** `dev` (next dev), `build`, `start`, `worker` (ts-node), `test` (vitest), `lint`, `format`, `format:check`, `test:e2e`. **Deps:** next 14.2, react 18.3, next-auth 4.24, bullmq 5.7, pg 8.12, zod 3.23, clsx. **DevDeps:** typescript 5.5, eslint 8.57, prettier 3.3, vitest 2.0, playwright 1.45, ts-node 10.9, jsdom, @testing-library, @vitejs/plugin-react. **Engines:** Node ≥20. |
+| `package.json` | npm manifest, deps & scripts | **Scripts:** `dev` (next dev), `build`, `start`, `worker` (tsx), `test` (vitest), `lint`, `format`, `format:check`, `test:e2e`. **Deps:** next 14.2, react 18.3, next-auth 4.24, bullmq 5.7, pg 8.12, zod 3.23, clsx. **DevDeps:** typescript 5.5, eslint 8.57, prettier 3.3, vitest 2.0, playwright 1.45, tsx, ts-node 10.9, jsdom, @testing-library, @vitejs/plugin-react. **Engines:** Node ≥20. |
 | `tsconfig.json` | TypeScript compiler config | Strict mode, ES2022 target, `@/*` → `./src/*` alias, `jsx: preserve`, `incremental: true`. |
 | `vitest.config.ts` | Unit test config | jsdom environment, globals on, setup file `./src/__tests__/setup.ts`, v8 coverage provider (text/json/html). Uses `@vitejs/plugin-react`. |
 | `playwright.config.ts` | E2E test config | Test dir `./e2e` (does not yet exist), chromium only, CI mode auto-starts dev server. |
@@ -349,14 +349,14 @@ npx playwright test      # E2E (requires running dev server)
 | `dev` | `next dev` | Start Next.js dev server (port 3000). |
 | `build` | `next build` | Production build. |
 | `start` | `next start` | Run production server. |
-| `worker` | `ts-node --esm src/worker/index.ts` | Run background job worker. |
+| `worker` | `tsx --env-file=.env src/worker/index.ts` | Run background job worker. |
 | `test` | `vitest run` | Run all unit/integration tests once. |
 | `test:watch` | `vitest` | Watch mode for TDD. |
 | `test:e2e` | `playwright test` | End-to-end smoke tests. |
 | `lint` | `eslint . --ext .ts,.tsx --max-warnings 0` | Lint (CI gate). |
 | `format` | `prettier --write .` | Format all files. |
 | `format:check` | `prettier --check .` | Verify formatting (CI gate). |
-| `db:migrate` | `ts-node --esm src/db/migrate.ts` | ✅ Applies `src/db/migrations/*.sql` in filename order (tracked in `schema_migrations`); rollback/recovery guidance in migrate.ts header + §12.4. |
+| `db:migrate` | `tsx src/db/migrate.ts` | ✅ Applies `src/db/migrations/*.sql` in filename order (tracked in `schema_migrations`); rollback/recovery guidance in migrate.ts header + §12.4. |
 
 ### Docker Compose
 - `db` (`ghostcart_db`): PostgreSQL 16-alpine. Mounts `./src/db/migrations` into `/docker-entrypoint-initdb.d/:ro` — Postgres auto-runs `*.sql` files in that directory on first init.
@@ -382,7 +382,7 @@ npx playwright test      # E2E (requires running dev server)
 |---|---|---|
 | `tenants` | Multi-tenant accounts | `id` (UUID PK), `name`, `created_at`, `suspended_at` |
 | `users` | Merchant users (next-auth) | `id` (UUID PK), `tenant_id` FK, `email`, `role` (default 'owner'), `created_at` |
-| `suppliers` | Approved supplier adapters per tenant | `id`, `tenant_id` FK, `adapter_id` (e.g. 'mock','csv','ebay'), `name`, `config` (JSONB — encrypted in Stage 2+) |
+| `suppliers` | Approved supplier adapters per tenant | `id`, `tenant_id` FK, `adapter_id` (e.g. 'mock','csv','html','ebay'), `name`, `config` (JSONB — encrypted in Stage 2+) |
 | `products` | Canonical products (normalized) | `id`, `tenant_id` FK, `title`, `description`, `supplier_price_cents`, `currency`, availability, `primary_image_url`, timestamps |
 | `product_sources` | Traceability: product↔supplier source | `id`, `product_id` FK, `tenant_id`, `supplier_id` FK, `source_url`, `raw_source_metadata` (JSONB) |
 | `listing_drafts` | Editable listing drafts (state machine) | `id`, `tenant_id`, `product_id`, `marketplace`, `state`, `title`, `price`, `attributes`/`shipping` (JSONB), `image_urls` (TEXT[]), `idempotency_key` (UNIQUE), `marketplace_listing_id`, `last_error` |
@@ -548,7 +548,9 @@ These files exist in the repository but are **NOT relevant to the GhostCart appl
 |---|---|---|
 | `src/lib/adapters/supplier.interface.ts` | `ISupplierAdapter` interface — formal contract all adapters must implement | ✅ |
 | `src/lib/adapters/mock.adapter.ts` | `MockSupplierAdapter` (implements `ISupplierAdapter`); fixture data for Stage 1; exports `mockAdapter` instance + `mockProduct` fixture for `GET /api/products` | ✅ |
-| `src/lib/adapters/factory.ts` | Adapter registry/factory: resolves `ISupplierAdapter` by `adapterId` (`getSupplierAdapter`); ships with `mock` for Stage 1 | ✅ |
+| `src/lib/adapters/csv.adapter.ts` | `CsvSupplierAdapter` — real adapter for user-provided CSV feeds (URL or data URI) | ✅ |
+| `src/lib/adapters/html.adapter.ts` | `HtmlProductAdapter` — generic product-page scraper (JSON-LD → OpenGraph → meta fallbacks); registered as `html` (migration 0019 seeds the supplier) | ✅ |
+| `src/lib/adapters/factory.ts` | Adapter registry/factory: resolves `ISupplierAdapter` by `adapterId` (`getSupplierAdapter`); registers `mock`, `csv`, `html` | ✅ |
 
 ✅ **Resolved** (see §11 #1): `src/app/api/products/route.ts` now imports `mockProduct` from `@/lib/adapters/mock.adapter` and the fixture export exists in `mock.adapter.ts`.
 
@@ -688,7 +690,7 @@ The investigation identified 5 new architectural patterns documented in [`.logs/
 | File | Purpose | Production Readiness |
 |---|---|---|
 | `src/lib/queue/index.ts` | BullMQ config: `importQueue` (`product.import`), `listingQueue` (`listing.submit`); IORedis; retry/backoff | 🟡 (@agent:archivist TODO items pending) |
-| `src/worker/index.ts` | Worker entrypoint (`npm run worker`); `product.import` processor resolves adapter via factory, normalizes, persists `products`+`jobs`+`audit_events` (graceful degradation — logs + completes); SIGTERM shutdown | ✅ (Stage 1 import pipeline) |
+| `src/worker/index.ts` | Worker entrypoint (`npm run worker` → `tsx --env-file=.env src/worker/index.ts`); `product.import` processor resolves adapter via factory, normalizes, persists `products`+`jobs`+`audit_events` (graceful degradation — logs + completes); SIGTERM shutdown | ✅ (Stage 1 import pipeline) |
 
 ### 12.8 API Helpers
 
@@ -771,7 +773,7 @@ The investigation identified 5 new architectural patterns documented in [`.logs/
 
 ### Queue / Workers
 - Redis 7 + BullMQ (`src/lib/queue/index.ts`, `src/worker/index.ts`) - import + refresh workers, dead-letter queue on final failure.
-- Separate worker process: `npm run worker` (`ts-node --esm`).
+- Separate worker process: `npm run worker` (`tsx --env-file=.env src/worker/index.ts`), or the `worker` docker service.
 
 ### Environment / local run
 - `docker-compose up -d db redis`, then `npm run db:migrate`.
