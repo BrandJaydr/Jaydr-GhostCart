@@ -1,14 +1,56 @@
-import type { NextRequest } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
-import { verifyWebhookSignature, storeWebhookEvent, markWebhookEventProcessed } from '@/lib/adapters/ebay/webhook-handler';
-import { db, withTenant } from '@/lib/db/index';
+import {
+  validateEndpointChallenge,
+  verifyEBaySignature,
+  verifyWebhookSignature,
+  resolveWebhookTenant,
+  storeWebhookEvent,
+} from '@/lib/adapters/ebay/webhook-handler';
+import { ebayWebhookQueue } from '@/lib/queue/index';
+
+/**
+ * GET /api/ebay/webhook
+ * Handle eBay Endpoint Validation Challenge
+ *
+ * When registering or updating a webhook endpoint in the eBay Developer Portal,
+ * eBay sends a GET request with a `challenge_code` query parameter.
+ * GhostCart must respond with SHA-256(challenge_code + verification_token + endpoint_url).
+ */
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const challengeCode = searchParams.get('challenge_code');
+
+  if (!challengeCode) {
+    return apiError('Missing challenge_code parameter', null, 400);
+  }
+
+  const verificationToken =
+    process.env.EBAY_VERIFICATION_TOKEN || process.env.EBAY_WEBHOOK_SECRET;
+  const endpointUrl =
+    process.env.EBAY_ENDPOINT_URL || `${req.nextUrl.origin}/api/ebay/webhook`;
+
+  if (!verificationToken) {
+    console.error('[api/ebay/webhook] EBAY_VERIFICATION_TOKEN not configured');
+    return apiError('Webhook verification token not configured', null, 500);
+  }
+
+  const challengeResponse = validateEndpointChallenge(
+    challengeCode,
+    verificationToken,
+    endpointUrl,
+  );
+
+  // eBay endpoint validation specifically requires direct JSON { challengeResponse: "..." }
+  return NextResponse.json({ challengeResponse }, { status: 200 });
+}
 
 /**
  * POST /api/ebay/webhook
  * Handle eBay webhook events
  *
- * Verifies webhook signature and stores event for processing.
- * Uses polling fallback if webhooks fail.
+ * Verifies webhook signature (ECC public-key or HMAC legacy) and queues event for async processing.
+ * Resolves tenant securely without arbitrary tenant spoofing (SEC-014 fix).
  */
 export async function POST(req: NextRequest) {
   // Get webhook signature from header
@@ -20,40 +62,72 @@ export async function POST(req: NextRequest) {
   // Get raw body for signature verification
   const body = await req.text();
 
-  // Get webhook secret from environment
-  const webhookSecret = process.env.EBAY_WEBHOOK_SECRET;
-  if (!webhookSecret) {
-    return apiError('Webhook secret not configured', null, 500);
+  // Verify signature: supports both official ECC X-EBAY-SIGNATURE and legacy test HMAC-SHA256
+  let isSignatureValid = false;
+  let failureReason: string | undefined;
+
+  if (signature.startsWith('sha256=')) {
+    // Legacy / test HMAC mode
+    const webhookSecret =
+      process.env.EBAY_WEBHOOK_SECRET || process.env.EBAY_VERIFICATION_TOKEN || '';
+    const verification = verifyWebhookSignature(body, signature, webhookSecret);
+    isSignatureValid = verification.valid;
+    failureReason = verification.reason;
+  } else {
+    // Official eBay ECC public-key verification
+    const verification = await verifyEBaySignature(body, signature, {
+      environment: process.env.EBAY_ENVIRONMENT === 'production' ? 'production' : 'sandbox',
+    });
+    isSignatureValid = verification.valid;
+    failureReason = verification.reason;
   }
 
-  // Verify signature
-  const verification = verifyWebhookSignature(body, signature, webhookSecret);
-  if (!verification.valid) {
-    console.error('[api/ebay/webhook] Signature verification failed:', verification.reason);
-    return apiError('Invalid signature', { reason: verification.reason }, 401);
+  if (!isSignatureValid) {
+    console.error('[api/ebay/webhook] Signature verification failed:', failureReason);
+    // eBay specification dictates HTTP 412 for failed signature verification
+    return apiError('Invalid signature', { reason: failureReason }, 412);
   }
 
   // Parse payload
-  let payload: unknown;
+  let payload: Record<string, unknown>;
   try {
-    payload = JSON.parse(body);
+    payload = JSON.parse(body) as Record<string, unknown>;
   } catch {
     return apiError('Invalid JSON payload', null, 400);
   }
 
-  // Extract event details
-  const eventType = (payload as any).eventType || 'unknown';
-  const eventId = (payload as any).eventId || '';
+  const notification = payload.notification as Record<string, unknown> | undefined;
+  const metadata = payload.metadata as Record<string, unknown> | undefined;
+  const notificationData = notification?.data as Record<string, unknown> | undefined;
+
+  // Extract event details (supporting both eBay Notification API format and GhostCart event format)
+  const eventId =
+    (typeof notification?.notificationId === 'string' && notification.notificationId) ||
+    (typeof payload.eventId === 'string' && payload.eventId) ||
+    `evt-${Date.now()}`;
+  const eventType =
+    (typeof metadata?.topic === 'string' && metadata.topic) ||
+    (typeof payload.eventType === 'string' && payload.eventType) ||
+    'unknown';
   const timestamp = Date.now();
 
-  // Extract tenant ID from webhook metadata or use default for webhooks
-  // Webhooks are typically authenticated via signature, not session
-  // For now, we'll extract tenant from payload if available
-  const tenantId = (payload as any).tenantId || '00000000-0000-0000-0000-000000000001';
+  // SEC-014 Remediation: Securely resolve tenant from marketplace_connections
+  const sellerIdentifier =
+    (typeof notificationData?.username === 'string' && notificationData.username) ||
+    (typeof notificationData?.userId === 'string' && notificationData.userId) ||
+    (typeof notificationData?.sellerId === 'string' && notificationData.sellerId) ||
+    (typeof payload.sellerId === 'string' && payload.sellerId) ||
+    undefined;
+
+  const resolvedTenantId = await resolveWebhookTenant(sellerIdentifier);
+  if (!resolvedTenantId) {
+    console.error('[api/ebay/webhook] SEC-014: Rejected unmapped seller notification:', sellerIdentifier);
+    return apiError('No authorized marketplace connection found for this notification', null, 404);
+  }
 
   try {
-    // Store webhook event
-    const { stored, duplicate } = await storeWebhookEvent(tenantId, 'ebay', {
+    // Store webhook event in DB for replay protection
+    const { duplicate } = await storeWebhookEvent(resolvedTenantId, 'ebay', {
       eventType,
       eventId,
       payload,
@@ -62,91 +136,28 @@ export async function POST(req: NextRequest) {
     });
 
     if (duplicate) {
-      // Duplicate event - acknowledge but don't process
+      // Duplicate event - acknowledge immediately without re-enqueuing
       return apiSuccess({ message: 'Duplicate event acknowledged', eventId });
     }
 
-    // Process the event based on type
-    // This is a simplified implementation - in production, dispatch to appropriate handlers
-    switch (eventType) {
-      case 'ITEM_CREATED':
-      case 'ITEM_UPDATED':
-      case 'ITEM_SOLD':
-        // Update listing status in database
-        await processListingEvent(tenantId, eventId, payload);
-        break;
-      case 'ORDER_CREATED':
-      case 'ORDER_UPDATED':
-        // Process order event
-        await processOrderEvent(tenantId, eventId, payload);
-        break;
-      default:
-        console.log(`[api/ebay/webhook] Unknown event type: ${eventType}`);
-    }
+    // Asynchronously dispatch to BullMQ worker queue for <100ms response time
+    await ebayWebhookQueue.add(
+      'process-ebay-event',
+      {
+        eventId,
+        eventType,
+        tenantId: resolvedTenantId,
+        payload,
+      },
+      {
+        jobId: `ebay-event-${eventId}`,
+      },
+    );
 
-    // Mark event as processed
-    await markWebhookEventProcessed(eventId);
-
-    return apiSuccess({ message: 'Webhook processed', eventId, eventType });
+    return apiSuccess({ message: 'Webhook received and queued', eventId, eventType });
   } catch (err) {
-    console.error('[api/ebay/webhook] Processing error:', err);
-    return apiError('Failed to process webhook', null, 500);
+    console.error('[api/ebay/webhook] Enqueueing error:', err);
+    return apiError('Failed to process webhook event', null, 500);
   }
 }
 
-/**
- * Process listing-related webhook events
- */
-async function processListingEvent(tenantId: string, eventId: string, payload: unknown): Promise<void> {
-  // Extract listing ID from payload
-  const listingId = (payload as any).listingId || (payload as any).itemId;
-
-  if (!listingId) {
-    console.warn('[api/ebay/webhook] No listing ID in payload');
-    return;
-  }
-
-  // Update listing status based on event type
-  const eventType = (payload as any).eventType;
-  let newState: string | null = null;
-
-  switch (eventType) {
-    case 'ITEM_CREATED':
-      newState = 'published';
-      break;
-    case 'ITEM_UPDATED':
-      newState = 'published';
-      break;
-    case 'ITEM_SOLD':
-      newState = 'published';
-      break;
-  }
-
-  if (newState) {
-    await withTenant(tenantId, async (client) => {
-      await client.query(
-        `UPDATE listings
-         SET state = $1, marketplace_listing_id = $2, updated_at = now()
-         WHERE marketplace_listing_id = $2 AND tenant_id = $3`,
-        [newState, listingId, tenantId],
-      );
-    });
-  }
-}
-
-/**
- * Process order-related webhook events
- */
-async function processOrderEvent(tenantId: string, eventId: string, payload: unknown): Promise<void> {
-  // Extract order ID from payload
-  const orderId = (payload as any).orderId;
-
-  if (!orderId) {
-    console.warn('[api/ebay/webhook] No order ID in payload');
-    return;
-  }
-
-  // Store order information
-  // This would be expanded in production to handle order processing
-  console.log(`[api/ebay/webhook] Order event: ${eventId}`, payload);
-}

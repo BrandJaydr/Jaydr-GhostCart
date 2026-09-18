@@ -1,10 +1,10 @@
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { z } from 'zod';
-import { getAIClient, type AnalysisRequest, type AnalysisResponse } from '@/lib/ai/ai-client';
+import { getAIClient, type AnalysisResponse } from '@/lib/ai/ai-client';
 import { getCacheManager, CacheManager } from '@/lib/ai/cache-manager';
-import { db, withTenant } from '@/lib/db/index';
-import { requireAuth } from '@/lib/middleware/auth-guard';
+import { withTenant } from '@/lib/db/index';
+import { withAuthRoute, requirePermission, Permission } from '@/lib/middleware/auth-guard';
 
 /**
  * Schema for AI analysis request
@@ -29,8 +29,8 @@ const AnalysisSchema = z.object({
  *
  * @agent:oracle Add unit tests for this endpoint
  */
-export async function POST(req: NextRequest) {
-  const actor = await requireAuth(req);
+export const POST = withAuthRoute(async (req: NextRequest, actor) => {
+  await requirePermission(actor, Permission.PRODUCTS_WRITE);
 
   let body: unknown;
   try {
@@ -131,14 +131,14 @@ export async function POST(req: NextRequest) {
 
     return apiError('Failed to analyze product', null, 500);
   }
-}
+});
 
 /**
  * GET /api/ai/analyze
  * Get cached analysis for a product
  */
-export async function GET(req: NextRequest) {
-  const actor = await requireAuth(req);
+export const GET = withAuthRoute(async (req: NextRequest, actor) => {
+  await requirePermission(actor, Permission.PRODUCTS_READ);
 
   const url = new URL(req.url);
   const productId = url.searchParams.get('productId');
@@ -187,4 +187,4 @@ export async function GET(req: NextRequest) {
     console.error('[api/ai/analyze] GET error:', err);
     return apiError('Failed to retrieve product analysis', null, 500);
   }
-}
+});

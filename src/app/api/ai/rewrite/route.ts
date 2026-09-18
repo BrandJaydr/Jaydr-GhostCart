@@ -1,9 +1,9 @@
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { z } from 'zod';
-import { getAIClient, type RewriteRequest } from '@/lib/ai/ai-client';
+import { getAIClient } from '@/lib/ai/ai-client';
 import { getCacheManager, CacheManager } from '@/lib/ai/cache-manager';
-import { requireAuth } from '@/lib/middleware/auth-guard';
+import { withAuthRoute, requirePermission, Permission } from '@/lib/middleware/auth-guard';
 
 /**
  * Schema for AI rewrite request
@@ -27,8 +27,8 @@ const RewriteSchema = z.object({
  *
  * @agent:oracle Add unit tests for this endpoint
  */
-export async function POST(req: NextRequest) {
-  const actor = await requireAuth(req);
+export const POST = withAuthRoute(async (req: NextRequest, actor) => {
+  await requirePermission(actor, Permission.LISTINGS_WRITE);
 
   let body: unknown;
   try {
@@ -103,14 +103,14 @@ export async function POST(req: NextRequest) {
 
     return apiError('Failed to generate AI rewrite', null, 500);
   }
-}
+});
 
 /**
  * GET /api/ai/rewrite
  * Get cached rewrite for a product or listing
  */
-export async function GET(req: NextRequest) {
-  const actor = await requireAuth(req);
+export const GET = withAuthRoute(async (req: NextRequest, actor) => {
+  await requirePermission(actor, Permission.LISTINGS_READ);
 
   const url = new URL(req.url);
   const productId = url.searchParams.get('productId');
@@ -137,4 +137,4 @@ export async function GET(req: NextRequest) {
     console.error('[api/ai/rewrite] GET error:', err);
     return apiError('Failed to retrieve cached rewrite', null, 500);
   }
-}
+});

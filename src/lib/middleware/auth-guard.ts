@@ -64,8 +64,18 @@ export function withAuthRoute<T = any>(
 
 /**
  * Role definitions with permission levels
+ *
+ * Tenant-scoped roles (permissions apply within the actor's own tenant):
+ * - owner: full access to all tenant resources
+ * - va: Virtual Assistant - can manage products, listings, but not users/settings
+ * - accountant: Read-only access to financial data and reports
+ *
+ * Platform-scoped role (manages cross-tenant/global surfaces such as feature
+ * flags and the beta program via /api/admin/*; enrolled manually via DB —
+ * signup always creates 'owner', so 'admin' cannot be self-assigned):
+ * - admin: platform operator
  */
-export type Role = 'owner' | 'va' | 'accountant';
+export type Role = 'owner' | 'admin' | 'va' | 'accountant';
 
 /**
  * Permission categories for fine-grained access control
@@ -109,6 +119,29 @@ export enum Permission {
  * Maps each role to their allowed permissions
  */
 const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
+  admin: [
+    // Platform operator — global/admin surfaces; granted every permission so
+    // platform admins can act anywhere (tenant data queries still scope to
+    // their own tenantId via withTenant).
+    Permission.PRODUCTS_READ,
+    Permission.PRODUCTS_WRITE,
+    Permission.PRODUCTS_DELETE,
+    Permission.LISTINGS_READ,
+    Permission.LISTINGS_WRITE,
+    Permission.LISTINGS_DELETE,
+    Permission.LISTINGS_SUBMIT,
+    Permission.JOBS_READ,
+    Permission.JOBS_WRITE,
+    Permission.JOBS_DELETE,
+    Permission.USERS_READ,
+    Permission.USERS_WRITE,
+    Permission.USERS_DELETE,
+    Permission.SETTINGS_READ,
+    Permission.SETTINGS_WRITE,
+    Permission.FINANCIAL_READ,
+    Permission.FINANCIAL_WRITE,
+    Permission.ANALYTICS_READ,
+  ],
   owner: [
     // Full access to everything
     Permission.PRODUCTS_READ,

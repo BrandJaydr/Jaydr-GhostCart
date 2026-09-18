@@ -8,6 +8,41 @@
 
 ## Changelog
 
+### 2026-09-18 — eBay Webhook Security, ECC Verification & Tenancy Isolation (Phase 1)
+
+**Category:** Security / Marketplace Integration / Architecture
+
+**Summary:** Replaced flawed mock HMAC-SHA256 verification with production-grade zero-dependency ECDSA P-256 / SHA-256 ECC public key verification (matching `event-notification-nodejs-sdk` protocol). Implemented eBay endpoint challenge verification (`GET /api/ebay/webhook`), resolved SEC-014 (dynamic multi-tenant mapping via `marketplace_connections` and removal of `DEV_TENANT_ID` fallback), added replay protection with timestamp freshness window, and decoupled ingestion into an asynchronous BullMQ queue (`ebayWebhookQueue`) with background worker processing (`ebayWebhookWorker`).
+
+**Changes:**
+- `src/lib/adapters/ebay/webhook-handler.ts` — Implemented `validateEndpointChallenge`, `verifyEBaySignature` with in-memory 24h public key cache, `resolveWebhookTenant`, and buffer-safe legacy HMAC comparison.
+- `src/app/api/ebay/webhook/route.ts` — Added `GET` endpoint challenge response handler (`{ challengeResponse }`), updated `POST` with ECC signature verification (HTTP 412 on failure), SEC-014 seller-to-tenant DB resolution, replay protection, and async BullMQ queue dispatching (<100ms response).
+- `src/lib/queue/index.ts` — Exported `ebayWebhookQueue`.
+- `src/worker/index.ts` — Implemented `ebayWebhookProcessor`, initialized `ebayWebhookWorker`, and added graceful shutdown hooks.
+- [NEW] `src/__tests__/integration/ebay/webhook-verification.test.ts` — 13 unit and integration tests covering ECDSA P-256 verification, bad signature rejection, expired timestamp rejection, endpoint challenge hashing, SEC-014 tenant resolution, and queue job emission.
+- `.logs/vulnerabilities.md` — Marked SEC-014 as resolved.
+
+**Verified:** `npm run rules:verify` PASSED; `npx tsc --noEmit --incremental false` exit 0; `npx eslint` 0 errors / 0 warnings across all 5 touched files; `npx vitest run src/__tests__/integration/ebay/webhook-verification.test.ts` 13/13 passing.
+
+### 2026-09-18 — eBay Open Source Ecosystem Audit & Marketplace Alignment
+
+**Category:** Architecture / Marketplace Integration / Security
+
+**Summary:** Completed an architectural audit of all 221 repositories in the official eBay GitHub organization (`https://github.com/orgs/eBay/repositories`) against GhostCart's architecture and eBay adapter suite. Identified key security and compliance divergence and registered prioritized action items:
+1. **Critical Defect (P0 / REPLACE):** GhostCart's `webhook-handler.ts` currently verifies `x-ebay-signature` via mock HMAC-SHA256, whereas production eBay Event Notifications mandate Elliptic Curve Cryptography (ECC) public-key signature verification and endpoint challenge hashing. Action: Replace HMAC logic with `event-notification-nodejs-sdk`.
+2. **Regulatory & API Security (P1 / APPLY):** GhostCart's `ebay-client.ts` lacks HTTP Digital Signatures (RFC 9421 / RFC 9530) required for modern eBay Sell API mutations. Action: Apply `digital-signature-nodejs-sdk` as an outbound HTTP request interceptor.
+3. **AI Coding Tooling (P1 / APPLY):** Integrate `@ebay/npm-public-api-mcp` into local IDE/agent configuration for live eBay API schema discovery and documentation introspection.
+4. **Data & Metadata Upgrades (P2 / IMPROVE):** Add 2-legged Client Credentials OAuth grant (`ebay-oauth-nodejs-client` pattern) for public/taxonomy querying; improve `listing-mapper.ts` with category aspect validation (`taxonomy-sdk` pattern); refactor `csv.adapter.ts` from full-string in-memory buffering to streaming ingestion (`FeedSDK` / `tsv-utils` pattern).
+5. **Retained Solutions (KEEP):** Retained `@heroui/react` and Tailwind CSS for GhostCart dashboard; rejected eBay `skin` / `ebayui-core` (Marko/legacy marketplace UI).
+
+### 2026-09-18 — Full application audit (static + live runtime, Triple Pass)
+
+**Category:** Audit / Security / Quality Gates
+
+**Summary:** Ran the full audit from `tasks/plan.md` (Passes 1–3): inventoried 45 API routes / 27 test suites, ran all quality gates, stood up the live runtime (Docker db+redis healthy, audit app container on `:3100` because Joplin holds host `:3000`), probed the unauthenticated API matrix, and inspected DB roles/RLS via psql. Gates: `rules:verify` ✅, `tsc --noEmit` ✅ 0 errors, **lint ❌ 159 errors/182 warnings** (pre-existing), **vitest 210 passed / 3 flaky** (all pass in isolation). Live app healthy: `/api/health` 200 (db+redis ok), `/`→`/sign-in`, core CRUD routes 401 unauthenticated, webhook signature enforcement intact. **Key findings:** (1) **SEC-015 confirmed live** — `/api/admin/beta-users` & `/api/admin/feature-flags` return admin data and accept mutations with zero auth; (2) **SEC-016 new** — app DB role is superuser with `rolbypassrls=true`, so all RLS policies are inert at runtime (isolation is app-layer only); (3) ERR-042 — 11 routes use bare `requireAuth` → 500 (not 401) unauthenticated; (4) ERR-041 — Docker image alone can't boot (`'id' !== 'jobId'` stale baked routes); (5) ERR-043 — feature-flags PATCH is unreachable dead code (`params.key` with no `[key]` segment); (6) ERR-044 — host `node_modules` missing `tsx` shim (`npm run db:migrate` broken; 0021 applied+registered via psql this audit); (7) ERR-045 — 3 flaky DB integration tests under parallel runs. Registers updated: `.logs/vulnerabilities.md` (SEC-016), `.logs/errors.md` (ERR-041…045), full verdict + smallest-safe-fix order in `tasks/plan.md`.
+
+**Verified:** `npm run rules:verify` PASSED; `npx tsc --noEmit --incremental false` exit 0; `npx vitest run` 210/3-skip/3-flaky; `npm run lint` exit 1 (pre-existing debt); live smoke: health 200, signin 200, 9/13 probed routes correctly 401, webhook 401-without-signature.
+
 ### 2026-08-31 — Runtime/browser audit of import flows (E2E readiness findings)
 
 **Category:** Audit / E2E / Import UX
@@ -611,7 +646,7 @@
 - [x] Add AI-assisted rewrite as draft-generation only (require user review; preserve original source content) — `POST /api/ai/rewrite`, `src/lib/ai/ai-client.ts`
 - [x] Integrate one marketplace sandbox or first release path (CSV/export fallback if direct publishing not approved) — eBay submit + CSV export:`/api/ebay/submit`, `/api/ebay/export/csv`
 - [x] Persist listing state transitions: `draft` → `ready_for_review` → `queued` → `submitted` → `published` → `failed` — `listing_drafts.state`; `0006_ebay_integration.sql`
-- [x] Verify webhook signatures where available; reconciliation/polling only where permitted — HMAC-SHA256 in `src/lib/adapters/ebay/webhook-handler.ts` + `polling-service.ts`
+- [x] ~~Verify webhook signatures where available; reconciliation/polling only where permitted — HMAC-SHA256 in `src/lib/adapters/ebay/webhook-handler.ts` + `polling-service.ts`~~ *(Deprecated: HMAC-SHA256 is invalid for real eBay Event Notifications; replaced by ECC public-key verification via `event-notification-nodejs-sdk` — see eBay OSS Alignment section)*
 - [x] Provide activity history, error details, retry controls, and kill switch for submission jobs — `/api/jobs/activity`, `/api/jobs/[id]`, `/api/jobs/[jobId]/retry`, `/api/jobs/kill`
 - [x] Contract/integration tests for marketplace payload mapping and expected error responses — `src/__tests__/integration/ebay/listing-mapper.test.ts`
 - [x] End-to-end tests: import → export/publish in test environment — `e2e/import-workflow.spec.ts`, `e2e/ebay-submission.spec.ts`, `e2e/ai-rewrite.spec.ts`, `e2e/error-scenarios.spec.ts`
@@ -940,6 +975,59 @@
 - [ ] Add dedicated analytics infrastructure, advanced reporting, and data-retention controls
 - [ ] Evaluate additional marketplace integrations (Amazon SP-API, Etsy, Shopify, Facebook, etc.)
 - [ ] Evaluate self-hosting, third-party API access, mobile clients, white-label, and predictive features
+
+---
+
+## 🛒 eBay Open Source Integration Alignment & Action Plan (2026-09-18)
+
+> **Context:** Architectural audit of official `https://github.com/orgs/eBay/repositories` (221 repos) mapped to GhostCart's adapter layer (`src/lib/adapters/ebay/`).
+
+### Priority Matrix & Workstreams
+
+| Priority | Component | Target eBay OSS | GhostCart File | Prescribed Action | Status |
+| :--- | :--- | :--- | :--- | :---: | :---: |
+| **P0 (Critical)** | Webhook Security | [`event-notification-nodejs-sdk`](https://github.com/eBay/event-notification-nodejs-sdk) | `src/lib/adapters/ebay/webhook-handler.ts` | **REPLACE** | `[x] Completed (2026-09-18)` |
+| **P1 (Compliance)**| Outbound REST Signatures | [`digital-signature-nodejs-sdk`](https://github.com/eBay/digital-signature-nodejs-sdk) | `src/lib/adapters/ebay/ebay-client.ts` | **APPLY** | `[ ] Backlog` |
+| **P1 (Dev Tooling)**| AI Agent Integration | [`npm-public-api-mcp`](https://github.com/eBay/npm-public-api-mcp) | `.gemini/config/mcp_config.json` | **APPLY** | `[ ] Backlog` |
+| **P2 (Auth)** | Client-Credentials OAuth | [`ebay-oauth-nodejs-client`](https://github.com/eBay/ebay-oauth-nodejs-client) | `src/lib/adapters/ebay/ebay-client.ts` | **IMPROVE** | `[ ] Backlog` |
+| **P2 (Metadata)** | Category Aspects Validation | [`taxonomy-sdk`](https://github.com/eBay/taxonomy-sdk) | `src/lib/adapters/ebay/listing-mapper.ts` | **IMPROVE** | `[ ] Backlog` |
+| **P2 (Feeds)** | Streaming CSV/TSV Ingestion | [`tsv-utils`](https://github.com/eBay/tsv-utils) / [`FeedSDK`](https://github.com/eBay/FeedSDK) | `src/lib/adapters/csv.adapter.ts` | **IMPROVE** | `[ ] Backlog` |
+| **N/A (UI)** | Dashboard UI Primitives | [`skin`](https://github.com/eBay/skin) / [`nice-modal-react`](https://github.com/eBay/nice-modal-react) | `src/components/layout/AppShell.tsx` | **KEEP** | `[x] Active` |
+
+---
+
+### Detailed Action Items
+
+#### Phase 1: Critical Security & Protocol Fixes (P0)
+- [x] `// @agent:forge` **Replace HMAC Webhook Verification with ECC Verification**:
+  - Replace flawed `createHmac('sha256', secret)` in `src/lib/adapters/ebay/webhook-handler.ts` with native zero-dependency ECDSA P-256 / SHA-256 verification matching `event-notification-nodejs-sdk` protocol.
+  - Implement eBay endpoint challenge verification (`GET /api/ebay/webhook` challenge code response) required for webhook registration (`SHA256(challenge_code + verification_token + endpoint_url)`).
+  - Add replay and timestamp validation window (10 minutes) against cached eBay public keys (24h TTL).
+  - Resolve SEC-014: resolve database tenant dynamically from `marketplace_connections` (`seller_id`, `app_id`, `webhook_url`); reject unmapped notifications with 404; eliminate `DEV_TENANT_ID` fallback.
+  - Asynchronous webhook queueing: queue notifications into `ebayWebhookQueue` and return 200 within <100ms; process events asynchronously via `ebayWebhookWorker` in `src/worker/index.ts`.
+- [x] `// @agent:oracle` **Webhook Verification Test Suite**:
+  - Add comprehensive unit and integration tests with sample eBay ECC signed payloads, invalid signatures, replay protection, endpoint challenge hashing, and SEC-014 tenant isolation in `src/__tests__/integration/ebay/webhook-verification.test.ts` (13/13 passing).
+
+#### Phase 2: Regulatory & API Signing Compliance (P1)
+- [ ] `// @agent:forge` **Apply HTTP Digital Signature Headers to Outbound Sell APIs**:
+  - Integrate `digital-signature-nodejs-sdk` into `eBayClient` (`src/lib/adapters/ebay/ebay-client.ts`).
+  - Automatically calculate and attach RFC 9421 / RFC 9530 headers (`Content-Digest`, `x-ebay-signature-key`, `Signature-Input`, `Signature`) for all mutating calls (`/sell/inventory/v1/inventory_item`, `/sell/inventory/v1/offer`, `/sell/inventory/v1/publish_offer`).
+  - Provide environment configuration for private signing key (`EBAY_SIGNATURE_KEY_ID`, `EBAY_SIGNATURE_PRIVATE_KEY`).
+- [ ] `// @agent:oracle` **Digital Signature Verification Tests**:
+  - Mock signing keys and assert valid signature headers in unit tests for `eBayClient.addListing`.
+
+#### Phase 3: Developer & Agent Tooling (P1)
+- [ ] `// @agent:atlas` **Configure eBay Public API MCP Server**:
+  - Wire `@ebay/npm-public-api-mcp` into local developer and agent MCP configuration.
+  - Document usage in `TECHNICAL_WIKI.md` for interactive schema browsing and sandbox testing.
+
+#### Phase 4: Data & Taxonomy Hardening (P2)
+- [ ] `// @agent:forge` **Add 2-Legged OAuth Client Credentials Support**:
+  - Extend `eBayClient` to support application access tokens for unauthenticated merchant operations (taxonomy queries, public product lookups).
+- [ ] `// @agent:forge` **Implement Category Aspect Validation**:
+  - Improve `src/lib/adapters/ebay/listing-mapper.ts` to replace hardcoded `Brand: ['Unbranded']` with dynamic category-specific aspect extraction and validation.
+- [ ] `// @agent:forge` **Refactor Supplier CSV Ingestion to Streaming**:
+  - Upgrade `src/lib/adapters/csv.adapter.ts` from full-file `res.text()` memory buffering to streaming chunk ingestion for large supplier feeds.
 
 ---
 

@@ -4,12 +4,9 @@ import { z } from 'zod';
 import {
   generateSuggestion,
   getPendingSuggestions,
-  approveSuggestion,
-  rejectSuggestion,
-  applySuggestion,
   isRepricingPaused,
 } from '@/lib/repricing/engine';
-import { requireAuth } from '@/lib/middleware/auth-guard';
+import { withAuthRoute, requirePermission, Permission } from '@/lib/middleware/auth-guard';
 
 /**
  * Schema for generating repricing suggestion
@@ -25,8 +22,8 @@ const GenerateSuggestionSchema = z.object({
  * POST /api/repricing/suggest
  * Generate a repricing suggestion
  */
-export async function POST(req: NextRequest) {
-  const actor = await requireAuth(req);
+export const POST = withAuthRoute(async (req: NextRequest, actor) => {
+  await requirePermission(actor, Permission.LISTINGS_WRITE);
 
   let body: unknown;
   try {
@@ -64,14 +61,14 @@ export async function POST(req: NextRequest) {
     console.error('[api/repricing/suggest] error:', err);
     return apiError('Failed to generate suggestion', null, 500);
   }
-}
+});
 
 /**
  * GET /api/repricing/suggest
  * Get pending repricing suggestions
  */
-export async function GET(req: NextRequest) {
-  const actor = await requireAuth(req);
+export const GET = withAuthRoute(async (req: NextRequest, actor) => {
+  await requirePermission(actor, Permission.LISTINGS_READ);
   const { tenantId } = actor;
 
   try {
@@ -82,4 +79,4 @@ export async function GET(req: NextRequest) {
     console.error('[api/repricing/suggest] GET error:', err);
     return apiError('Failed to fetch suggestions', null, 500);
   }
-}
+});

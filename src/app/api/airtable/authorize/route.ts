@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { randomBytes } from 'node:crypto';
 import { apiSuccess, apiError } from '@/lib/api/response';
-import { requireAuth, requirePermission, Permission } from '@/lib/middleware/auth-guard';
+import { withAuthRoute, requirePermission, Permission } from '@/lib/middleware/auth-guard';
 import { withTenant } from '@/lib/db';
 import {
   AirtableOAuthClient,
@@ -18,8 +18,7 @@ import {
  * Mirrors the eBay OAuth flow (src/app/api/ebay/authorize/route.ts) but scoped
  * to the Airtable supplier adapter (suppliers.adapter_id = 'airtable').
  */
-export async function POST(req: NextRequest) {
-  const actor = await requireAuth(req);
+export const POST = withAuthRoute(async (req: NextRequest, actor) => {
   await requirePermission(actor, Permission.SETTINGS_WRITE);
 
   const config: AirtableOAuthConfig = {
@@ -64,4 +63,4 @@ export async function POST(req: NextRequest) {
     state,
     redirectUri: config.redirectUri,
   });
-}
+});

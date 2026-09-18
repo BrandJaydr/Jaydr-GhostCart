@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { z } from 'zod';
 import { db } from '@/lib/db/index';
+import { withAuthRoute, requireRole } from '@/lib/middleware/auth-guard';
 
 /**
  * Schema for feature flag update
@@ -15,9 +16,11 @@ const FlagUpdateSchema = z.object({
 
 /**
  * GET /api/admin/feature-flags
- * List all feature flags
+ * List all feature flags (platform admin only — global surface, SEC-015)
  */
-export async function GET(req: NextRequest) {
+export const GET = withAuthRoute(async (req: NextRequest, actor) => {
+  await requireRole(actor, 'admin');
+
   try {
     const result = await db.query(
       `SELECT key, name, description, enabled, enabled_for_tenants,
@@ -43,17 +46,22 @@ export async function GET(req: NextRequest) {
     console.error('[api/admin/feature-flags] GET error:', err);
     return apiError('Failed to fetch feature flags', null, 500);
   }
-}
+});
 
 /**
  * PATCH /api/admin/feature-flags/[key]
- * Update a feature flag
+ * Update a feature flag (platform admin only — SEC-015)
+ *
+ * NOTE (ERR-043): there is no `[key]` dynamic segment under
+ * api/admin/feature-flags/, so this handler is currently unreachable dead
+ * code (`params.key` would be undefined). Guarded anyway so it is safe if
+ * the `[key]/route.ts` child is added later — see .logs/errors.md ERR-043.
  */
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { key: string } },
-) {
-  const key = params.key;
+export const PATCH = withAuthRoute<{ params: { key: string } }>(
+  async (req: NextRequest, actor, { params }) => {
+    await requireRole(actor, 'admin');
+
+    const key = params.key;
 
   let body: unknown;
   try {
@@ -130,4 +138,5 @@ export async function PATCH(
     console.error('[api/admin/feature-flags] PATCH error:', err);
     return apiError('Failed to update feature flag', null, 500);
   }
-}
+  },
+);

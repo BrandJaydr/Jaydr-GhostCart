@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { z } from 'zod';
 import { db } from '@/lib/db/index';
+import { withAuthRoute, requireRole } from '@/lib/middleware/auth-guard';
 
 /**
  * Schema for beta user invitation
@@ -14,9 +15,11 @@ const InviteBetaUserSchema = z.object({
 
 /**
  * GET /api/admin/beta-users
- * List all beta users
+ * List all beta users (platform admin only — cross-tenant surface, SEC-015)
  */
-export async function GET(req: NextRequest) {
+export const GET = withAuthRoute(async (req: NextRequest, actor) => {
+  await requireRole(actor, 'admin');
+
   const url = new URL(req.url);
   const phase = url.searchParams.get('phase');
   const status = url.searchParams.get('status');
@@ -70,13 +73,15 @@ export async function GET(req: NextRequest) {
     console.error('[api/admin/beta-users] GET error:', err);
     return apiError('Failed to fetch beta users', null, 500);
   }
-}
+});
 
 /**
  * POST /api/admin/beta-users
- * Invite a user to beta program
+ * Invite a user to beta program (platform admin only — SEC-015)
  */
-export async function POST(req: NextRequest) {
+export const POST = withAuthRoute(async (req: NextRequest, actor) => {
+  await requireRole(actor, 'admin');
+
   let body: unknown;
   try {
     body = await req.json();
@@ -130,17 +135,22 @@ export async function POST(req: NextRequest) {
     console.error('[api/admin/beta-users] POST error:', err);
     return apiError('Failed to invite beta user', null, 500);
   }
-}
+});
 
 /**
  * PATCH /api/admin/beta-users/[id]
- * Update beta user status
+ * Update beta user status (platform admin only — SEC-015)
+ *
+ * NOTE (ERR-043-class defect): there is no `[id]` dynamic segment under
+ * api/admin/beta-users/, so this handler is currently unreachable dead code.
+ * Guarded anyway so it is safe if the segment is added later (see
+ * .logs/errors.md ERR-043 for the pattern).
  */
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { id: string } },
-) {
-  const id = params.id;
+export const PATCH = withAuthRoute<{ params: { id: string } }>(
+  async (req: NextRequest, actor, { params }) => {
+    await requireRole(actor, 'admin');
+
+    const id = params.id;
 
   let body: unknown;
   try {
@@ -190,4 +200,5 @@ export async function PATCH(
     console.error('[api/admin/beta-users] PATCH error:', err);
     return apiError('Failed to update beta user', null, 500);
   }
-}
+  },
+);

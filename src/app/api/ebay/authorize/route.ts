@@ -1,9 +1,9 @@
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { z } from 'zod';
-import { getEBayClient, type eBayConfig, eBayClient } from '@/lib/adapters/ebay/ebay-client';
-import { db, withTenant } from '@/lib/db/index';
-import { requireAuth } from '@/lib/middleware/auth-guard';
+import { type eBayConfig, eBayClient } from '@/lib/adapters/ebay/ebay-client';
+import { withTenant } from '@/lib/db/index';
+import { withAuthRoute, requirePermission, Permission } from '@/lib/middleware/auth-guard';
 
 /**
  * Schema for eBay authorization request
@@ -20,8 +20,8 @@ const AuthorizeSchema = z.object({
  *
  * @agent:oracle Add tests for OAuth flow
  */
-export async function POST(req: NextRequest) {
-  const actor = await requireAuth(req);
+export const POST = withAuthRoute(async (req: NextRequest, actor) => {
+  await requirePermission(actor, Permission.SETTINGS_WRITE);
 
   let body: unknown;
   try {
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
     console.error('[api/ebay/authorize] Error:', err);
     return apiError('Failed to initiate eBay authorization', null, 500);
   }
-}
+});
 
 /**
  * GET /api/ebay/authorize/callback
@@ -92,8 +92,8 @@ export async function POST(req: NextRequest) {
  *
  * Exchange authorization code for access token and store credentials.
  */
-export async function GET(req: NextRequest) {
-  const actor = await requireAuth(req);
+export const GET = withAuthRoute(async (req: NextRequest, actor) => {
+  await requirePermission(actor, Permission.SETTINGS_WRITE);
 
   const url = new URL(req.url);
   const code = url.searchParams.get('code');
@@ -178,4 +178,4 @@ export async function GET(req: NextRequest) {
     console.error('[api/ebay/authorize/callback] Error:', err);
     return apiError('Failed to complete eBay authorization', null, 500);
   }
-}
+});

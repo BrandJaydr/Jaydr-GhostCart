@@ -1,10 +1,10 @@
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { z } from 'zod';
-import { getEBayClient, type ListingItem } from '@/lib/adapters/ebay/ebay-client';
+import { getEBayClient } from '@/lib/adapters/ebay/ebay-client';
 import { mapListingDraftToEBayListing, validateEBayListing } from '@/lib/adapters/ebay/listing-mapper';
-import { db, withTenant } from '@/lib/db/index';
-import { requireAuth } from '@/lib/middleware/auth-guard';
+import { withTenant } from '@/lib/db/index';
+import { withAuthRoute, requirePermission, Permission } from '@/lib/middleware/auth-guard';
 
 /**
  * Schema for eBay listing submission
@@ -23,8 +23,8 @@ const SubmitListingSchema = z.object({
  *
  * @agent:oracle Add tests for listing submission
  */
-export async function POST(req: NextRequest) {
-  const actor = await requireAuth(req);
+export const POST = withAuthRoute(async (req: NextRequest, actor) => {
+  await requirePermission(actor, Permission.LISTINGS_SUBMIT);
 
   let body: unknown;
   try {
@@ -141,4 +141,4 @@ export async function POST(req: NextRequest) {
 
     return apiError('Failed to submit listing to eBay', null, 500);
   }
-}
+});

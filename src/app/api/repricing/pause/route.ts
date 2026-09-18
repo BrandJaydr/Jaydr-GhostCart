@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { z } from 'zod';
 import { setRepricingPause, isRepricingPaused } from '@/lib/repricing/engine';
-import { requireAuth } from '@/lib/middleware/auth-guard';
+import { withAuthRoute, requirePermission, Permission } from '@/lib/middleware/auth-guard';
 
 /**
  * Schema for pause request
@@ -14,10 +14,11 @@ const PauseSchema = z.object({
 
 /**
  * POST /api/repricing/pause
- * Set global or tenant-specific pause state
+ * Set tenant-specific pause state (ERR-046: previously set GLOBAL pause for any
+ * authenticated user; now scoped to the caller's tenant and owner/admin-only).
  */
-export async function POST(req: NextRequest) {
-  const actor = await requireAuth(req);
+export const POST = withAuthRoute(async (req: NextRequest, actor) => {
+  await requirePermission(actor, Permission.SETTINGS_WRITE);
 
   let body: unknown;
   try {
@@ -32,39 +33,36 @@ export async function POST(req: NextRequest) {
   }
 
   const { paused, reason } = parseResult.data;
-  const { userId } = actor;
+  const { userId, tenantId } = actor;
 
   try {
-    const success = await setRepricingPause(null, paused, reason, userId);
+    const success = await setRepricingPause(tenantId, paused, reason, userId);
     if (!success) {
       return apiError('Failed to set pause state', null, 500);
     }
 
-    return apiSuccess({ paused, reason, scope: 'global' });
+    return apiSuccess({ paused, reason, scope: 'tenant' });
   } catch (err) {
     console.error('[api/repricing/pause] error:', err);
     return apiError('Failed to set pause state', null, 500);
   }
-}
+});
 
 /**
  * GET /api/repricing/pause
- * Get current pause state
+ * Get current pause state for the caller's tenant (ERR-046: previously accepted
+ * an arbitrary ?tenantId= for cross-tenant reads; now scoped to the actor).
  */
-export async function GET(req: NextRequest) {
-  const actor = await requireAuth(req);
-
-  const url = new URL(req.url);
-  const tenantId = url.searchParams.get('tenantId');
-
-  const effectiveTenantId = tenantId || null;
+export const GET = withAuthRoute(async (req: NextRequest, actor) => {
+  await requirePermission(actor, Permission.SETTINGS_WRITE);
+  const { tenantId } = actor;
 
   try {
-    const paused = await isRepricingPaused(effectiveTenantId || undefined);
+    const paused = await isRepricingPaused(tenantId);
 
-    return apiSuccess({ paused, scope: effectiveTenantId ? 'tenant' : 'global' });
+    return apiSuccess({ paused, scope: 'tenant' });
   } catch (err) {
     console.error('[api/repricing/pause] GET error:', err);
     return apiError('Failed to get pause state', null, 500);
   }
-}
+});

@@ -76,6 +76,20 @@ export const syncSchedulerQueue = new Queue('product.sync_scheduler', {
   },
 });
 
+/** Queue for async eBay webhook processing — enqueued by POST /api/ebay/webhook */
+export const ebayWebhookQueue = new Queue('ebay.webhook', {
+  connection: redis,
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: {
+      type: 'exponential',
+      delay: 2_000,
+    },
+    removeOnComplete: { age: 24 * 3600 },
+    removeOnFail: { age: 7 * 24 * 3600 },
+  },
+});
+
 /**
  * Register repeatable periodic sync cron
  */
@@ -96,4 +110,5 @@ export async function registerRepeatableSyncJobs(): Promise<void> {
     console.error('[queue] Failed to register repeatable sync jobs:', err);
   }
 }
+
 

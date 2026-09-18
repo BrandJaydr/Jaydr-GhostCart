@@ -25,6 +25,7 @@ import { calculateMargin } from '../lib/margin/calculator';
 import { isRepricingPaused, generateSuggestion } from '../lib/repricing/engine';
 import type { PoolClient } from 'pg';
 import { logger } from '../lib/logger';
+import { markWebhookEventProcessed } from '../lib/adapters/ebay/webhook-handler';
 
 logger.warn('worker', '[Worker] Starting GhostCart worker process...');
 
@@ -585,6 +586,57 @@ syncSchedulerWorker.on('failed', (job, err) => {
   logger.error('worker', `Sync scheduler job ${job?.id} failed: ${err.message}`);
 });
 
+// ─── eBay Webhook Async Processing Worker ─────────────────────────────────────
+// Processes verified marketplace notifications asynchronously from BullMQ
+export const ebayWebhookProcessor = async (job: Job) => {
+  const { eventId, eventType, tenantId, payload } = job.data ?? {};
+  logger.warn('worker', `[Worker] Processing eBay webhook event ${eventId} (${eventType}) for tenant ${tenantId}`);
+
+  if (tenantId) {
+    await withTenant(tenantId, async (client) => {
+      // Handle listing update events
+      if (eventType === 'ITEM_SOLD' || eventType === 'ITEM_UPDATED' || eventType === 'ITEM_CREATED') {
+        const itemId = payload?.notification?.data?.itemId || payload?.data?.itemId || payload?.itemId;
+        if (itemId) {
+          const newState = eventType === 'ITEM_SOLD' ? 'sold' : 'published';
+          await client.query(
+            `UPDATE listings
+             SET state = $1,
+                 updated_at = now()
+             WHERE tenant_id = $2 AND (marketplace_listing_id = $3 OR id::text = $3)`,
+            [newState, tenantId, itemId],
+          );
+        }
+      }
+
+      // Record audit event
+      await client.query(
+        `INSERT INTO audit_events
+           (tenant_id, user_id, action, entity_type, entity_id, metadata, created_at)
+         VALUES ($1, NULL, 'ebay.webhook_processed', 'webhook_events', NULL, $2, now())`,
+        [tenantId, JSON.stringify({ eventId, eventType })],
+      );
+    });
+  }
+
+  // Mark event as processed in webhook_events table
+  if (eventId) {
+    await markWebhookEventProcessed(eventId);
+  }
+
+  return { processed: true, eventId, eventType };
+};
+
+const ebayWebhookWorker = new Worker(
+  'ebay.webhook',
+  ebayWebhookProcessor,
+  { connection: redis, concurrency: 5 },
+);
+
+ebayWebhookWorker.on('failed', (job, err) => {
+  logger.error('worker', `eBay webhook job ${job?.id} failed: ${err.message}`);
+});
+
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   logger.warn('worker', '[Worker] Shutting down...');
@@ -592,6 +644,8 @@ process.on('SIGTERM', async () => {
     importWorker.close(),
     refreshWorker.close(),
     syncSchedulerWorker.close(),
+    ebayWebhookWorker.close(),
   ]);
   process.exit(0);
 });
+

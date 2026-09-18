@@ -1,14 +1,14 @@
 import type { NextRequest } from 'next/server';
 import { apiError } from '@/lib/api/response';
-import { db, withTenant } from '@/lib/db/index';
-import { requireAuth } from '@/lib/middleware/auth-guard';
+import { withTenant } from '@/lib/db/index';
+import { withAuthRoute, requirePermission, Permission } from '@/lib/middleware/auth-guard';
 
 /**
  * GET /api/ebay/export/csv
  * Export listings to eBay-compatible CSV format
  */
-export async function GET(req: NextRequest) {
-  const actor = await requireAuth(req);
+export const GET = withAuthRoute(async (req: NextRequest, actor) => {
+  await requirePermission(actor, Permission.LISTINGS_READ);
   const { tenantId } = actor;
 
   try {
@@ -37,4 +37,4 @@ export async function GET(req: NextRequest) {
     console.error('[api/ebay/export/csv] Error:', err);
     return apiError('Failed to export CSV', null, 500);
   }
-}
+});

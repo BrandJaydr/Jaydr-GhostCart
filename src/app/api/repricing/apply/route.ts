@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { z } from 'zod';
 import { applySuggestion, approveSuggestion, rejectSuggestion } from '@/lib/repricing/engine';
-import { requireAuth } from '@/lib/middleware/auth-guard';
+import { withAuthRoute, requirePermission, Permission } from '@/lib/middleware/auth-guard';
 
 /**
  * Schema for applying repricing suggestion
@@ -16,8 +16,8 @@ const ApplySuggestionSchema = z.object({
  * POST /api/repricing/apply
  * Apply an approved repricing suggestion
  */
-export async function POST(req: NextRequest) {
-  const actor = await requireAuth(req);
+export const POST = withAuthRoute(async (req: NextRequest, actor) => {
+  await requirePermission(actor, Permission.LISTINGS_WRITE);
 
   let body: unknown;
   try {
@@ -55,14 +55,14 @@ export async function POST(req: NextRequest) {
     console.error('[api/repricing/apply] error:', err);
     return apiError('Failed to apply suggestion', null, 500);
   }
-}
+});
 
 /**
  * PATCH /api/repricing/apply
  * Approve or reject a suggestion
  */
-export async function PATCH(req: NextRequest) {
-  const actor = await requireAuth(req);
+export const PATCH = withAuthRoute(async (req: NextRequest, actor) => {
+  await requirePermission(actor, Permission.LISTINGS_WRITE);
 
   let body: unknown;
   try {
@@ -97,4 +97,4 @@ export async function PATCH(req: NextRequest) {
     console.error('[api/repricing/apply] PATCH error:', err);
     return apiError('Failed to update suggestion', null, 500);
   }
-}
+});

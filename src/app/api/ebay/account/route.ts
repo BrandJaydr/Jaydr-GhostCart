@@ -1,11 +1,12 @@
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
-import { db, withTenant } from '@/lib/db/index';
-import { requireAuth } from '@/lib/middleware/auth-guard';
-import { getEBayClient, eBayClient, type eBayConfig } from '@/lib/adapters/ebay/ebay-client';
+import { withTenant } from '@/lib/db/index';
+import { withAuthRoute, requirePermission, Permission } from '@/lib/middleware/auth-guard';
+import { getEBayClient } from '@/lib/adapters/ebay/ebay-client';
 
 // Simulated database memory in case real eBay API credentials are not set up or are in Sandbox mode.
 // We use a global variable to persist updates during the dev server lifetime for interactive testing.
+// eslint-disable-next-line prefer-const
 let mockInventory = [
   {
     itemId: '110552763291',
@@ -40,8 +41,8 @@ let mockInventory = [
  * GET /api/ebay/account
  * Returns eBay connection status, account info, and active inventory
  */
-export async function GET(req: NextRequest) {
-  const actor = await requireAuth(req);
+export const GET = withAuthRoute(async (req: NextRequest, actor) => {
+  await requirePermission(actor, Permission.SETTINGS_READ);
   const { tenantId } = actor;
 
   try {
@@ -88,24 +89,24 @@ export async function GET(req: NextRequest) {
     console.error('[api/ebay/account] GET Error:', err);
     return apiError('Failed to fetch eBay account status', null, 500);
   }
-}
+});
 
 /**
  * POST /api/ebay/account
  * Performs connection actions: test, disconnect, or update inventory based on request body
  */
-export async function POST(req: NextRequest) {
-  const actor = await requireAuth(req);
+export const POST = withAuthRoute(async (req: NextRequest, actor) => {
+  await requirePermission(actor, Permission.SETTINGS_WRITE);
   const { tenantId } = actor;
 
-  let body: any;
+  let body: unknown;
   try {
     body = await req.json();
   } catch {
     return apiError('Invalid JSON request body', null, 400);
   }
 
-  const { action } = body;
+  const { action } = (body ?? {}) as { action?: string };
   if (!action) {
     return apiError('Action is required in request body', null, 400);
   }
@@ -202,7 +203,11 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === 'update') {
-      const { itemId, quantity, price } = body;
+      const { itemId, quantity, price } = (body ?? {}) as {
+        itemId?: string;
+        quantity?: unknown;
+        price?: unknown;
+      };
       if (!itemId) return apiError('Item ID is required', null, 400);
 
       // Find and update item in mock database
@@ -245,4 +250,4 @@ export async function POST(req: NextRequest) {
     console.error('[api/ebay/account] Action Error:', err);
     return apiError('Failed to perform connection action', null, 500);
   }
-}
+});

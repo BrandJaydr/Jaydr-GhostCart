@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { apiError } from '@/lib/api/response';
-import { requireAuth, requirePermission, Permission } from '@/lib/middleware/auth-guard';
+import { withAuthRoute, requirePermission, Permission } from '@/lib/middleware/auth-guard';
 import { withTenant } from '@/lib/db';
 import {
   AirtableOAuthClient,
@@ -22,8 +22,7 @@ import {
  * NOTE: tokens are stored server-side; long-term AES-256/GCM at-rest encryption
  * of supplier config is tracked as a Stage 5 TODO (migration 0001 comment).
  */
-export async function GET(req: NextRequest) {
-  const actor = await requireAuth(req);
+export const GET = withAuthRoute(async (req: NextRequest, actor) => {
   await requirePermission(actor, Permission.SETTINGS_WRITE);
 
   const url = new URL(req.url);
@@ -159,4 +158,4 @@ export async function GET(req: NextRequest) {
       ),
     );
   }
-}
+});
