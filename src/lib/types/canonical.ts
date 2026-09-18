@@ -43,6 +43,25 @@ export interface CorrectionEntry {
   correctedBy: string;
 }
 
+/** Single SKU/variant specification under a parent product */
+export interface ProductVariant {
+  skuId: string;
+  title: string;
+  priceCents: number;
+  stock: number;
+  attributes: Record<string, string>;
+  imageUrl?: string;
+}
+
+/** Shipping rate and transit estimate for landed cost computation */
+export interface ShippingOption {
+  serviceName: string;
+  costCents: number;
+  estimatedDays: number;
+  trackingAvailable: boolean;
+  carrier?: string;
+}
+
 /** Canonical product model — normalized from any supplier adapter */
 export interface CanonicalProduct {
   /** Internal GhostCart product ID (UUID) */
@@ -69,6 +88,10 @@ export interface CanonicalProduct {
   sourceUrl: string;
   /** Supplier ID (references suppliers table) */
   supplierId: string;
+  /** Available product variants / SKU option tree */
+  variants?: ProductVariant[];
+  /** Estimated supplier shipping carrier methods and freight costs */
+  shippingOptions?: ShippingOption[];
   /** Raw supplier payload stored for traceability (never expose to clients) */
   rawSourceMetadata: Record<string, unknown>;
   /** Per-field normalization confidence scores */

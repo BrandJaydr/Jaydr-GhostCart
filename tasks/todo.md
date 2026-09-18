@@ -8,6 +8,95 @@
 
 ## Changelog
 
+### 2026-08-31 — Runtime/browser audit of import flows (E2E readiness findings)
+
+**Category:** Audit / E2E / Import UX
+
+**Summary:** Attempted live browser/API smoke tests of the import functions (dev server + Playwright + curl). Server came up on :3000 but DB-backed routes hung (no Docker Postgres/Redis) and Playwright couldn't launch a browser in this sandbox — so browser-level verification is marked **pending** (ERR-038). Static/code audit still produced three actionable findings: the E2E `import-workflow.spec.ts` DOM contract does not match the real UI (zero `data-testid` in `src/`, no `name="url"` on the Input) — all 4 E2E tests would fail (ERR-037); and the import form has no client-side URL validation or distinct duplicate-warning UI (ERR-039). Unit/contract tests still pass: `ImportForm.test.tsx` (payload ↔ `ProductImportSchema` ↔ `jobId`) 14/14 across import-related suites, Airtable adapter 23, adapters total 36.
+
+**Findings → Backlog (for review):**
+- [E2E-1] Fix `e2e/import-workflow.spec.ts` to use accessible selectors (`getByLabel('Product URL')`, `getByText('Import queued')`) and/or add stable `data-testid`s to ImportForm + products + activity (decide a single convention).
+- [E2E-2] Add `name="url"` (+ `data-testid="import-url"`) to the URL Input for form semantics; consider HTML5 `type="url"`.
+- [UX-1] Client-side URL pre-validation (reuse a shared valid-URL predicate) so invalid URLs show an inline error before the request.
+- [UX-2] Distinct duplicate-import feedback (409 → amber "already imported" card + link to the existing product) instead of the generic error block.
+- [OPS-1] Re-run the browser/API audit with `docker compose up -d db redis` + `npm run db:migrate` + `npm run dev`, and wire `webServer` for CI E2E.
+- [OPS-2] Switch `npm run worker` to `tsx` (ERR-036 follow-up) so a local worker exists for end-to-end import verification.
+
+**Verified:** `npx tsc --noEmit --incremental false` exit 0; `npx vitest run src/__tests__/components/ImportForm.test.tsx src/__tests__/api/products.test.ts src/__tests__/api/products-stage2.test.ts` 14/14; adapter suite 36/36; `rules:verify` PASSED. Browser smoke = blocked (ERR-038).
+### 2026-08-31 — Airtable adapter hardening (Phase 1.5): token auto-refresh, pagination, id-collision fix
+
+**Category:** Feature / Supplier Integration / Reliability
+
+**Summary:** Hardened the Airtable supplier adapter after a verification review. Key defects fixed: (1) OAuth access tokens (~1 hr expiry) were never refreshed — added auto-refresh in `resolveAirtableConfig` with rotated-token persistence and a deterministic **owner-first** connection selection (per-user rows preserved for audit); (2) the Records API paginates at 100 rows/page and the adapter was silently truncating larger bases — added an `offset` follow loop; (3) the shared CSV/HTML product-id scheme (`base64(source).slice(0,12)`) collides for URLs sharing a long prefix (all Airtable record URLs share a base prefix) — Airtable now uses a SHA-256-based id; (4) `fetchProduct` derived ids from raw (unmapped) fields while `importProduct` used the coerced row — unified on the coerced row and removed the silent `records[0]` fallback that could overwrite the wrong product; (5) the callback now redirects the browser to `/import` with status flags instead of returning JSON, and the supplier-config upsert no longer nulls baseId/tableName/fieldMapping on reconnect. Added a title guard and raw `rawFields` traceability.
+
+**Changes:**
+- `src/lib/adapters/airtable.adapter.ts` — added `airtableProductId` (SHA-256), `pickTenantConnection` (owner-first → most-recent), `shouldRefreshToken` (60 s safety window), `refreshStoredAccessToken` (rotates + persists); `resolveAirtableConfig` resolves the owner's connection and auto-refreshes stale tokens; `fetchRecords` follows `offset` cursors (50-page cap); `pickRecord`/`fetchProduct` match on the coerced row; `fetchProduct` throws on unresolved id instead of falling back to `records[0]`; title guard on import/refresh; stores `rawSourceMetadata.rawFields`.
+- `src/app/api/airtable/callback/route.ts` — browser redirect to `/import?airtable=connected|error`, `requirePermission(SETTINGS_WRITE)` parity, config upsert uses `jsonb_set` + COALESCE (no null overwrite).
+- `src/__tests__/adapters/airtable.adapter.test.ts` — 12 new regression tests (pagination, coerced-row id consistency/H1, title guard, rawFields, unresolved-fetch throw, pickTenantConnection, shouldRefreshToken). Airtable suite now 23 tests.
+
+**Verified:** `npx tsc --noEmit --incremental false` exit 0; `npx vitest run src/__tests__/adapters` 36/36 pass; scoped eslint exit 0 on all touched files; `npm run rules:verify` PASSED.
+
+**Notes:** The CSV/HTML adapters still use the truncated base64 id scheme (latent prefix-collision risk) — follow-up to switch them to the SHA-256 helper when those suppliers next change.
+### 2026-08-30 — Temporary 3px Border Thickness Test for Key Components
+
+**Category:** UI / Visual Testing / Design System
+
+**Summary:** Applied 3px border thickness to key UI components as a temporary visual test to evaluate improved contrast and visual appeal. Modified command palette module (base and all themes), sidebar panel container, and main workspace foreground panels (.gc-island) to use thicker borders instead of the default 1px. Components intentionally unchanged: sidebar items, command palette items, search trigger, and trigger bordered components.
+
+**Changes:**
+- `src/app/globals.css` — Added `border-width: 3px` to `.gc-command-modal` base class
+- `src/app/globals.css` — Added `border-width: 3px` to `.warm-cream-burgundy-2 .gc-command-modal` (Cream & Burgundy theme)
+- `src/app/globals.css` — Added `border-width: 3px` to `.cherry-blossom .gc-command-modal` (Cherry Blossom theme)
+- `src/app/globals.css` — Added `border-width: 3px` to `.gc-island` class (main workspace foreground panels)
+- `src/components/layout/AppShell.tsx` — Added inline `style={{ borderWidth: '3px' }}` to sidebar panel container
+
+**Verified:** ESLint check on modified AppShell.tsx passed. CSS changes are visual-only and do not affect functionality. This is a temporary change to evaluate visual appeal and may be reverted based on user feedback.
+
+**Notes:** This is a visual test change - may need to be reverted if thicker borders don't improve the design. Applied consistently across all themes for uniform user experience.
+
+### 2026-08-28 — Research-Driven Ingestion Engine, Resilient HttpClient, and Unlockable Developer Mode Logs
+
+**Category:** Feature / Pipeline Architecture / Developer Tooling / Telemetry
+
+**Summary:** Integrated research insights from `comalex/aliexpress_parser`, `sudheer-ranga/aliexpress-product-scraper`, and `smicallef/spiderfoot` into GhostCart's backend. Implemented a centralized `HttpClient` with host-based sliding-window rate limiting (token-bucket delays), SHA-256 Redis-backed response caching, and payload size safety limits. Upgraded `HtmlProductAdapter` to extract embedded JavaScript state (`window.runParams`, `window._page_data_`, `window.data`), multi-variant SKU trees (`ProductVariant[]`), and landed shipping costs (`ShippingOption[]`). Enhanced `logger.ts` with an in-memory circular ring buffer (1,000 entries) and EventEmitter for real-time telemetry streaming. Created PostgreSQL migration `0021_system_logs.sql` (RLS-enforced), `GET /api/dev/logs` endpoint, unlockable Developer Mode in Settings (`/settings/general`), and a real-time Developer Mode System Logs Console (`/settings/logs`) with category filtering, search, and JSON inspector.
+
+**Changes:**
+- [NEW] `src/lib/http/rate-limiter.ts` — `HostRateLimiter` token-bucket delay tracker per domain to prevent 429 IP bans.
+- [NEW] `src/lib/http/client.ts` — Resilient `HttpClient` with keep-alive, SHA-256 caching, host throttling, and size caps.
+- `src/lib/types/canonical.ts` — Added `ProductVariant` and `ShippingOption` to `CanonicalProduct`.
+- `src/lib/adapters/html.adapter.ts` — Multi-tier extraction (embedded runParams, JSON-LD, variant trees, shipping options, structured telemetry).
+- `src/lib/logger.ts` — In-memory ring buffer, EventEmitter stream, redaction, and `getRecentLogs` filtering utility.
+- [NEW] `src/db/migrations/0021_system_logs.sql` — `system_logs` table with RLS tenant isolation and indexes.
+- [NEW] `src/app/api/dev/logs/route.ts` — Authenticated telemetry and log retrieval endpoint.
+- `src/app/(dashboard)/settings/general/page.tsx` — Unlockable Developer Mode toggle, log verbosity selector, and diagnostics shortcuts.
+- [NEW] `src/app/(dashboard)/settings/logs/page.tsx` — Real-time Developer Mode System Logs Console with category tabs, search, and JSON drawer.
+- `src/components/layout/Sidebar.tsx` — Dynamic "Developer Logs" navigation link when Developer Mode is unlocked.
+- [NEW] `src/__tests__/http/client.test.ts` — 4 unit tests covering rate limiting, caching, and content length caps.
+- [NEW] `src/__tests__/adapters/html.adapter.test.ts` — 2 unit tests covering embedded runParams and JSON-LD variant extraction.
+- [NEW] `src/__tests__/api/dev-logs.test.ts` — 2 unit tests covering log buffer and filter queries.
+- `TECHNICAL_WIKI.md` & `.logs/patterns.md` — Updated with Pattern 20 and component inventory.
+
+**Verified:** `npm run rules:verify` passed; `npx tsc --noEmit` exit 0; `npx eslint` on all modified files exit 0; 37/37 targeted unit/integration tests passed.
+
+### 2026-08-28 — Airtable supplier adapter: "Sign in with Airtable" (OAuth 2.0) — Phase 1 import
+
+**Category:** Feature / Supplier Integration / Security
+
+**Summary:** Added Airtable as a second non-CSV supplier adapter behind the same `ISupplierAdapter` contract. Users connect via the per-user **"Sign in with Airtable"** OAuth 2.0 flow (tokens stored per-user in a new RLS-scoped `airtable_connections` table, never in env/code). The adapter imports records → `CanonicalProduct`, syncing **only fields shared by both the Airtable base and the canonical CSV field set** via a `fieldMapping` config + identity fallback. Write-back (GhostCart → Airtable) + the connect button UI are deferred to Phase 2.
+
+**Changes:**
+- [NEW] `src/lib/adapters/airtable/oauth-client.ts` — `AirtableOAuthClient`: authorization URL, code→token exchange, token refresh, base/table discovery. Scopes `data.records:read` + `schema.bases:read`. Injectable `fetcher` for tests.
+- [NEW] `src/app/api/airtable/authorize/route.ts` — `POST` initiates the flow; CSPRNG `state` bound to tenant+user (CSRF); audit `airtable.auth_initiated`; requires `SETTINGS_WRITE`.
+- [NEW] `src/app/api/airtable/callback/route.ts` — `GET` verifies `state`, exchanges code, persists token + supplier `config` (baseId/tableName/fieldMapping), audit `airtable.authorized`.
+- [NEW] `src/db/migrations/0020_airtable_supplier.sql` — `airtable_connections` table (RLS tenant isolation, `GRANT ... TO ghostcart_app`, mirror of 0016) + idempotent dev-tenant `airtable` supplier seed (mirror of 0019).
+- [NEW] `src/lib/adapters/airtable.adapter.ts` — `AirtableSupplierAdapter`; per-tenant token/config resolution via `withTenant`; Airtable field coercion (number/boolean/attachment/multi-select → CSV string) then reuses `normalizeCsvRow`; rec-id / source_url matching with first-record fallback; deterministic `product_` id.
+- `src/lib/adapters/factory.ts` — registered `airtable` (available adapterIds: `mock`, `csv`, `html`, `airtable`).
+- [NEW] `src/__tests__/adapters/airtable.adapter.test.ts` — 11 unit tests (coercion, rec-url/source_url/fallback, no-connection error, validateConnection env toggle, fetchProduct, factory registration).
+- `.env.example` — `AIRTABLE_CLIENT_ID`/`AIRTABLE_CLIENT_SECRET` (+ optional ops PAT `AIRTABLE_TOKEN`/`AIRTABLE_BASE_ID`/`AIRTABLE_TABLE`).
+
+**Verified:** `npx tsc --noEmit` exit 0; `npx vitest run src/__tests__/adapters` 29/29 pass (11 new); eslint exit 0 on all touched files; `npm run rules:verify` PASSED. Repo-wide lint failures remain pre-existing debt.
+
+**Notes / Follow-ups (Phase 2):** GhostCart → Airtable write-back (`airtable/writer.ts` + sync API route, gaining `data.records:write` scope), "Sign in with Airtable" button UI component, at-rest encryption of supplier config (Stage 5 TODO from migration 0001), token auto-refresh integration.
 ### 2026-08-24 — URL product import: HTML scraper adapter, worker service, and tooling fixes
 
 **Category:** Feature / Pipeline / Ops
@@ -566,6 +655,277 @@
 - [x] **Phase 2 CSV Creator:** build the Interactive Product Spreadsheet & CSV Editor (`/dashboard/products/editor`) with inline click-to-edit cells, Zod schema validation, and CSV exporting.
 - [ ] **Phase 3 CRM & Chat Module:** design database structures and build paginated chat dashboard with WhatsApp Business Cloud and Telegram Bot API connections.
 - [ ] **Phase 4 Multi-Channel Sync:** design integration dev kits for Facebook Catalog API, Etsy API v3, and TikTok Shop Open API.
+
+---
+
+## Yaballe-Inspired Upgrade Branch
+
+**Goal:** Transform GhostCart into a comprehensive dropshipping automation platform competitive with Yaballe by implementing critical missing features identified through feature gap analysis.
+
+**Analysis Reference:** See detailed feature gap analysis at `C:\Users\jayst\.devin\plans\plan-8f4a14b3547e7a19.md`
+
+### Phase 1: Core Dropshipping Functionality (Critical - 3-4 months)
+
+#### 1.1 Order Processing Pipeline
+- [ ] Create `orders` table with order lifecycle management
+- [ ] Implement order status machine (pending → processing → fulfilled → delivered/cancelled)
+- [ ] Add `supplier_accounts` table for Amazon/AliExpress credential management
+- [ ] Build order fulfillment workers with BullMQ
+- [ ] Add order management dashboard with status indicators
+- [ ] Implement order-to-product mapping and tracking
+- [ ] Add order history and audit logging
+
+#### 1.2 Auto-Ordering System
+- [ ] Implement "Your Amazon Accounts" auto-ordering mode
+- [ ] Add load balancing integration (PayPal/Payoneer/Stripe)
+- [ ] Build order placement automation with retry logic
+- [ ] Add order queue management and prioritization
+- [ ] Implement error handling and order failure recovery
+- [ ] Create auto-ordering configuration page with toggles and status
+- [ ] Add order cost tracking and profit calculation
+
+#### 1.3 Auto-Tracking Integration
+- [ ] Implement supplier tracking webhook processing
+- [ ] Add eBay tracking number update automation
+- [ ] Build tracking status monitoring system
+- [ ] Create delivery confirmation workflow
+- [ ] Add tracking dashboard with timeline view
+- [ ] Implement tracking event history and notifications
+
+#### 1.4 Real-Time Stock/Price Monitoring
+- [ ] Implement continuous supplier polling system
+- [ ] Add automatic stock updates with out-of-stock alerts
+- [ ] Build automatic price sync with margin protection
+- [ ] Create monitoring dashboard with live status indicators
+- [ ] Add price change notifications and alerts
+- [ ] Implement stock drop prevention and auto-delisting
+
+#### 1.5 Help Center & Documentation
+- [ ] Create comprehensive help center infrastructure
+- [ ] Add step-by-step guides for all major features
+- [ ] Implement searchable documentation system
+- [ ] Add troubleshooting articles for common issues
+- [ ] Create video tutorials and walkthroughs
+- [ ] Build dedicated help center UI with navigation and search
+
+### Phase 2: Scalability & Automation (High Priority - 2-3 months)
+
+#### 2.1 Bulk Listing System
+- [ ] Implement CSV bulk upload (10K+ items)
+- [ ] Add multi-variation listing support
+- [ ] Build listing scheduling system
+- [ ] Create bulk status tracking and monitoring
+- [ ] Implement bulk lister interface with progress tracking
+- [ ] Add error handling and retry mechanisms for bulk operations
+- [ ] Build bulk operation queuing and management
+
+#### 2.2 AI Title Generation
+- [ ] Integrate AI for title optimization (extend existing Ollama/VLLM)
+- [ ] Implement SEO best practices in title generation
+- [ ] Add tone/style customization options
+- [ ] Build bulk AI title processing
+- [ ] Create AI title editor with preview and comparison
+- [ ] Add title performance analytics and A/B testing
+
+#### 2.3 VeRO Protection
+- [ ] Create `vero_blacklist` database table
+- [ ] Build brand blacklist database management
+- [ ] Implement automated IP risk detection
+- [ ] Add pre-listing validation and risk scoring
+- [ ] Create VeRO settings page with risk indicators
+- [ ] Implement brand filtering and warning system
+
+#### 2.4 Advanced Repricing
+- [ ] Implement competitor price monitoring
+- [ ] Add beat-by pricing logic to existing engine
+- [ ] Build automatic repricing with approval workflow
+- [ ] Create market-based floor/ceiling adjustments
+- [ ] Enhance repricing dashboard with competitor analysis
+- [ ] Add repricing performance metrics and analytics
+
+#### 2.5 Structured Onboarding
+- [ ] Implement guided onboarding wizard
+- [ ] Add step-by-step account connection flows
+- [ ] Build first import walkthrough with tips
+- [ ] Create progress tracking and milestone celebrations
+- [ ] Add contextual help tooltips throughout interface
+- [ ] Implement onboarding completion metrics
+
+### Phase 3: AI & Analytics (Medium Priority - 2-3 months)
+
+#### 3.1 AI Co-Pilot Interface
+- [ ] Build conversational AI assistant interface
+- [ ] Implement store performance insights generation
+- [ ] Add action recommendations based on data
+- [ ] Create natural language query processing
+- [ ] Integrate AI chat interface with suggestions and actions
+- [ ] Add AI-driven troubleshooting and support
+
+#### 3.2 Product Research Tool
+- [ ] Implement market demand analysis
+- [ ] Add sales data integration and analysis
+- [ ] Build winning product suggestion engine
+- [ ] Create trend identification and forecasting
+- [ ] Design research dashboard with filters and recommendations
+- [ ] Add product performance prediction models
+
+#### 3.3 Enhanced Analytics
+- [ ] Implement profit/breakeven analysis tools
+- [ ] Build performance dashboards with KPIs
+- [ ] Add predictive analytics capabilities
+- [ ] Create custom report generation
+- [ ] Design analytics dashboard with charts and export options
+- [ ] Add cohort analysis and user behavior tracking
+
+#### 3.4 Advanced Filter Configuration
+- [ ] Build visual rule builder interface
+- [ ] Implement condition logic (AND/OR operators)
+- [ ] Add filter preview and testing capabilities
+- [ ] Create rule templates and presets
+- [ ] Design visual filter builder with drag-and-drop interface
+- [ ] Add filter performance metrics and optimization
+
+### Phase 4: Multi-Channel & Growth (Lower Priority - 3-4 months)
+
+#### 4.1 Multi-Store Management UI
+- [ ] Implement store-specific settings management
+- [ ] Build cluster management system
+- [ ] Add cross-store analytics and reporting
+- [ ] Create store switching mechanism
+- [ ] Design multi-store dashboard with account health indicators
+- [ ] Add store-level performance comparison
+
+#### 4.2 Additional Marketplaces
+- [ ] Implement Shopify integration
+- [ ] Add TikTok Shop integration
+- [ ] Build Amazon marketplace connection
+- [ ] Create unified inventory sync across channels
+- [ ] Design multi-channel management interface
+- [ ] Add channel-specific listing optimization
+
+#### 4.3 Partner/Affiliate System
+- [ ] Implement partner account management
+- [ ] Build revenue sharing system
+- [ ] Add multi-user cluster management
+- [ ] Create partner analytics dashboard
+- [ ] Design partner management UI
+- [ ] Add partner performance tracking and reporting
+
+#### 4.4 Error Handling & Troubleshooting
+- [ ] Implement detailed error messages with context
+- [ ] Add suggested solutions for common errors
+- [ ] Build troubleshooting step-by-step guides
+- [ ] Create support shortcuts and escalation paths
+- [ ] Design error handling UI with contextual help
+- [ ] Add error categorization and severity levels
+
+---
+
+## Database Schema Requirements for Yaballe Branch
+
+### New Tables Needed
+- `orders` - Order lifecycle and fulfillment tracking
+- `supplier_accounts` - Amazon/AliExpress credential management
+- `tracking_events` - Tracking status history
+- `vero_blacklist` - Brand/keyword restrictions
+- `competitor_prices` - Price monitoring data
+- `product_research` - Market analysis data
+- `help_center_articles` - Documentation system
+- `onboarding_progress` - User onboarding tracking
+- `ai_conversations` - AI co-pilot chat history
+- `partner_accounts` - Partner/affiliate management
+
+### Migration Priority
+1. `0022_orders.sql` - Order processing foundation
+2. `0023_supplier_accounts.sql` - Account management
+3. `0024_tracking_events.sql` - Tracking system
+4. `0025_vero_blacklist.sql` - IP protection
+5. `0026_competitor_prices.sql` - Price monitoring
+6. `0027_help_center.sql` - Documentation system
+
+---
+
+## Infrastructure Requirements
+
+### Enhanced Job Queue
+- Add order processing workers
+- Add monitoring workers for stock/price
+- Add tracking update workers
+- Implement worker health monitoring
+
+### Webhook Endpoints
+- Supplier tracking webhooks
+- Order status webhooks
+- Marketplace notification webhooks
+
+### External API Integrations
+- Amazon SP-API integration
+- AliExpress API integration
+- Additional marketplace APIs
+
+### AI Service Scaling
+- Additional Ollama/VLLM instances
+- AI model caching and optimization
+- AI request queuing and rate limiting
+
+### Real-Time Monitoring
+- SSE/WebSocket for live updates
+- Real-time dashboard data streaming
+- Alert system integration
+
+---
+
+## Security Considerations
+
+### Credential Management
+- Supplier credential encryption (at-rest)
+- API key rotation for supplier accounts
+- Secure credential storage and retrieval
+
+### Rate Limiting
+- Supplier API rate limiting
+- Per-tenant rate limiting for external calls
+- Request queuing and backoff strategies
+
+### Audit Logging
+- Order processing audit trails
+- Supplier account access logging
+- Tracking event history
+
+### Compliance
+- PCI compliance for payment processing
+- GDPR compliance for user data
+- Marketplace policy compliance
+
+---
+
+## Success Metrics
+
+### Phase 1 Success Criteria
+- Order processing pipeline handles 100+ orders/day
+- Auto-ordering success rate > 95%
+- Tracking updates < 5 minutes from supplier
+- Stock/price monitoring < 1 hour latency
+- Help center reduces support tickets by 30%
+
+### Phase 2 Success Criteria
+- Bulk listing processes 10K+ items in < 1 hour
+- AI title generation improves CTR by 15%
+- VeRO protection prevents 90% of IP violations
+- Advanced repricing improves margins by 10%
+- Onboarding completion rate > 80%
+
+### Phase 3 Success Criteria
+- AI co-pilot reduces manual tasks by 40%
+- Product research tool identifies 20+ winning products/month
+- Analytics dashboards used by 70% of active users
+- Advanced filters improve workflow efficiency by 25%
+
+### Phase 4 Success Criteria
+- Multi-store management supports 10+ stores/account
+- Multi-channel sync handles 3+ marketplaces
+- Partner program acquires 50+ partners in 6 months
+- Error handling reduces support escalation by 50%
 
 **Test gate:** Each adapter passes contract, rate-limit, security, and recovery tests; tenant isolation verified across new queries and jobs.
 

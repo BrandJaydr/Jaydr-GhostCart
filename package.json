@@ -4,7 +4,7 @@
   "private": true,
   "description": "Enterprise Reseller & Dropshipping Automation Platform — Stage 1 Scaffold",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -H 127.0.0.1",
     "build": "next build",
     "start": "next start",
     "worker": "tsx --env-file=.env src/worker/index.ts",

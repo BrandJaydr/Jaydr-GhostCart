@@ -21,6 +21,7 @@ See [01-methodology.md](01-methodology.md) for our analysis framework, criteria,
 |---|---|---|---|
 | comalex/aliexpress_parser | Complete | AliExpress product parser | 2026-08-25 |
 | sudheer-ranga/aliexpress-product-scraper | Complete | Product scraping (npm package) | 2026-08-25 |
+| smicallef/spiderfoot | Complete | Event-driven multi-source OSINT & ingestion | 2026-08-27 |
 | stiekel/aliexpress | Not started | General AliExpress scraping | - |
 | agabopinho/AliExpressScraper | Not started | Scraper implementation | - |
 | DongshaoZ/aliexpress | Not started | AliExpress tools | - |

@@ -1,9 +1,10 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Tooltip, Button } from '@heroui/react';
-import { Settings, Package, FileText, Clock, DollarSign, Store, Factory, LayoutDashboard, Upload, Menu, Sparkles } from 'lucide-react';
+import { Settings, Package, FileText, Clock, DollarSign, Store, Factory, LayoutDashboard, Upload, Menu, Sparkles, Terminal } from 'lucide-react';
 
 export interface SidebarSection {
   title: string;
@@ -23,6 +24,30 @@ export interface SidebarProps {
 
 export function Sidebar({ isCollapsed = false, onToggle }: SidebarProps) {
   const pathname = usePathname();
+  const [isDevMode, setIsDevMode] = useState(false);
+
+  useEffect(() => {
+    const checkDevMode = () => {
+      setIsDevMode(localStorage.getItem('gc_dev_mode') === 'true');
+    };
+    checkDevMode();
+    window.addEventListener('gc_dev_mode_changed', checkDevMode);
+    return () => window.removeEventListener('gc_dev_mode_changed', checkDevMode);
+  }, []);
+
+  const settingsItems: SidebarItem[] = [
+    { label: 'General', href: '/settings/general', icon: <Settings className="w-5 h-5" /> },
+    { label: 'Marketplaces', href: '/settings/marketplaces', icon: <Store className="w-5 h-5" /> },
+    { label: 'Suppliers', href: '/settings/suppliers', icon: <Factory className="w-5 h-5" /> },
+  ];
+
+  if (isDevMode) {
+    settingsItems.push({
+      label: 'Developer Logs',
+      href: '/settings/logs',
+      icon: <Terminal className="w-5 h-5 text-primary" />,
+    });
+  }
 
   const sections: SidebarSection[] = [
     {
@@ -45,11 +70,7 @@ export function Sidebar({ isCollapsed = false, onToggle }: SidebarProps) {
     },
     {
       title: 'Settings',
-      items: [
-        { label: 'General', href: '/settings/general', icon: <Settings className="w-5 h-5" /> },
-        { label: 'Marketplaces', href: '/settings/marketplaces', icon: <Store className="w-5 h-5" /> },
-        { label: 'Suppliers', href: '/settings/suppliers', icon: <Factory className="w-5 h-5" /> },
-      ],
+      items: settingsItems,
     },
   ];
 

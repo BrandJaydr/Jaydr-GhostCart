@@ -29,6 +29,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         className={`hidden md:flex flex-col transition-all duration-300 flex-shrink-0 overflow-visible rounded-2xl border border-border bg-surface shadow-md ${
           isSidebarCollapsed ? 'w-20' : 'w-64'
         }`}
+        style={{ borderWidth: '3px' }}
       >
         <Sidebar isCollapsed={isSidebarCollapsed} onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)} />
       </aside>

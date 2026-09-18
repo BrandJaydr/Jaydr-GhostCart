@@ -1,6 +1,30 @@
 import crypto from 'crypto';
 
 /**
+ * Verifies a plain-text password against a stored `sha256:<salt>:<digest>` hash.
+ * Compatible with the hash produced by `hashPassword()` and with the local
+ * `verifyPassword` in `src/lib/auth/config.ts` (intentionally kept separate so
+ * that the config.ts fallback logic is not affected).
+ */
+export function verifyPassword(plain: string, stored: string): boolean {
+  if (!stored || !stored.startsWith('sha256:')) return false;
+  const [, salt, digest] = stored.split(':');
+  if (!salt || !digest) return false;
+  const expected = crypto
+    .createHash('sha256')
+    .update(salt + plain)
+    .digest('hex');
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(digest, 'hex'),
+      Buffer.from(expected, 'hex'),
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Password + password-reset token utilities for the public auth routes.
  *
  * The hash format is the same `sha256:<salt>:<digest>` scheme verified in

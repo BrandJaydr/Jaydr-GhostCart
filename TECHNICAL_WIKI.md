@@ -527,9 +527,8 @@ These files exist in the repository but are **NOT relevant to the GhostCart appl
 | `src/db/migrations/0012_rate_limiting.sql` | Rate limit definitions | ✅ |
 | `src/db/migrations/0013_dashboard_views.sql` | Database views for dashboard metrics | ✅ |
 | `src/db/migrations/0014_review_state.sql` | Manual corrections & review state workflow | ✅ |
-| `src/db/migrations/0015_alerts.sql` | System health & DLQ alerts schema | ✅ |
-| `src/db/migrations/0016_api_keys.sql` | API keys schema for CLI & Agentic authentication | ✅ |
-| `src/db/migrate.ts` | Migration runner; applies all migrations in order (0001–0016) | ✅ |
+| `src/db/migrations/0021_system_logs.sql` | Structured system telemetry, scraper trace, and developer mode log storage with RLS | ✅ |
+| `src/db/migrate.ts` | Migration runner; applies all migrations in order (0001–0021) | ✅ |
 | `src/lib/db/index.ts` | PG pool; RLS helpers; DEV_TENANT_ID; SIGTERM drain | ✅ |
 
 
@@ -539,7 +538,7 @@ These files exist in the repository but are **NOT relevant to the GhostCart appl
 
 | File | Purpose | Production Readiness |
 |---|---|---|
-| `src/lib/types/canonical.ts` | Canonical domain models: `CanonicalProduct`, `ListingDraft`, `ListingState`, `FieldConfidence`, `JobType`, `JobRecord` | ✅ |
+| `src/lib/types/canonical.ts` | Canonical domain models: `CanonicalProduct`, `ProductVariant`, `ShippingOption`, `ListingDraft`, `ListingState`, `FieldConfidence`, `JobType`, `JobRecord` | ✅ |
 | `src/lib/validation/schemas.ts` | Zod schemas: `ProductListQuerySchema`, `ListingListQuerySchema`, `ProductImportSchema`, `ListingCreateSchema` + inferred types | ✅ |
 
 ### 12.5 Adapter Layer
@@ -549,18 +548,20 @@ These files exist in the repository but are **NOT relevant to the GhostCart appl
 | `src/lib/adapters/supplier.interface.ts` | `ISupplierAdapter` interface — formal contract all adapters must implement | ✅ |
 | `src/lib/adapters/mock.adapter.ts` | `MockSupplierAdapter` (implements `ISupplierAdapter`); fixture data for Stage 1; exports `mockAdapter` instance + `mockProduct` fixture for `GET /api/products` | ✅ |
 | `src/lib/adapters/csv.adapter.ts` | `CsvSupplierAdapter` — real adapter for user-provided CSV feeds (URL or data URI) | ✅ |
-| `src/lib/adapters/html.adapter.ts` | `HtmlProductAdapter` — generic product-page scraper (JSON-LD → OpenGraph → meta fallbacks); registered as `html` (migration 0019 seeds the supplier) | ✅ |
-| `src/lib/adapters/factory.ts` | Adapter registry/factory: resolves `ISupplierAdapter` by `adapterId` (`getSupplierAdapter`); registers `mock`, `csv`, `html` | ✅ |
+| `src/lib/adapters/html.adapter.ts` | `HtmlProductAdapter` — multi-tier scraper with embedded `runParams`/JSON-LD parsing, variant SKU tree extraction, shipping calculator, and telemetry logging | ✅ |
+| `src/lib/adapters/factory.ts` | Adapter registry/factory: resolves `ISupplierAdapter` by `adapterId` (`getSupplierAdapter`); registers `mock`, `csv`, `html`, `airtable` | ✅ |
 
-✅ **Resolved** (see §11 #1): `src/app/api/products/route.ts` now imports `mockProduct` from `@/lib/adapters/mock.adapter` and the fixture export exists in `mock.adapter.ts`.
-
-### 12.5.1 API Helpers & Telemetry
+### 12.5.1 HTTP Client, Telemetry & Developer Tooling
 
 | File | Purpose | Production Readiness |
 |---|---|---|
+| `src/lib/http/client.ts` | Resilient `HttpClient` with connection pooling, Redis response cache, size caps, and telemetry logging | ✅ |
+| `src/lib/http/rate-limiter.ts` | `HostRateLimiter` sliding window / token bucket per-host polite throttling | ✅ |
 | `src/lib/api/response.ts` | API response helpers: `apiSuccess`, `apiError` | ✅ |
-| `src/lib/api/idempotency.ts` | Idempotency helpers: `checkDuplicateSourceUrl` (DB query with tenant scoping), `generateIdempotencyKey` (SHA-256 hash) — Hybrid duplicate detection (API layer 409 Conflict + DB UNIQUE constraint) | ✅ |
-| `src/lib/logger.ts` | Centralized structured logger with level formatting, production JSON, correlation context routing, and auto-redaction rules | ✅ |
+| `src/lib/api/idempotency.ts` | Idempotency helpers: `checkDuplicateSourceUrl` (DB query with tenant scoping), `generateIdempotencyKey` (SHA-256 hash) | ✅ |
+| `src/lib/logger.ts` | Centralized structured logger with in-memory ring buffer, EventEmitter stream, redaction, and `getRecentLogs` | ✅ |
+| `src/app/api/dev/logs/route.ts` | `GET /api/dev/logs` — authenticated Developer Mode telemetry and log retrieval endpoint | ✅ |
+| `src/app/(dashboard)/settings/logs/page.tsx` | Developer Mode System Logs Console with real-time live tailing, category filtering, search, and JSON inspector | ✅ |
 
 
 ## 13. Known Issues & Technical Debt (Stage 2 Investigation)

@@ -103,3 +103,19 @@ This file captures recurring design patterns, integration gotchas, database guid
 - **Risk:** CI/local verification can be falsely reported as complete when only a toolchain startup error was observed.
 - **Required control:** Keep a recorded test command/result matrix and verify the runner loads before interpreting pass/fail counts.
 - **Discovered by:** Investigator — 2026-08-12 (ERR-018)
+
+### 19. OAuth Per-User Credential Pattern (Supplier Adapters)
+- **Pattern:** Supplier adapters that need external OAuth use a per-user authorization-code flow: an authorize route returns `authUrl` + a CSRF-bound `state` (tenant:user:nonce, base64url), and a callback route verifies `state`, exchanges the code, and persists the per-user token in a dedicated RLS-scoped `airtable_connections`-style table (NOT the shared env config). The adapter resolves its own token per tenant via `withTenant` at import time through an injectable `configResolver` (tests inject a stub; prod uses the real DB resolver via a dynamic `import('@/lib/db')` so the module stays unit-testable without DATABASE_URL). Non-secret discovery data (baseId/tableName/fieldMapping) lives in `suppliers.config`; secrets live in the dedicated table — never in env/code.
+- **Rationale:** Matches the existing eBay OAuth flow + `marketplace_connections` precedent, keeps the `ISupplierAdapter` interface unchanged, and satisfies tenant isolation + "no third-party payloads in the app layer" without leaking vendor payloads or tokens to components/routes.
+- **Trade-off (Phase 1.5):** token auto-refresh is implemented (owner-first deterministic resolution across per-user rows, rotated-token persistence, 60 s safety window). At-rest config encryption remains deferred (Stage 5 TODO from migration 0001).
+- **Discovered by:** Senior Architect — 2026-08-28 (Airtable supplier adapter, Phase 1)
+
+### 20. Resilient HTTP Ingestion, Host Throttling & Developer Mode Telemetry
+- **Pattern:** Upstream product scraping uses a centralized `HttpClient` with persistent keep-alive connection pooling, sliding-window host rate limiting (token-bucket delays per domain to prevent 429 IP bans), SHA-256 Redis response caching, and maximum content length guards. Scrapers implement multi-tier extraction (embedded JavaScript state like `window.runParams`, JSON-LD schemas, and OpenGraph fallbacks), extracting full variant trees and localized landed shipping fees. All lifecycle events are emitted into an in-memory circular ring buffer and PostgreSQL `system_logs` table (tenant-isolated with RLS), streamed in real-time to an unlockable Developer Mode Log Console in Settings.
+- **Rationale:** Prevents worker crashes from dynamic/unstable external sites, eliminates redundant upstream network calls during bulk refreshes, and gives operators transparent diagnostic tracing across the entire ingestion pipeline.
+- **Discovered by:** Lead Architect & Agentic Engineer — 2026-08-28 (Research-Driven Ingestion Engine & Dev Logs)
+
+### 21. Collision-Prone Truncated-URL Product IDs
+- **Pattern:** The shared `normalizeCsvRow` id scheme — `product_` + base64(sourceUrl).slice(0,12) — truncates the encoded URL, so any two URLs sharing a long prefix can produce the SAME id. CSV/HTML source_url values are typically short/distinct; Airtable record URLs all share `https://airtable.com/<base>/<table>/`, making collisions near-guaranteed. Writing/refreshing by a collided id then silently targets the wrong product.
+- **Required control:** Use a collision-resistant digest (SHA-256 → hex, first 16 chars) for suppliers whose URLs share long prefixes, and keep one source of truth for id derivation between import/refresh/matching (derive from the COERCED row so fieldMapping is honored).
+- **Discovered by:** Senior Architect — 2026-08-31 (Airtable Phase 1.5; surfaced by an H1 regression test that resolved the wrong record)
