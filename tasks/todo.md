@@ -7,6 +7,21 @@
 
 ## Changelog
 
+### 2026-10-23 — Agent Job Board, Lead Engineer & Development Plan
+
+**Category:** Project governance / delivery system
+
+**Summary:** Cruze appointed Lotus (Muse) as Lead Software Engineer. Established the agent coordination system the AOP-CORE pipeline assumed but never had: a job board with a message-board forum, a role roster, and a phased development plan to a functional app, sequenced from the 2026-10-22 connector scan.
+
+**Changes:**
+- ✅ Created `Docs/agent-job-board.md` — mandatory check-in protocol (board → logs → todo → plan), role roster (Jules = primary implementation in the Forge/Atlas slots; Claude = Oracle/reviewer on check-in; Codex = implementation/test support on check-in; Muse subagents = light duty only), live assignments table, standing idle-duty orders, and the agent-only Message Board (forum) with entry format and rules
+- ✅ Created `Docs/development-plan.md` — Phases 0–5 to the functional thin vertical slice (real AliExpress import → comps pricing → eBay Trading submit): small daily tasks with owners, dependencies, acceptance criteria, OWNER-GATED markers, and a roadblock/research protocol
+- ✅ First delegations posted on the board and mirrored below (GC-101, GC-201, GC-202, GC-R1, GC-T1, GC-S1)
+- ✅ Governance + security-maintenance gaps logged as ERR-038 / ERR-039 in `.logs/errors.md`
+
+**Impact:**
+- Agents (Jules on cron check-ins, plus any future Claude/Codex/other agents) now have one place to check before acting, assigned roles, and a task queue that leads to a working app instead of ad-hoc work
+
 ### 2026-08-12 — UI Foundation Recovery
 
 **Category:** UI/UX Foundation
@@ -308,3 +323,17 @@ worker processes with PostgreSQL and Redis; finalize it through an ADR before a 
 - [ ] **Link to** `@agent:scout` (observability) + a future security-review workstream
 - [ ] **Align with** Production Blueprint §7.1 (authorization boundaries,
       backup-restore tests) and `tasks/todo.md` Stage 4 hardening items
+
+---
+
+## 🤝 Agent Job Board — Active Delegations (2026-10-23)
+
+> Coordination hub: [`Docs/agent-job-board.md`](../Docs/agent-job-board.md) — agents must check the board (assignments + message board) before working. Plan: [`Docs/development-plan.md`](../Docs/development-plan.md). If this list and the board disagree, the board wins and the Lead fixes this file.
+
+- [ ] **GC-100** — All agents: check in on the job board Message Board and confirm roles (Lead: Lotus)
+- [ ] **GC-101** — Jules: sync `.env.example` with every env var the code reads (full `process.env` sweep of `src/` + `scripts/`)
+- [ ] **GC-201** — Jules: AliExpress HMAC-SHA256 signer module + fixture unit tests (dummy secret only)
+- [ ] **GC-202** — Jules: AliExpress token provider (transient secret, expiry-aware refresh, mocked-HTTP tests, no plaintext persistence)
+- [ ] **GC-R1** — Claude (on check-in): second-eyes review of GC-101 against `process.env` reads in `src/`
+- [ ] **GC-T1** — Codex (on check-in): `aliexpress.ds.text.search` response fixture pack (full / empty / error envelope)
+- [ ] **GC-S1** — First idle checked-in agent (Lead assigns): RANGER sweep #1 — secrets-pattern scan (locations/types only) + dependency vulnerability summary, reported on the board
