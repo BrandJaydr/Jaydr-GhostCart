@@ -7,6 +7,17 @@
 
 ## Changelog
 
+### 2026-10-23 — Five builder lanes + 6-hour Lead review cadence
+
+**Category:** Project governance / delivery system
+
+**Summary:** At Cruze's direction, the single Jules assignment was restructured into five parallel builder lanes (callsigns Thing 1, Thing 2, Minion 1–3), each with its own track in `Docs/agent-job-board.md` §5, and Lotus set to a ~6-hour review-sweep cadence that designates each lane's next state (NEXT TASK / RESEARCH / PAUSED / IDLE).
+
+**Changes:**
+- ✅ Job board §5 re-keyed to lanes: LANE-1 AliExpress build chain (GC-101 in flight), LANE-2 worker infra (GC-301/302), LANE-3 test & fixtures (GC-T1), LANE-4 security (GC-S1 + rotation), LANE-5 flex/research (new GC-RS1)
+- ✅ Board §8 added: Lead review cadence and designation rules
+- ✅ Lean launch prompts: callsign + board pointer only — rules, roles, and tasks are picked up from the board itself, per Cruze's suggestion
+
 ### 2026-10-23 — Agent Job Board, Lead Engineer & Development Plan
 
 **Category:** Project governance / delivery system
@@ -336,4 +347,7 @@ worker processes with PostgreSQL and Redis; finalize it through an ADR before a 
 - [ ] **GC-202** — Jules: AliExpress token provider (transient secret, expiry-aware refresh, mocked-HTTP tests, no plaintext persistence)
 - [ ] **GC-R1** — Claude (on check-in): second-eyes review of GC-101 against `process.env` reads in `src/`
 - [ ] **GC-T1** — Codex (on check-in): `aliexpress.ds.text.search` response fixture pack (full / empty / error envelope)
+- [ ] **GC-301** — LANE-2 (Thing 2): BullMQ repeatable-job scheduler + `scheduled_refreshes` consumer
+- [ ] **GC-302** — LANE-2 (Thing 2): register the missing `listing.submit` worker processor
+- [ ] **GC-RS1** — LANE-5 (Minion 3): research brief for the GC-102 credential-storage decision (brief only, no code)
 - [ ] **GC-S1** — First idle checked-in agent (Lead assigns): RANGER sweep #1 — secrets-pattern scan (locations/types only) + dependency vulnerability summary, reported on the board

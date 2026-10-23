@@ -54,20 +54,27 @@ Persona definitions live in `Docs/Agents/` (AOP-CORE pipeline slots). Runtimes f
 | **Scribe** | Lead (default) | Documentation alignment: README, wiki, board, todo, changelog. |
 | **Muse subagents** | Spawned by the Lead only | **Light duty only** (owner's standing instruction): read-only verification, summaries, single-file doc edits. Never heavy builds, never long chains. |
 
-## 5. Assignments (live table)
+## 5. Assignments — builder lanes (live table)
 
-The Lead keeps this table current. `tasks/todo.md` mirrors task state as checkboxes; if they ever disagree, **this board wins** and the Lead fixes `todo.md`.
+Work runs in **five parallel builder lanes** (set by the owner, 2026-10-23). Each lane is a separate agent session with its own callsign; a lane works **only its own track**, one task at a time, and never touches another lane's files. The Lead keeps this table current. `tasks/todo.md` mirrors task state as checkboxes; if they ever disagree, **this board wins** and the Lead fixes `todo.md`.
 
-| ID | Task | Owner | Status | Plan ref |
+**Lane states** — set by the Lead at each 6-hour review sweep (§8) and posted on the Message Board: `NEXT TASK` (proceed to the next task in your track) · `RESEARCH` (do the research task the Lead names) · `PAUSED` (stop; do nothing until re-designated) · `IDLE` (standing duties, §6). A lane that finishes its task posts `[DONE]` and waits for its next designation — it does not self-advance to a task outside its track.
+
+| Lane | Callsign | Role (slots) | Track (in order) | State |
 |---|---|---|---|---|
-| GC-101 | Sync `.env.example` with every env var the code actually reads | Jules | **ASSIGNED — start on next check-in** | Phase 0 |
-| GC-201 | AliExpress HMAC-SHA256 signer module + fixture unit tests (dummy secret only) | Jules | QUEUED (after GC-101) | Phase 1 |
-| GC-202 | AliExpress token provider (transient secret, refresh logic) — no live calls | Jules | QUEUED | Phase 1 |
-| GC-R1 | Review GC-101 diff; verify every claimed var against `process.env` reads in `src/` | Claude (on check-in) | WAITING ON CHECK-IN | Phase 0 |
-| GC-T1 | Produce recorded-shape fixtures for `aliexpress.ds.text.search` responses (fields per scan report Part 1) for GC-203 tests | Codex (on check-in) | WAITING ON CHECK-IN | Phase 1 |
-| GC-S1 | RANGER sweep #1: repo-wide secrets/credential pattern scan (report locations/types only, never values) + dependency vulnerability summary | Unassigned — Lead will assign to first idle checked-in agent | OPEN | Phase 5 (standing) |
+| LANE-1 | Thing 1 | Builder — Forge + Atlas | GC-101 → GC-201 → GC-202 → GC-203 → GC-204 | **ACTIVE** — GC-101 launched by owner 2026-10-23 |
+| LANE-2 | Thing 2 | Builder — Forge | GC-301 → GC-302 → GC-303 | READY TO LAUNCH — start GC-301 |
+| LANE-3 | Minion 1 | Test & fixtures — Oracle support | GC-T1 → test support for LANE-1/LANE-2 as designated | READY TO LAUNCH — start GC-T1 |
+| LANE-4 | Minion 2 | Security — RANGER + Dependency Guardian | GC-S1 → standing security rotation (§6) | READY TO LAUNCH — start GC-S1 |
+| LANE-5 | Minion 3 | Flex — research / Janitor / Scout | GC-RS1 → research & hygiene as designated | READY TO LAUNCH — start GC-RS1 |
+| — | (on check-in) | Oracle — reviewer | GC-R1: review GC-101 diff against `process.env` reads in `src/` | WAITING ON CHECK-IN (Claude) |
+| — | (on check-in) | Forge/Oracle support | Overflow implementation & tests as designated | WAITING ON CHECK-IN (Codex) |
 
-Full task definitions, dependencies, and acceptance criteria: `Docs/development-plan.md`.
+Additional task definitions opened by this restructure:
+
+- **GC-RS1 (LANE-5, research only):** Draft the evidence brief for the GC-102 credential-storage decision: how this repo currently handles env vars and secrets (`.env.age` scripts, authorize-route DB columns, ERR-029), the realistic options (env/encrypted-env only · encrypted DB columns · external secret store), and pros/cons of each against the phone-only, modular-monolith reality. **Brief only — no decision, no code.** Post as a `[RESEARCH]` board entry with a doc under `Docs/research/` if it runs long.
+
+Full task definitions, dependencies, and acceptance criteria for GC-* tasks: `Docs/development-plan.md`.
 
 ## 6. Standing orders — when there is no assignment
 
@@ -99,9 +106,16 @@ Rules:
 - **No secrets, ever.** No credential values, tokens, or keys in board entries, commits, or logs — locations and types only.
 - **OWNER-GATED items** (live API sessions, credential entry, anything production-facing) are flagged in the entry and wait for Cruze.
 
+## 8. Lead review cadence — every 6 hours
+
+Authorized by the owner on 2026-10-23. Roughly every 6 hours the Lead runs a review sweep: read new commits/PRs and Message Board entries, verify each lane's finished work against the acceptance criteria in `Docs/development-plan.md` by reading the actual code (never the agent's summary alone), then post a designation entry per lane — `NEXT TASK`, `RESEARCH`, `PAUSED`, or `IDLE` (§5). Errors and vulnerabilities found during review are logged in `.logs/errors.md`; task state is mirrored into `tasks/todo.md`. A lane with no designation yet keeps its last state.
+
 ---
 
 ### Message Board — entries
+
+### [STATUS] 2026-10-23 — Lotus (Lead Engineer)
+Lane structure is live (§5). Five builder lanes, each with its own callsign and track; the owner's first launched agent is **LANE-1 (Thing 1)** and stays as-is — no restart needed. First designations: LANE-1 `NEXT TASK` (GC-101, in flight), LANE-2 `NEXT TASK` (GC-301), LANE-3 `NEXT TASK` (GC-T1), LANE-4 `NEXT TASK` (GC-S1), LANE-5 `RESEARCH` (GC-RS1 credential-storage brief). Review sweeps run every ~6 hours from here; each sweep re-designates every lane on this board. Lanes: post `[DONE]` when your task lands and wait for your designation — do not self-advance outside your track.
 
 ### [STATUS] 2026-10-23 — Lotus (Lead Engineer)
 Board is live. Jules: your first assignment is **GC-101** (`.env.example` sync) — small, safe, fully specified in `Docs/development-plan.md` Phase 0; follow it with GC-201 (AliExpress signer + tests, dummy credentials only). Claude and Codex: check in per §3 and I'll confirm your roles — provisional assignments GC-R1 and GC-T1 are on the table for you. Everyone: the three-part scan at `Docs/connector-scan-report-2026-10-22.md` and its error entries (ERR-021 → ERR-037 in `.logs/errors.md`) are required reading before your first task. Standing rule, non-negotiable: official APIs first (AliExpress Open Platform, eBay Trading API); the Jaydr-Scraper research repo is last-resort only and anything drawn from it must be labeled as such.
