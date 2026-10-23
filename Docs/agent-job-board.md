@@ -58,7 +58,17 @@ Persona definitions live in `Docs/Agents/` (AOP-CORE pipeline slots). Runtimes f
 
 Work runs in **five parallel builder lanes** (set by the owner, 2026-10-23). Each lane is a separate agent session with its own callsign; a lane works **only its own track**, one task at a time, and never touches another lane's files. The Lead keeps this table current. `tasks/todo.md` mirrors task state as checkboxes; if they ever disagree, **this board wins** and the Lead fixes `todo.md`.
 
-**Lane states** — set by the Lead at each 6-hour review sweep (§8) and posted on the Message Board: `NEXT TASK` (proceed to the next task in your track) · `RESEARCH` (do the research task the Lead names) · `PAUSED` (stop; do nothing until re-designated) · `IDLE` (standing duties, §6). A lane that finishes its task posts `[DONE]` and waits for its next designation — it does not self-advance to a task outside its track.
+**Lane states** — set by the Lead at each 6-hour review sweep (§8) and posted on the Message Board: `NEXT TASK` (proceed to the next task in your track) · `RESEARCH` (do the research task the Lead names) · `PAUSED` (stop; do nothing until re-designated) · `IDLE` (standing duties, §6) · `POOL-PICK` (claim the next available job for your role yourself, per §5.1). A lane that finishes its task posts `[DONE]`, marks the job done in this table itself, and — if no fresh designation is waiting — defaults to `POOL-PICK` inside its own track (§5.1). It never self-advances *outside* its track/role.
+
+## 5.1 How jobs flow (claim protocol)
+
+This is the operating model the owner specified; the lanes above are its first seeding, not an exception to it.
+
+1. **The Lead finds and posts the work.** Work items are defined by the Lead (from the dev plan, audits, or review findings) and posted on this board under a role/team — a lane track or the open pool in `Docs/development-plan.md` order. If it's not on the board, it's not a job.
+2. **Workers arrive ambiguous.** A worker does not need a pre-written role or task in its launch prompt. On arrival it reads this board, checks in (§3), and takes a role: its designated lane role if it has one, or a role the Lead assigns at check-in.
+3. **Claim before you build.** To take a job, post a `[CLAIM]` Message Board entry naming the task ID *before* starting. First claim wins; a claimed job is that worker's alone (AOP-CORE: one agent modifies a file set at a time). A worker with a current Lead designation works that designation; a worker without one claims the next available unclaimed, unblocked job posted for its role.
+4. **Finish means report + cross out.** On completion the worker posts `[DONE]` in the forum with evidence **and** updates the job's status in the board table itself (status `DONE` + date). The job is not finished until both are done.
+5. **The Lead verifies and comments.** At each review sweep the Lead checks the work against acceptance criteria, posts `[REVIEW]` comments in the forum (the feedback loop — read yours at check-in), corrects board state where a worker's update was wrong, ratifies or unwinds claims, and issues the next designations. The Lead's verified state overrides a worker's self-report where they differ, with the reason posted in the forum.
 
 | Lane | Callsign | Role (slots) | Track (in order) | State |
 |---|---|---|---|---|
@@ -108,11 +118,16 @@ Rules:
 
 ## 8. Lead review cadence — every 6 hours
 
-Authorized by the owner on 2026-10-23. Roughly every 6 hours the Lead runs a review sweep: read new commits/PRs and Message Board entries, verify each lane's finished work against the acceptance criteria in `Docs/development-plan.md` by reading the actual code (never the agent's summary alone), then post a designation entry per lane — `NEXT TASK`, `RESEARCH`, `PAUSED`, or `IDLE` (§5). Errors and vulnerabilities found during review are logged in `.logs/errors.md`; task state is mirrored into `tasks/todo.md`. A lane with no designation yet keeps its last state.
+Authorized by the owner on 2026-10-23. Roughly every 6 hours the Lead runs a review sweep: read new commits/PRs and Message Board entries, verify each lane's finished work against the acceptance criteria in `Docs/development-plan.md` by reading the actual code (never the agent's summary alone), post a `[REVIEW]` comment in the forum on each completed job, ratify or unwind any self-claims made under §5.1, then post a designation entry per lane — `NEXT TASK`, `RESEARCH`, `PAUSED`, `IDLE`, or `POOL-PICK` (§5). Errors and vulnerabilities found during review are logged in `.logs/errors.md`; task state is mirrored into `tasks/todo.md`. A lane with no designation yet keeps its last state, and a lane between sweeps follows the §5.1 claim protocol rather than waiting idle.
+
+Builder launch times set by the owner (Jules side): **12:30 AM, 3:30 AM, 10:30 AM, 4:30 PM, 11:30 PM ET**. Lead sweeps anchor at ~**1:32 / 7:32 AM, 1:32 / 7:32 PM ET** — so every launch except 12:30 AM follows a fresh sweep, and the 12:30 AM launch works under §5.1 POOL-PICK until the 1:32 AM sweep ratifies it.
 
 ---
 
 ### Message Board — entries
+
+### [STATUS] 2026-10-23 — Lotus (Lead Engineer)
+Owner clarified the intended model, and it's now written into §5.1 as the standing job flow: workers arrive ambiguous, take a role from this board, claim the next available job for that role with a `[CLAIM]` post, and on finishing they report `[DONE]` in this forum **and** cross the job out in the §5 table themselves. My sweeps then verify, comment here with `[REVIEW]` entries, correct the board, and designate what's next. The five lanes stay as the role tracks / first seeding — nothing already launched changes. Because builder launches (12:30 AM, 3:30 AM, 10:30 AM, 4:30 PM, 11:30 PM ET) and my sweeps (~1:32/7:32 AM & PM ET) don't perfectly interlock, any lane arriving without a fresh designation from me defaults to POOL-PICK inside its own track instead of waiting. First designations below stand.
 
 ### [STATUS] 2026-10-23 — Lotus (Lead Engineer)
 Lane structure is live (§5). Five builder lanes, each with its own callsign and track; the owner's first launched agent is **LANE-1 (Thing 1)** and stays as-is — no restart needed. First designations: LANE-1 `NEXT TASK` (GC-101, in flight), LANE-2 `NEXT TASK` (GC-301), LANE-3 `NEXT TASK` (GC-T1), LANE-4 `NEXT TASK` (GC-S1), LANE-5 `RESEARCH` (GC-RS1 credential-storage brief). Review sweeps run every ~6 hours from here; each sweep re-designates every lane on this board. Lanes: post `[DONE]` when your task lands and wait for your designation — do not self-advance outside your track.

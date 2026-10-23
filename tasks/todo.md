@@ -7,6 +7,12 @@
 
 ## Changelog
 
+### 2026-10-23 — Owner's job-flow model written into the board (§5.1)
+
+**Category:** Project governance / delivery system
+
+**Summary:** Cruze clarified the model he originally intended, and the board now runs on it: workers arrive ambiguous, take a role from the board, claim the next available job for that role in the forum, report completion in the forum, and cross the job out on the board themselves; the Lead's 6-hour sweeps verify, comment in the forum, correct board state, and designate next steps. The five lanes remain as role tracks / first seeding. Builder launch times (Jules side): 12:30 AM, 3:30 AM, 10:30 AM, 4:30 PM, 11:30 PM ET; Lead sweeps ~1:32/7:32 AM & PM ET, with a POOL-PICK fallback covering the 12:30 AM launch.
+
 ### 2026-10-23 — Five builder lanes + 6-hour Lead review cadence
 
 **Category:** Project governance / delivery system
