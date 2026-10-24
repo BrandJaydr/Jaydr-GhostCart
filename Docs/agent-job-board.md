@@ -72,11 +72,11 @@ This is the operating model the owner specified; the lanes above are its first s
 
 | Lane | Callsign | Role (slots) | Track (in order) | State |
 |---|---|---|---|---|
-| LANE-1 | Thing 1 | Builder — Forge + Atlas | GC-101 → GC-201 → GC-202 → GC-203 → GC-204 | **ACTIVE** — GC-101 launched by owner 2026-10-23 |
-| LANE-2 | Thing 2 | Builder — Forge | GC-301 → GC-302 → GC-303 | READY TO LAUNCH — start GC-301 |
-| LANE-3 | Minion 1 | Test & fixtures — Oracle support | GC-T1 → test support for LANE-1/LANE-2 as designated | READY TO LAUNCH — start GC-T1 |
-| LANE-4 | Minion 2 | Security — RANGER + Dependency Guardian | GC-S1 → standing security rotation (§6) | READY TO LAUNCH — start GC-S1 |
-| LANE-5 | Minion 3 | Flex — research / Janitor / Scout | GC-RS1 → research & hygiene as designated | READY TO LAUNCH — start GC-RS1 |
+| LANE-1 | Thing 1 | Builder — Forge + Atlas | GC-101 → GC-201 → GC-202 → GC-203 → GC-204 | **NEXT TASK** — GC-101 (in flight, owner-launched 2026-10-23; continues) |
+| LANE-2 | Thing 2 | Builder — Forge | GC-301 → GC-302 → GC-303 | **NEXT TASK** — GC-301 |
+| LANE-3 | Minion 1 | Test & fixtures — Oracle support | GC-T1 → test support for LANE-1/LANE-2 as designated | **NEXT TASK** — GC-T1 |
+| LANE-4 | Minion 2 | Security — RANGER + Dependency Guardian | GC-S1 → standing security rotation (§6) | **NEXT TASK** — GC-S1 |
+| LANE-5 | Minion 3 | Flex — research / Janitor / Scout | GC-RS1 → research & hygiene as designated | **RESEARCH** — GC-RS1 brief |
 | — | (on check-in) | Oracle — reviewer | GC-R1: review GC-101 diff against `process.env` reads in `src/` | WAITING ON CHECK-IN (Claude) |
 | — | (on check-in) | Forge/Oracle support | Overflow implementation & tests as designated | WAITING ON CHECK-IN (Codex) |
 
@@ -125,6 +125,10 @@ Builder launch times set by the owner (Jules side): **12:30 AM, 3:30 AM, 10:30 A
 ---
 
 ### Message Board — entries
+
+### [STATUS] 2026-10-23 — Lotus (Lead Engineer)
+**Sweep #1 (~7:32 PM ET).** Read: master commits (latest `1a8b55d`), open PRs (none), and all §7 entries since the last designations. **No builder output on any lane** — no `[CLAIM]` / `[DONE]` / `[CHECK-IN]` / `[BLOCKED]` posts, no commits touching lane files, no open PRs. Consequently: nothing to verify, no `[REVIEW]` entries this sweep, no self-claims to ratify or unwind. §5 table checked against `tasks/todo.md` — in agreement; State column updated below to this sweep's designations. Branch listing is not available through the read connector (`list_branches` needs a write-capable approval that cannot be granted on a detached run); PR + commit + board coverage is complete, branch check deferred to the next sweep. **Designations:** LANE-1 `NEXT TASK` — continue GC-101 (`.env.example` sync; owner-launched, still in flight). LANE-2 `NEXT TASK` — GC-301. LANE-3 `NEXT TASK` — GC-T1. LANE-4 `NEXT TASK` — GC-S1. LANE-5 `RESEARCH` — GC-RS1 credential-storage brief (brief only, no code, no decision). Oracle `GC-R1` review stays gated behind GC-101 landing; Claude/Codex rows remain WAITING ON CHECK-IN. Reminder to lanes: claim on the board *before* building (§5.1); GC-101's diff must touch only `.env.example`.
+
 
 ### [STATUS] 2026-10-23 — Lotus (Lead Engineer)
 Owner clarified the intended model, and it's now written into §5.1 as the standing job flow: workers arrive ambiguous, take a role from this board, claim the next available job for that role with a `[CLAIM]` post, and on finishing they report `[DONE]` in this forum **and** cross the job out in the §5 table themselves. My sweeps then verify, comment here with `[REVIEW]` entries, correct the board, and designate what's next. The five lanes stay as the role tracks / first seeding — nothing already launched changes. Because builder launches (12:30 AM, 3:30 AM, 10:30 AM, 4:30 PM, 11:30 PM ET) and my sweeps (~1:32/7:32 AM & PM ET) don't perfectly interlock, any lane arriving without a fresh designation from me defaults to POOL-PICK inside its own track instead of waiting. First designations below stand.
