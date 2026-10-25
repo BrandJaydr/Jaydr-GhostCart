@@ -88,10 +88,10 @@ class LRUCache<K, V> {
  */
 export class CacheManager {
   private l1Cache: LRUCache<string, CacheEntry<unknown>>;
-  private redis: any; // Redis client (configured separately)
+  private redis: unknown; // Redis client (configured separately)
   private defaultOptions: Required<CacheOptions>;
 
-  constructor(redisClient?: any) {
+  constructor(redisClient?: unknown) {
     this.l1Cache = new LRUCache<string, CacheEntry<unknown>>(100);
     this.redis = redisClient;
     this.defaultOptions = {
@@ -117,7 +117,8 @@ export class CacheManager {
     // Try L2 (Redis)
     if (this.redis) {
       try {
-        const l2Data = await this.redis.get(`ghostcart:l2:${key}`);
+        const redisClient = this.redis as { get: (k: string) => Promise<string | null>; setex: (k: string, s: number, v: string) => Promise<void> };
+        const l2Data = await redisClient.get(`ghostcart:l2:${key}`);
         if (l2Data) {
           const parsed = JSON.parse(l2Data) as CacheEntry<T>;
           if (Date.now() - parsed.timestamp < parsed.ttl) {
@@ -158,7 +159,8 @@ export class CacheManager {
         this.l1Cache.set(key, entry as CacheEntry<unknown>);
 
         if (this.redis) {
-          await this.redis.setex(
+          const redisClient = this.redis as { setex: (k: string, s: number, v: string) => Promise<void> };
+          await redisClient.setex(
             `ghostcart:l2:${key}`,
             Math.floor(opts.l2TTL / 1000),
             JSON.stringify(entry),
@@ -203,7 +205,8 @@ export class CacheManager {
         level: 'L2',
       };
       try {
-        await this.redis.setex(
+        const redisClient = this.redis as { setex: (k: string, s: number, v: string) => Promise<void> };
+        await redisClient.setex(
           `ghostcart:l2:${key}`,
           Math.floor(opts.l2TTL / 1000),
           JSON.stringify(l2Entry),
@@ -254,7 +257,8 @@ export class CacheManager {
     // Remove from L2
     if (this.redis) {
       try {
-        await this.redis.del(`ghostcart:l2:${key}`);
+        const redisClient = this.redis as { del: (k: string) => Promise<void> };
+        await redisClient.del(`ghostcart:l2:${key}`);
       } catch (err) {
         console.error('[CacheManager] L2 cache invalidate error:', err);
       }
@@ -276,7 +280,7 @@ export class CacheManager {
   /**
    * Invalidate cache by tags
    */
-  async invalidateByTag(tag: string): Promise<void> {
+  async invalidateByTag(_tag: string): Promise<void> {
     // Clear L1 cache (simple approach)
     this.l1Cache.clear();
 
@@ -333,9 +337,10 @@ export class CacheManager {
 
     if (this.redis) {
       try {
-        const keys = await this.redis.keys('ghostcart:l2:*');
+        const redisClient = this.redis as { keys: (p: string) => Promise<string[]>; del: (...k: string[]) => Promise<void> };
+        const keys = await redisClient.keys('ghostcart:l2:*');
         if (keys.length > 0) {
-          await this.redis.del(...keys);
+          await redisClient.del(...keys);
         }
       } catch (err) {
         console.error('[CacheManager] L2 clear error:', err);
@@ -350,7 +355,7 @@ export class CacheManager {
  */
 let cacheManagerInstance: CacheManager | null = null;
 
-export function getCacheManager(redisClient?: any): CacheManager {
+export function getCacheManager(redisClient?: unknown): CacheManager {
   if (!cacheManagerInstance) {
     cacheManagerInstance = new CacheManager(redisClient);
   }

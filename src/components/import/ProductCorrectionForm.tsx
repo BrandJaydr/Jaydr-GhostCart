@@ -10,7 +10,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { CorrectionField } from './CorrectionField';
 import type { CanonicalProduct } from '@/lib/types/canonical';
 
@@ -112,13 +112,6 @@ export function ProductCorrectionForm({
       default:
         return '';
     }
-  };
-
-  const getCurrentValue = (fieldName: string): string => {
-    if (fieldName in corrections) {
-      return corrections[fieldName];
-    }
-    return getOriginalValue(fieldName);
   };
 
   return (

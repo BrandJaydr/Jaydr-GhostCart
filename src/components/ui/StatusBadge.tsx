@@ -37,8 +37,10 @@ export function StatusBadge({ state }: StatusBadgeProps) {
 
   const config = badgeConfig[state as string];
 
+  type ChipColor = 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger';
+
   return (
-    <HeroUIChip color={config.color as any} variant="flat" size="sm">
+    <HeroUIChip color={config.color as ChipColor} variant="flat" size="sm">
       {config.label}
     </HeroUIChip>
   );

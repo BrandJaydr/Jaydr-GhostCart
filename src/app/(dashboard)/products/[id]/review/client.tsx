@@ -16,7 +16,27 @@ export function ProductReviewClient({ productId }: ProductReviewClientProps) {
   const [reviewStatus, setReviewStatus] = useState<'pending_review' | 'approved' | 'rejected' | null>(null);
 
   useEffect(() => {
-    fetchProduct();
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await fetch(`/api/products/${productId}`);
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch product: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        setProduct(data.data);
+        setReviewStatus(data.data.reviewStatus);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load product');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
   }, [productId]);
 
   const fetchProduct = async () => {
@@ -225,6 +245,7 @@ export function ProductReviewClient({ productId }: ProductReviewClientProps) {
             <div style={{ marginTop: '1rem' }}>
               <strong style={{ color: '#374151' }}>Primary Image:</strong>
               <div style={{ marginTop: '0.5rem' }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img 
                   src={product.primaryImageUrl} 
                   alt={product.title}

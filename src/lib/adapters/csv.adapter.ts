@@ -38,7 +38,7 @@ export class CsvSupplierAdapter implements ISupplierAdapter {
     return this.fetcher(url);
   }
 
-  async validateConnection(): Promise<{ valid: boolean; reason?: string; details?: any }> {
+  async validateConnection(): Promise<{ valid: boolean; reason?: string; details?: Record<string, unknown> }> {
     const feedUrl = process.env.CSV_FEED_URL;
     if (!feedUrl) {
       return { valid: false, reason: 'CSV_FEED_URL is not configured' };
