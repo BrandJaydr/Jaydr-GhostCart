@@ -365,5 +365,5 @@ worker processes with PostgreSQL and Redis; finalize it through an ADR before a 
 - [ ] **GC-T1** — Codex (on check-in): `aliexpress.ds.text.search` response fixture pack (full / empty / error envelope)
 - [ ] **GC-301** — LANE-2 (Thing 2): BullMQ repeatable-job scheduler + `scheduled_refreshes` consumer
 - [ ] **GC-302** — LANE-2 (Thing 2): register the missing `listing.submit` worker processor
-- [ ] **GC-RS1** — LANE-5 (Minion 3): research brief for the GC-102 credential-storage decision (brief only, no code)
+- [x] **GC-RS1** — LANE-5 (Minion 3): research brief for the GC-102 credential-storage decision (brief only, no code) — Lead-reviewed 2026-10-25, PR #7 accepted, merge pending
 - [ ] **GC-S1** — First idle checked-in agent (Lead assigns): RANGER sweep #1 — secrets-pattern scan (locations/types only) + dependency vulnerability summary, reported on the board

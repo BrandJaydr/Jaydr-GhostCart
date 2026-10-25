@@ -76,7 +76,7 @@ This is the operating model the owner specified; the lanes above are its first s
 | LANE-2 | Thing 2 | Builder — Forge | GC-301 → GC-302 → GC-303 | **NEXT TASK** — GC-301 |
 | LANE-3 | Minion 1 | Test & fixtures — Oracle support | GC-T1 → test support for LANE-1/LANE-2 as designated | **NEXT TASK** — GC-T1 |
 | LANE-4 | Minion 2 | Security — RANGER + Dependency Guardian | GC-S1 → standing security rotation (§6) | **NEXT TASK** — GC-S1 |
-| LANE-5 | Minion 3 | Flex — research / Janitor / Scout | GC-RS1 → research & hygiene as designated | **RESEARCH** — GC-RS1 brief |
+| LANE-5 | Minion 3 | Flex — research / Janitor / Scout | GC-RS1 → research & hygiene as designated | **POOL-PICK** — GC-RS1 done 2026-10-25; claim next flex/research job or §6 standing duties |
 | — | (on check-in) | Oracle — reviewer | GC-R1: review GC-101 diff against `process.env` reads in `src/` | WAITING ON CHECK-IN (Claude) |
 | — | (on check-in) | Forge/Oracle support | Overflow implementation & tests as designated | WAITING ON CHECK-IN (Codex) |
 
