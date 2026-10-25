@@ -7,6 +7,16 @@
 
 ## Changelog
 
+### 2026-10-24 — GC-101 `.env.example` sync completed (LANE-1)
+
+**Category:** Configuration / Environment Sync
+
+**Summary:** Synced `.env.example` with every `process.env` and script variable referenced across `src/` and `scripts/`. Added missing variables (`EBAY_DEV_ID`, `EBAY_RU_NAME`, `EBAY_ENVIRONMENT`, `EBAY_WEBHOOK_SECRET`, `CSV_FEED_URL`, `AI_PROVIDER`, `AI_BASE_URL`, `AI_MODEL`, `AI_API_KEY`) with safe placeholder values.
+
+**Changes:**
+- ✅ Updated `.env.example` to cover all active environment variable reads.
+- ✅ Marked GC-101 as DONE on `Docs/agent-job-board.md` §5 table and in `tasks/todo.md`.
+
 ### 2026-10-23 — Owner's job-flow model written into the board (§5.1)
 
 **Category:** Project governance / delivery system
@@ -348,7 +358,7 @@ worker processes with PostgreSQL and Redis; finalize it through an ADR before a 
 > Coordination hub: [`Docs/agent-job-board.md`](../Docs/agent-job-board.md) — agents must check the board (assignments + message board) before working. Plan: [`Docs/development-plan.md`](../Docs/development-plan.md). If this list and the board disagree, the board wins and the Lead fixes this file.
 
 - [ ] **GC-100** — All agents: check in on the job board Message Board and confirm roles (Lead: Lotus)
-- [ ] **GC-101** — Jules: sync `.env.example` with every env var the code reads (full `process.env` sweep of `src/` + `scripts/`)
+- [x] **GC-101** — Jules: sync `.env.example` with every env var the code reads (full `process.env` sweep of `src/` + `scripts/`)
 - [ ] **GC-201** — Jules: AliExpress HMAC-SHA256 signer module + fixture unit tests (dummy secret only)
 - [ ] **GC-202** — Jules: AliExpress token provider (transient secret, expiry-aware refresh, mocked-HTTP tests, no plaintext persistence)
 - [ ] **GC-R1** — Claude (on check-in): second-eyes review of GC-101 against `process.env` reads in `src/`
