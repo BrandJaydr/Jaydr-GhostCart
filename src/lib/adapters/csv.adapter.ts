@@ -54,7 +54,7 @@ export class CsvSupplierAdapter implements ISupplierAdapter {
         return { 
           valid: false, 
           reason: `CSV validation failed: ${errorMessages}`,
-          details: validation
+          details: validation as unknown as Record<string, unknown>
         };
       }
       
@@ -65,7 +65,7 @@ export class CsvSupplierAdapter implements ISupplierAdapter {
         return { 
           valid: true, 
           reason: `CSV validated with warnings: ${warningMessages}`,
-          details: validation
+          details: validation as unknown as Record<string, unknown>
         };
       }
       
