@@ -3,8 +3,8 @@ import fixtures, {
   aliexpressFullSearchFixture,
   aliexpressEmptySearchFixture,
   aliexpressErrorSearchFixture,
-  AliExpressSearchSuccessResponse,
-  AliExpressErrorResponse,
+  type AliExpressSearchSuccessResponse,
+  type AliExpressErrorResponse,
 } from './aliexpress';
 
 describe('AliExpress ds.text.search Fixtures (GC-T1)', () => {

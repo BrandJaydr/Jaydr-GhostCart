@@ -57,8 +57,10 @@ export const aliexpressFullSearchFixture: AliExpressSearchSuccessResponse = full
 export const aliexpressEmptySearchFixture: AliExpressSearchSuccessResponse = emptyResponse as AliExpressSearchSuccessResponse;
 export const aliexpressErrorSearchFixture: AliExpressErrorResponse = errorResponse as AliExpressErrorResponse;
 
-export default {
+const aliexpressFixtures = {
   full: aliexpressFullSearchFixture,
   empty: aliexpressEmptySearchFixture,
   error: aliexpressErrorSearchFixture,
 };
+
+export default aliexpressFixtures;
