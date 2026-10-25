@@ -76,7 +76,7 @@ This is the operating model the owner specified; the lanes above are its first s
 | LANE-2 | Thing 2 | Builder — Forge | GC-301 → GC-302 → GC-303 | **NEXT TASK** — GC-301 |
 | LANE-3 | Minion 1 | Test & fixtures — Oracle support | GC-T1 → test support for LANE-1/LANE-2 as designated | **NEXT TASK** — GC-T1 |
 | LANE-4 | Minion 2 | Security — RANGER + Dependency Guardian | GC-S1 → standing security rotation (§6) | **NEXT TASK** — GC-S1 |
-| LANE-5 | Minion 3 | Flex — research / Janitor / Scout | GC-RS1 → research & hygiene as designated | **RESEARCH** — GC-RS1 brief |
+| LANE-5 | Minion 3 | Flex — research / Janitor / Scout | GC-RS1 → research & hygiene as designated | **DONE** (2026-10-24) — GC-RS1 brief |
 | — | (on check-in) | Oracle — reviewer | GC-R1: review GC-101 diff against `process.env` reads in `src/` | WAITING ON CHECK-IN (Claude) |
 | — | (on check-in) | Forge/Oracle support | Overflow implementation & tests as designated | WAITING ON CHECK-IN (Codex) |
 
@@ -125,6 +125,19 @@ Builder launch times set by the owner (Jules side): **12:30 AM, 3:30 AM, 10:30 A
 ---
 
 ### Message Board — entries
+
+### [DONE] 2026-10-24 — Minion 3 (LANE-5, Flex / Builder)
+Completed **GC-RS1** research brief for the GC-102 credential-storage decision. Brief created at `Docs/research/GC-102-credential-storage-brief.md`.
+**Summary & Evidence:**
+- Evaluated 3 credential storage options against GhostCart's modular-monolith architecture and phone-only owner (Cruze) operational constraints.
+- Recommends Option 2 (Hybrid Two-Tier Credential Model): static provider credentials in `.env` / `.env.age`, and application-layer AES-256-GCM encryption for dynamic tenant OAuth tokens in PostgreSQL `marketplace_connections` (closing ERR-029).
+- Recommends fixing `scripts/rotate-secrets.sh` to treat `EBAY_CERT_ID` as provider-issued rather than locally minted.
+
+### [CLAIM] 2026-10-24 — Minion 3 (LANE-5, Flex / Builder)
+Claiming task **GC-RS1** (credential-storage research brief for GC-102 decision). Drafting evidence brief under `Docs/research/GC-102-credential-storage-brief.md`.
+
+### [CHECK-IN] 2026-10-24 — Minion 3 (LANE-5, Flex / Builder) — Jules runtime
+Checking in as LANE-5 (Minion 3). Capabilities: full shell access, node/npm, file reading/writing, git operations. Constraints: strictly executing assigned LANE-5 tasks, one at a time. Taking designated RESEARCH task GC-RS1.
 
 ### [STATUS] 2026-10-24 — Lotus (Lead Engineer)
 **Sweep #2 (~1:32 AM ET).** Read: master commits (latest `3b08663673` — my own sweep-#1 push, still the head of master), open PRs (none), and all §7 entries since the last designations. **No builder output on any lane** — no `[CLAIM]` / `[DONE]` / `[CHECK-IN]` / `[BLOCKED]` posts, no commits touching lane files, no open PRs. Consequently: nothing to verify, no `[REVIEW]` entries this sweep, no self-claims to ratify or unwind. §5 table checked against `tasks/todo.md` — in agreement; State column already carries these designations. Branch listing is still unavailable through the read connector (`list_branches` needs a write-capable approval that cannot be granted on a detached run); PR + commit + board coverage is complete, branch check deferred to the next sweep. **Designations:** LANE-1 `NEXT TASK` — continue GC-101 (`.env.example` sync; owner-launched 2026-10-23, in flight — still no `[CLAIM]` or commit from the lane, so post one before continuing). LANE-2 `NEXT TASK` — GC-301. LANE-3 `NEXT TASK` — GC-T1. LANE-4 `NEXT TASK` — GC-S1. LANE-5 `RESEARCH` — GC-RS1 credential-storage brief (brief only, no code, no decision). Oracle `GC-R1` stays gated behind GC-101 landing; Claude/Codex rows remain WAITING ON CHECK-IN. The next Jules launch (3:30 AM ET) arriving without a fresh designation works under §5.1 POOL-PICK inside its own track.
