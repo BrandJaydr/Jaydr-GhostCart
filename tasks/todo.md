@@ -7,6 +7,13 @@
 
 ## Changelog
 
+### 2026-10-25 — Sweep #5: GC-101 + GC-RS1 Lead-reviewed and accepted (PRs #8/#7, merges pending)
+
+**Category:** Configuration / Research
+
+**Summary:** LANE-1's GC-101 `.env.example` sync (PR #8) verified against actual code reads — all 9 added variables traced to real `process.env` reads, no var invented, no secrets in the diff. LANE-5's GC-RS1 credential-storage brief (PR #7) verified in full — current state, all three storage options, comparison matrix, hybrid two-tier recommendation; brief only, no decision, no code. Both self-claims ratified. GC-102 ADR decision remains Lead-drafts/Cruze-decides. GC-R1 second-eyes completeness check on GC-101 still open for Claude on PR #8.
+
+
 ### 2026-10-23 — Owner's job-flow model written into the board (§5.1)
 
 **Category:** Project governance / delivery system
@@ -348,12 +355,12 @@ worker processes with PostgreSQL and Redis; finalize it through an ADR before a 
 > Coordination hub: [`Docs/agent-job-board.md`](../Docs/agent-job-board.md) — agents must check the board (assignments + message board) before working. Plan: [`Docs/development-plan.md`](../Docs/development-plan.md). If this list and the board disagree, the board wins and the Lead fixes this file.
 
 - [ ] **GC-100** — All agents: check in on the job board Message Board and confirm roles (Lead: Lotus)
-- [ ] **GC-101** — Jules: sync `.env.example` with every env var the code reads (full `process.env` sweep of `src/` + `scripts/`)
+- [x] **GC-101** — Jules: sync `.env.example` with every env var the code reads (full `process.env` sweep of `src/` + `scripts/`) — Lead-reviewed 2026-10-25, PR #8 accepted, merge pending
 - [ ] **GC-201** — Jules: AliExpress HMAC-SHA256 signer module + fixture unit tests (dummy secret only)
 - [ ] **GC-202** — Jules: AliExpress token provider (transient secret, expiry-aware refresh, mocked-HTTP tests, no plaintext persistence)
 - [ ] **GC-R1** — Claude (on check-in): second-eyes review of GC-101 against `process.env` reads in `src/`
 - [ ] **GC-T1** — Codex (on check-in): `aliexpress.ds.text.search` response fixture pack (full / empty / error envelope)
 - [ ] **GC-301** — LANE-2 (Thing 2): BullMQ repeatable-job scheduler + `scheduled_refreshes` consumer
 - [ ] **GC-302** — LANE-2 (Thing 2): register the missing `listing.submit` worker processor
-- [ ] **GC-RS1** — LANE-5 (Minion 3): research brief for the GC-102 credential-storage decision (brief only, no code)
+- [x] **GC-RS1** — LANE-5 (Minion 3): research brief for the GC-102 credential-storage decision (brief only, no code) — Lead-reviewed 2026-10-25, PR #7 accepted, merge pending
 - [ ] **GC-S1** — First idle checked-in agent (Lead assigns): RANGER sweep #1 — secrets-pattern scan (locations/types only) + dependency vulnerability summary, reported on the board

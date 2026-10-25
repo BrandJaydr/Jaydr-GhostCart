@@ -72,11 +72,11 @@ This is the operating model the owner specified; the lanes above are its first s
 
 | Lane | Callsign | Role (slots) | Track (in order) | State |
 |---|---|---|---|---|
-| LANE-1 | Thing 1 | Builder — Forge + Atlas | GC-101 → GC-201 → GC-202 → GC-203 → GC-204 | **NEXT TASK** — GC-101 (in flight, owner-launched 2026-10-23; continues) |
+| LANE-1 | Thing 1 | Builder — Forge + Atlas | GC-101 → GC-201 → GC-202 → GC-203 → GC-204 | **NEXT TASK** — GC-201 (AliExpress signer; starts once PR #8 merges; GC-101 reviewed 2026-10-25) |
 | LANE-2 | Thing 2 | Builder — Forge | GC-301 → GC-302 → GC-303 | **NEXT TASK** — GC-301 |
 | LANE-3 | Minion 1 | Test & fixtures — Oracle support | GC-T1 → test support for LANE-1/LANE-2 as designated | **NEXT TASK** — GC-T1 |
 | LANE-4 | Minion 2 | Security — RANGER + Dependency Guardian | GC-S1 → standing security rotation (§6) | **NEXT TASK** — GC-S1 |
-| LANE-5 | Minion 3 | Flex — research / Janitor / Scout | GC-RS1 → research & hygiene as designated | **RESEARCH** — GC-RS1 brief |
+| LANE-5 | Minion 3 | Flex — research / Janitor / Scout | GC-RS1 → research & hygiene as designated | **POOL-PICK** — GC-RS1 done 2026-10-25; claim next flex/research job or §6 standing duties |
 | — | (on check-in) | Oracle — reviewer | GC-R1: review GC-101 diff against `process.env` reads in `src/` | WAITING ON CHECK-IN (Claude) |
 | — | (on check-in) | Forge/Oracle support | Overflow implementation & tests as designated | WAITING ON CHECK-IN (Codex) |
 
@@ -125,6 +125,15 @@ Builder launch times set by the owner (Jules side): **12:30 AM, 3:30 AM, 10:30 A
 ---
 
 ### Message Board — entries
+
+### [STATUS] 2026-10-25 — Lotus (Lead Engineer)
+**Sweep #5 (~1:32 AM ET).** Builder output landed on two lanes since sweep #4: PR #8 (LANE-1, GC-101) and PR #7 (LANE-5, GC-RS1). Both self-claims RATIFIED — each job was posted for that lane's role, was unclaimed and unblocked, and the work verified (see [REVIEW] entries below). Master head is still `853f44a`; neither PR branch is merged yet, so the §5 table below reflects reviewed-but-unmerged state, and the PR-branch board/todo updates will land with the merges. **Designations:** LANE-1 `NEXT TASK` — GC-201 (AliExpress HMAC-SHA256 signer + fixture tests, dummy secret only; start once PR #8 merges). LANE-2 `NEXT TASK` — GC-301 (unchanged, no output). LANE-3 `NEXT TASK` — GC-T1 (unchanged, no output). LANE-4 `NEXT TASK` — GC-S1 (unchanged, no output). LANE-5 `POOL-PICK` — GC-RS1 done; claim the next flex/research job for its role or run §6 standing duties. Oracle GC-R1: the GC-101 diff is now available for second-eyes review on PR #8 (branch `jules-3327100503514270366-6c739114`); Claude/Codex rows remain WAITING ON CHECK-IN.
+
+### [REVIEW] 2026-10-25 — Lotus (Lead Engineer) — GC-101 (PR #8, LANE-1 Thing 1)
+**Verdict: ACCEPTED.** Checked the actual `.env.example` diff on the PR branch against master: it adds exactly 9 variables — EBAY_DEV_ID, EBAY_RU_NAME, EBAY_ENVIRONMENT, EBAY_WEBHOOK_SECRET, CSV_FEED_URL, AI_PROVIDER, AI_BASE_URL, AI_MODEL, AI_API_KEY — and no other code changes. Each traced to a real read in master: EBAY_DEV_ID/RU_NAME/ENVIRONMENT in `src/lib/adapters/ebay/ebay-client.ts`, EBAY_WEBHOOK_SECRET in `src/app/api/ebay/webhook/route.ts`, CSV_FEED_URL in `src/lib/adapters/csv.adapter.ts`, the four AI_* vars in `src/lib/ai/ai-client.ts`. No var invented; all values are empty or safe placeholders (`sandbox`, `ollama`, `gemma:2b`, `<redacted>`) — no secrets in the diff. Claim ratified. Caveat: full-tree "no var missed" completeness is GC-R1's second-eyes job (still open for Claude on PR #8); any miss it finds becomes a fix-up task, not a reopen of GC-101. Required action: merge PR #8, then LANE-1 starts GC-201.
+
+### [REVIEW] 2026-10-25 — Lotus (Lead Engineer) — GC-RS1 (PR #7, LANE-5 Minion 3)
+**Verdict: ACCEPTED.** Read the full brief at `Docs/research/GC-102-credential-storage-brief.md` on the PR branch: current state covers `.env`/`.env.age` scripts, the `marketplace_connections` plaintext-token defect (ERR-029), and the `rotate-secrets.sh` EBAY_CERT_ID mismodel; all three required options evaluated (env/encrypted-env only · encrypted DB columns · external secret store) against the phone-only, modular-monolith reality, with a comparison matrix and a recommendation (hybrid two-tier, app-layer AES-256-GCM for dynamic tokens). Brief only — no decision taken, no code written, no secret values. Claim ratified. The GC-102 ADR decision itself stays Lead-drafts/Cruze-decides and is NOT advanced by this review.
 
 ### [STATUS] 2026-10-24 — Lotus (Lead Engineer)
 **Sweep #2 (~1:32 AM ET).** Read: master commits (latest `3b08663673` — my own sweep-#1 push, still the head of master), open PRs (none), and all §7 entries since the last designations. **No builder output on any lane** — no `[CLAIM]` / `[DONE]` / `[CHECK-IN]` / `[BLOCKED]` posts, no commits touching lane files, no open PRs. Consequently: nothing to verify, no `[REVIEW]` entries this sweep, no self-claims to ratify or unwind. §5 table checked against `tasks/todo.md` — in agreement; State column already carries these designations. Branch listing is still unavailable through the read connector (`list_branches` needs a write-capable approval that cannot be granted on a detached run); PR + commit + board coverage is complete, branch check deferred to the next sweep. **Designations:** LANE-1 `NEXT TASK` — continue GC-101 (`.env.example` sync; owner-launched 2026-10-23, in flight — still no `[CLAIM]` or commit from the lane, so post one before continuing). LANE-2 `NEXT TASK` — GC-301. LANE-3 `NEXT TASK` — GC-T1. LANE-4 `NEXT TASK` — GC-S1. LANE-5 `RESEARCH` — GC-RS1 credential-storage brief (brief only, no code, no decision). Oracle `GC-R1` stays gated behind GC-101 landing; Claude/Codex rows remain WAITING ON CHECK-IN. The next Jules launch (3:30 AM ET) arriving without a fresh designation works under §5.1 POOL-PICK inside its own track.
