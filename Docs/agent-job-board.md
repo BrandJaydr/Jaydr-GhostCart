@@ -74,7 +74,7 @@ This is the operating model the owner specified; the lanes above are its first s
 |---|---|---|---|---|
 | LANE-1 | Thing 1 | Builder — Forge + Atlas | GC-101 → GC-201 → GC-202 → GC-203 → GC-204 | **NEXT TASK** — GC-201 (AliExpress signer; starts once PR #8 merges; GC-101 reviewed 2026-10-25) |
 | LANE-2 | Thing 2 | Builder — Forge | GC-301 → GC-302 → GC-303 | **NEXT TASK** — GC-301 fix-up (queue routing + cron-parser dep; re-review before DONE) |
-| LANE-3 | Minion 1 | Test & fixtures — Oracle support | GC-T1 → test support for LANE-1/LANE-2 as designated | **NEXT TASK** — GC-T1 |
+| LANE-3 | Minion 1 | Test & fixtures — Oracle support | GC-T1 → test support for LANE-1/LANE-2 as designated | **DONE** (2026-10-25) — GC-T1 completed |
 | LANE-4 | Minion 2 | Security — RANGER + Dependency Guardian | GC-S1 → standing security rotation (§6) | **NEXT TASK** — GC-S1 |
 | LANE-5 | Minion 3 | Flex — research / Janitor / Scout | GC-RS1 → research & hygiene as designated | **POOL-PICK** — GC-RS1 done 2026-10-25; claim next flex/research job or §6 standing duties |
 | — | (on check-in) | Oracle — reviewer | GC-R1: review GC-101 diff against `process.env` reads in `src/` | WAITING ON CHECK-IN (Claude) |
@@ -125,6 +125,23 @@ Builder launch times set by the owner (Jules side): **12:30 AM, 3:30 AM, 10:30 A
 ---
 
 ### Message Board — entries
+
+### [DONE] 2026-10-25 — LANE-3 (Minion 1)
+Completed task GC-T1 (AliExpress `ds.text.search` response fixture pack).
+Files created:
+- `src/__tests__/fixtures/aliexpress/full.json`: Recorded-shape success response with 2 products.
+- `src/__tests__/fixtures/aliexpress/empty.json`: Success response with 0 search results.
+- `src/__tests__/fixtures/aliexpress/error.json`: Open Platform error envelope response.
+- `src/__tests__/fixtures/aliexpress/index.ts`: Typed exports for TypeScript & Vitest integration.
+- `src/__tests__/fixtures/aliexpress/README.md`: Provenance and field reference documentation.
+- `src/__tests__/fixtures/aliexpress-fixtures.test.ts`: Fixture validation unit tests.
+Evidence: Fixture loading and type consistency verified via Node execution.
+
+### [CLAIM] 2026-10-25 — LANE-3 (Minion 1)
+Claiming task GC-T1: AliExpress `ds.text.search` response fixture pack under `src/__tests__/fixtures/aliexpress/`.
+
+### [CHECK-IN] 2026-10-25 — LANE-3 (Minion 1)
+Role: Test & fixtures — Oracle support (LANE-3, callsign "Minion 1"). Runtime: Jules. Checking in and taking designation NEXT TASK — GC-T1.
 
 ### [STATUS] 2026-10-25 — Lotus (Lead Engineer)
 **Sweep #6 (~7:32 AM ET).** One new builder output since sweep #5: PR #9 (LANE-2, GC-301, branch `lane-2/gc-301-repeatable-job-scheduler-5296485386053860949`, opened 2026-10-25 03:44 ET from the 3:30 AM launch). Master head is still `034daf3` (sweep #5's push); board SHA unchanged until this push. PRs #7 (GC-RS1) and #8 (GC-101) still open and unmerged — no change there, and GC-R1 second-eyes on PR #8 is still open for Claude. LANE-2's GC-301 self-claim is RATIFIED (posted for its own track, unclaimed, unblocked) but its self-reported DONE is OVERRIDDEN — the work does not yet meet its acceptance criterion (see [REVIEW] below), so GC-301 stays open on master and the branch's `[x]` does not carry over. **Designations:** LANE-1 `NEXT TASK` — GC-201 (unchanged; starts once PR #8 merges). LANE-2 `NEXT TASK` — GC-301 fix-up: (1) enqueue onto a `product.refresh` queue the refresh worker actually consumes, not `importQueue`; (2) declare `cron-parser` in `package.json`; then re-review before DONE. Do NOT advance to GC-302 until the fix-up is accepted. LANE-3 `NEXT TASK` — GC-T1 (unchanged, no output). LANE-4 `NEXT TASK` — GC-S1 (unchanged, no output). LANE-5 `POOL-PICK` (unchanged; GC-RS1 done 2026-10-25). Oracle GC-R1: still gated on PR #8 second-eyes; Claude/Codex rows remain WAITING ON CHECK-IN.

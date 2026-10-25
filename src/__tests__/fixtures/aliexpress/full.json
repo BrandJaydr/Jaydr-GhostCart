@@ -1,0 +1,65 @@
+{
+  "aliexpress_ds_text_search_response": {
+    "rsp_code": 200,
+    "rsp_msg": "call success",
+    "result": {
+      "total_page": 42,
+      "total_record_count": 834,
+      "current_page_no": 1,
+      "current_record_count": 2,
+      "products": {
+        "selection_search_product": [
+          {
+            "product_id": 1005007429636284,
+            "product_title": "Wireless Bluetooth Earbuds Noise Cancelling Headphones Touch Control Waterproof Earphones",
+            "product_main_image_url": "https://ae01.alicdn.com/kf/S1a2b3c4d5e6f7g8h9i0.jpg",
+            "product_small_image_urls": {
+              "string": [
+                "https://ae01.alicdn.com/kf/S1a2b3c4d5e6f7g8h9i0.jpg",
+                "https://ae01.alicdn.com/kf/S0i9h8g7f6e5d4c3b2a1.jpg"
+              ]
+            },
+            "target_sale_price": "12.99",
+            "target_sale_price_currency": "USD",
+            "target_original_price": "29.99",
+            "target_original_price_currency": "USD",
+            "evaluate_rate": "96.5%",
+            "volume": 1520,
+            "shop_id": 1102345678,
+            "first_level_category_id": 509,
+            "first_level_category_name": "Consumer Electronics",
+            "second_level_category_id": 200003482,
+            "second_level_category_name": "Earphones & Headphones",
+            "ship_to_days": "7-12",
+            "sale_price": "12.99",
+            "sale_price_currency": "USD"
+          },
+          {
+            "product_id": 1005006123456789,
+            "product_title": "Magnetic Wireless Fast Charger Pad 15W Compatible with iPhone and Android Devices",
+            "product_main_image_url": "https://ae01.alicdn.com/kf/S9f8e7d6c5b4a321.jpg",
+            "product_small_image_urls": {
+              "string": [
+                "https://ae01.alicdn.com/kf/S9f8e7d6c5b4a321.jpg"
+              ]
+            },
+            "target_sale_price": "8.50",
+            "target_sale_price_currency": "USD",
+            "target_original_price": "19.99",
+            "target_original_price_currency": "USD",
+            "evaluate_rate": "98.1%",
+            "volume": 4210,
+            "shop_id": 1109876543,
+            "first_level_category_id": 509,
+            "first_level_category_name": "Consumer Electronics",
+            "second_level_category_id": 200003112,
+            "second_level_category_name": "Mobile Phone Accessories",
+            "ship_to_days": "10-15",
+            "sale_price": "8.50",
+            "sale_price_currency": "USD"
+          }
+        ]
+      }
+    }
+  }
+}

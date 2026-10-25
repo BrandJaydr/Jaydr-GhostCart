@@ -365,7 +365,7 @@ worker processes with PostgreSQL and Redis; finalize it through an ADR before a 
 - [ ] **GC-201** — Jules: AliExpress HMAC-SHA256 signer module + fixture unit tests (dummy secret only)
 - [ ] **GC-202** — Jules: AliExpress token provider (transient secret, expiry-aware refresh, mocked-HTTP tests, no plaintext persistence)
 - [ ] **GC-R1** — Claude (on check-in): second-eyes review of GC-101 against `process.env` reads in `src/`
-- [ ] **GC-T1** — Codex (on check-in): `aliexpress.ds.text.search` response fixture pack (full / empty / error envelope)
+- [x] **GC-T1** — LANE-3 (Minion 1): `aliexpress.ds.text.search` response fixture pack (full / empty / error envelope) — completed 2026-10-25
 - [ ] **GC-301** — LANE-2 (Thing 2): BullMQ repeatable-job scheduler + `scheduled_refreshes` consumer
 - [ ] **GC-302** — LANE-2 (Thing 2): register the missing `listing.submit` worker processor
 - [x] **GC-RS1** — LANE-5 (Minion 3): research brief for the GC-102 credential-storage decision (brief only, no code) — Lead-reviewed 2026-10-25, PR #7 accepted, merge pending
