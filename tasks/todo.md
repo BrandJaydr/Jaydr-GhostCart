@@ -7,6 +7,12 @@
 
 ## Changelog
 
+### 2026-10-25 — Sweep #6: GC-301 Lead-reviewed, fixes needed (PR #9, not merged)
+
+**Category:** Worker infrastructure / Reliability
+
+**Summary:** LANE-2's GC-301 repeatable-job scheduler (PR #9, 5 files, +304/−3) verified against the actual PR-branch code: scheduler logic, 60s worker tick, and 4 unit tests are sound, but two defects block acceptance — the scheduler enqueues `product.refresh` jobs onto the `product.import` queue (the refresh worker listens on a separate `product.refresh` queue, so jobs never reach it), and `cron-parser` is imported but absent from `package.json`. Claim ratified; self-reported DONE overridden — GC-301 stays unchecked on master pending a fix-up and re-review. Logged as ERR-040/ERR-041. PRs #7/#8 still open and unmerged.
+
 ### 2026-10-25 — Sweep #5: GC-101 + GC-RS1 Lead-reviewed and accepted (PRs #8/#7, merges pending)
 
 **Category:** Configuration / Research
