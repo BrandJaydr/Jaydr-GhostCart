@@ -1,0 +1,9 @@
+{
+  "error_response": {
+    "code": "15",
+    "msg": "Remote service error",
+    "sub_code": "isv.invalid-parameter:session-expired",
+    "sub_msg": "The session / access token provided has expired or is invalid.",
+    "request_id": "0b12345616982304000001d2e3f4"
+  }
+}

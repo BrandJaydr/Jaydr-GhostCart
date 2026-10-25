@@ -1,0 +1,15 @@
+{
+  "aliexpress_ds_text_search_response": {
+    "rsp_code": 200,
+    "rsp_msg": "call success",
+    "result": {
+      "total_page": 0,
+      "total_record_count": 0,
+      "current_page_no": 1,
+      "current_record_count": 0,
+      "products": {
+        "selection_search_product": []
+      }
+    }
+  }
+}
