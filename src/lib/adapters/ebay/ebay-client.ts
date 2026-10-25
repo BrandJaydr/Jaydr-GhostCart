@@ -300,7 +300,7 @@ export class eBayClient {
   /**
    * Get listing status
    */
-  async getListingStatus(itemId: string): Promise<any> {
+  async getListingStatus(itemId: string): Promise<unknown> {
     const accessToken = await this.getAccessToken();
     const apiUrl = `${this.baseUrl}/sell/inventory/v1/inventory_item/${itemId}`;
 

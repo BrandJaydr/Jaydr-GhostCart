@@ -110,8 +110,6 @@ describe('Pause Verification Tests', () => {
       // This would test the actual queue pause functionality
       // For now, we'll test the pause state tracking
 
-      const idempotencyKey = 'test-pause-job-queue';
-      
       // In a real implementation, the queue would check pause state before accepting jobs
       // We'll verify the pause state is queryable
       
@@ -216,8 +214,6 @@ describe('Pause Verification Tests', () => {
     });
 
     it('should prevent marketplace submissions when paused', async () => {
-      const idempotencyKey = 'test-pause-submission';
-      
       // Create a listing ready for submission
       await db.query(
         `INSERT INTO listings

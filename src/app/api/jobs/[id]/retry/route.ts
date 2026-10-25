@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
-import { db, DEV_TENANT_ID, withTenant } from '@/lib/db/index';
+import { DEV_TENANT_ID, withTenant } from '@/lib/db/index';
 
 /**
  * POST /api/jobs/[id]/retry
@@ -27,7 +27,7 @@ export async function POST(
   const tenantId = DEV_TENANT_ID;
 
   try {
-    const result = await withTenant(tenantId, async (client) => {
+    await withTenant(tenantId, async (client) => {
       // Check if job exists and belongs to tenant
       const checkResult = await client.query(
         'SELECT id, status, killed FROM jobs WHERE id = $1 LIMIT 1',
