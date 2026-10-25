@@ -7,6 +7,18 @@
 
 ## Changelog
 
+### 2026-10-24 — GC-301: Repeatable-Job Scheduler Implemented (LANE-2 / Thing 2)
+
+**Category:** Worker Infrastructure / Reliability
+
+**Summary:** Implemented the runtime repeatable-job scheduler for migration 0009's `scheduled_refreshes` table.
+
+**Changes:**
+- ✅ Created `src/worker/scheduler.ts` (`processScheduledRefreshes` & `calculateNextRunAt`): queries enabled due `scheduled_refreshes` rows, parses cron expressions using `cron-parser`, enqueues `product.refresh` jobs for specific or tenant-wide products, and updates `last_run_at` and `next_run_at`.
+- ✅ Integrated scheduler tick (60s interval + startup check) in `src/worker/index.ts`.
+- ✅ Added unit tests in `src/__tests__/worker/scheduler.test.ts`.
+- ✅ Marked GC-301 DONE on `Docs/agent-job-board.md`.
+
 ### 2026-10-23 — Owner's job-flow model written into the board (§5.1)
 
 **Category:** Project governance / delivery system
@@ -353,7 +365,7 @@ worker processes with PostgreSQL and Redis; finalize it through an ADR before a 
 - [ ] **GC-202** — Jules: AliExpress token provider (transient secret, expiry-aware refresh, mocked-HTTP tests, no plaintext persistence)
 - [ ] **GC-R1** — Claude (on check-in): second-eyes review of GC-101 against `process.env` reads in `src/`
 - [ ] **GC-T1** — Codex (on check-in): `aliexpress.ds.text.search` response fixture pack (full / empty / error envelope)
-- [ ] **GC-301** — LANE-2 (Thing 2): BullMQ repeatable-job scheduler + `scheduled_refreshes` consumer
+- [x] **GC-301** — LANE-2 (Thing 2): BullMQ repeatable-job scheduler + `scheduled_refreshes` consumer
 - [ ] **GC-302** — LANE-2 (Thing 2): register the missing `listing.submit` worker processor
 - [ ] **GC-RS1** — LANE-5 (Minion 3): research brief for the GC-102 credential-storage decision (brief only, no code)
 - [ ] **GC-S1** — First idle checked-in agent (Lead assigns): RANGER sweep #1 — secrets-pattern scan (locations/types only) + dependency vulnerability summary, reported on the board

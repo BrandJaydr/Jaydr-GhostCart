@@ -73,7 +73,7 @@ This is the operating model the owner specified; the lanes above are its first s
 | Lane | Callsign | Role (slots) | Track (in order) | State |
 |---|---|---|---|---|
 | LANE-1 | Thing 1 | Builder — Forge + Atlas | GC-101 → GC-201 → GC-202 → GC-203 → GC-204 | **NEXT TASK** — GC-101 (in flight, owner-launched 2026-10-23; continues) |
-| LANE-2 | Thing 2 | Builder — Forge | GC-301 → GC-302 → GC-303 | **NEXT TASK** — GC-301 |
+| LANE-2 | Thing 2 | Builder — Forge | GC-301 → GC-302 → GC-303 | **DONE** — GC-301 (2026-10-24) |
 | LANE-3 | Minion 1 | Test & fixtures — Oracle support | GC-T1 → test support for LANE-1/LANE-2 as designated | **NEXT TASK** — GC-T1 |
 | LANE-4 | Minion 2 | Security — RANGER + Dependency Guardian | GC-S1 → standing security rotation (§6) | **NEXT TASK** — GC-S1 |
 | LANE-5 | Minion 3 | Flex — research / Janitor / Scout | GC-RS1 → research & hygiene as designated | **RESEARCH** — GC-RS1 brief |
@@ -125,6 +125,16 @@ Builder launch times set by the owner (Jules side): **12:30 AM, 3:30 AM, 10:30 A
 ---
 
 ### Message Board — entries
+
+### [DONE] 2026-10-24 — LANE-2 (Thing 2 — Builder / Forge)
+Completed task **GC-301**: Implemented BullMQ repeatable-job scheduler in `src/worker/scheduler.ts` and wired it into `src/worker/index.ts`. Queries due `scheduled_refreshes` rows, calculates next run date via `cron-parser`, enqueues `product.refresh` jobs for specific products or tenant-wide products, and updates `last_run_at`/`next_run_at`. Added 4 unit tests in `src/__tests__/worker/scheduler.test.ts` (100% passing).
+
+### [CLAIM] 2026-10-24 — LANE-2 (Thing 2 — Builder / Forge)
+Claiming task **GC-301**: BullMQ repeatable-job scheduler in worker + consumer for `scheduled_refreshes` rows (stock/price/both).
+
+### [CHECK-IN] 2026-10-24 — LANE-2 (Thing 2 — Builder / Forge)
+Capabilities: TypeScript implementation, worker & BullMQ queues, DB integration, unit/integration testing.
+Constraints: Operates only on designated LANE-2 track (`GC-301 → GC-302 → GC-303`), following job board protocol.
 
 ### [STATUS] 2026-10-24 — Lotus (Lead Engineer)
 **Sweep #2 (~1:32 AM ET).** Read: master commits (latest `3b08663673` — my own sweep-#1 push, still the head of master), open PRs (none), and all §7 entries since the last designations. **No builder output on any lane** — no `[CLAIM]` / `[DONE]` / `[CHECK-IN]` / `[BLOCKED]` posts, no commits touching lane files, no open PRs. Consequently: nothing to verify, no `[REVIEW]` entries this sweep, no self-claims to ratify or unwind. §5 table checked against `tasks/todo.md` — in agreement; State column already carries these designations. Branch listing is still unavailable through the read connector (`list_branches` needs a write-capable approval that cannot be granted on a detached run); PR + commit + board coverage is complete, branch check deferred to the next sweep. **Designations:** LANE-1 `NEXT TASK` — continue GC-101 (`.env.example` sync; owner-launched 2026-10-23, in flight — still no `[CLAIM]` or commit from the lane, so post one before continuing). LANE-2 `NEXT TASK` — GC-301. LANE-3 `NEXT TASK` — GC-T1. LANE-4 `NEXT TASK` — GC-S1. LANE-5 `RESEARCH` — GC-RS1 credential-storage brief (brief only, no code, no decision). Oracle `GC-R1` stays gated behind GC-101 landing; Claude/Codex rows remain WAITING ON CHECK-IN. The next Jules launch (3:30 AM ET) arriving without a fresh designation works under §5.1 POOL-PICK inside its own track.

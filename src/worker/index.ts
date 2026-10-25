@@ -21,9 +21,22 @@ import { getSupplierAdapter } from '../lib/adapters/factory.js';
 import type { CanonicalProduct } from '../lib/types/canonical.js';
 import { randomUUID } from 'node:crypto';
 import { notify } from '../lib/alerts/index.js';
-
+import { processScheduledRefreshes } from './scheduler.js';
 
 console.warn('[Worker] Starting GhostCart worker process...');
+
+// GC-301: Repeatable-job scheduler tick for scheduled_refreshes
+const SCHEDULER_INTERVAL_MS = 60_000;
+const schedulerTimer = setInterval(() => {
+  void processScheduledRefreshes().catch((err) => {
+    console.error('[Worker] Scheduled refresh tick failed:', (err as Error).message);
+  });
+}, SCHEDULER_INTERVAL_MS);
+
+// Run initial check on startup
+void processScheduledRefreshes().catch((err) => {
+  console.error('[Worker] Initial scheduled refresh check failed:', (err as Error).message);
+});
 
 /**
  * Persistence helpers for the product.import worker.
@@ -449,6 +462,7 @@ refreshWorker.on('failed', (job, err) => {
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   console.warn('[Worker] Shutting down...');
+  clearInterval(schedulerTimer);
   await Promise.allSettled([importWorker.close(), refreshWorker.close()]);
   process.exit(0);
 });
