@@ -7,10 +7,8 @@
  */
 
 import cronParser from 'cron-parser';
-import type { PoolClient } from 'pg';
 import { db } from '../lib/db/index.js';
 import { importQueue } from '../lib/queue/index.js';
-import { randomUUID } from 'node:crypto';
 
 export interface ScheduledRefreshRow {
   id: string;
