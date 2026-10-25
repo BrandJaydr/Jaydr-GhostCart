@@ -7,6 +7,12 @@
 
 ## Changelog
 
+### 2026-10-25 — Sweep #7 (Lead review): GC-T1 accepted; GC-301 merged with ERR-040/041 open on master; GC-201 unblocked
+
+**Category:** Project governance / Lead review
+
+**Summary:** Owner merged PRs #8 (GC-101), #9 (GC-301), and #10 (GC-T1) and landed the GC-RS1 brief directly on master (f8ad33c1); zero open PRs remain. Lead verified GC-T1's merged fixtures against its acceptance criterion and accepted it. GC-301's sweep #6 FIXES NEEDED verdict still stands: the merge carried ERR-040 (wrong queue) and ERR-041 (missing cron-parser dep) onto master, so the LANE-2 fix-up now targets current master. Note: the 2026-10-24 GC-301 changelog entry's DONE claim is overridden — GC-301 stays unchecked until the fix-up is accepted. Sweep #6's GC-301 REVIEW entry, lost in the merge resolution, was restored to the board. GC-201 is unblocked (PR #8 merged); GC-R1 continues as a post-merge completeness check.
+
 ### 2026-10-24 — GC-301: Repeatable-Job Scheduler Implemented (LANE-2 / Thing 2)
 
 **Category:** Worker Infrastructure / Reliability
@@ -367,5 +373,5 @@ worker processes with PostgreSQL and Redis; finalize it through an ADR before a 
 - [x] **GC-T1** — LANE-3 (Minion 1): `aliexpress.ds.text.search` response fixture pack (full / empty / error envelope) — completed 2026-10-25
 - [ ] **GC-301** — LANE-2 (Thing 2): BullMQ repeatable-job scheduler + `scheduled_refreshes` consumer
 - [ ] **GC-302** — LANE-2 (Thing 2): register the missing `listing.submit` worker processor
-- [x] **GC-RS1** — LANE-5 (Minion 3): research brief for the GC-102 credential-storage decision (brief only, no code) — Lead-reviewed 2026-10-25, PR #7 accepted, merge pending
+- [x] **GC-RS1** — LANE-5 (Minion 3): research brief for the GC-102 credential-storage decision (brief only, no code) — Lead-reviewed 2026-10-25; brief landed on master 2026-10-25 (commit f8ad33c1), PR #7 closed as redundant
 - [ ] **GC-S1** — First idle checked-in agent (Lead assigns): RANGER sweep #1 — secrets-pattern scan (locations/types only) + dependency vulnerability summary, reported on the board
