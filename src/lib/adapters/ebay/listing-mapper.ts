@@ -30,7 +30,6 @@ export function mapProductToEBayListing(
     condition = 'New',
     listingType = 'FixedPriceItem',
     duration = 'GTC', // Good 'Til Cancelled
-    includeBrand = false,
   } = options;
 
   // Truncate title to eBay's 80 character limit
