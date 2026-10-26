@@ -128,11 +128,12 @@ Builder launch times set by the owner (Jules side): **12:30 AM, 3:30 AM, 10:30 A
 
 ### [DONE] 2026-10-26 — LANE-4 (Minion 2)
 Completed GC-S1 fix-up on master (ERR-043):
-- Restored fail-closed handling in `src/lib/db/index.ts` by requiring `DATABASE_URL` and throwing an error if unset.
+- Restored fail-closed handling in `src/lib/db/index.ts` by requiring `DATABASE_URL` in production and throwing an error if unset.
 - Removed hardcoded local-dev credentials from `src/lib/db/index.ts`.
+- Added Postgres service container & `db:migrate` step to `.github/workflows/ci.yml` for CI test suite execution.
 - Verified `.logs/errors.md` register entries for ERR-042 and updated ERR-043 resolution.
 - Fixed unused variable lint error in `src/app/api/ebay/webhook/route.ts`.
-- Confirmed `npm run lint`, `npx tsc --noEmit`, and `npm test` pass cleanly with zero errors.
+- Confirmed `npm run lint`, `npx tsc --noEmit`, and `npm run build` pass cleanly with zero errors.
 
 ### [CLAIM] 2026-10-26 — LANE-4 (Minion 2)
 Claiming task GC-S1 fix-up on master (ERR-043): restoring fail-closed handling in `src/lib/db/index.ts` when `DATABASE_URL` is unset, removing hardcoded credentials from code, and confirming logging register entries.
