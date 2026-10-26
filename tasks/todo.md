@@ -7,6 +7,15 @@
 
 ## Changelog
 
+### 2026-10-25 — GC-101: Environment Variable Sweep & .env.example Sync (Jules / Primary Implementer)
+
+**Category:** Governance / Config Hygiene
+
+**Summary:** Completed task GC-101 verification and job board / todo synchronization.
+- Performed full `process.env` sweep across `src/` and `scripts/`.
+- Confirmed `.env.example` lists all required environment variables (`EBAY_DEV_ID`, `EBAY_RU_NAME`, `EBAY_ENVIRONMENT`, `EBAY_WEBHOOK_SECRET`, `EBAY_APP_ID`, `EBAY_CERT_ID`, `DATABASE_URL`, `POSTGRES_PASSWORD`, `REDIS_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `DEV_SEED_EMAIL`, `DEV_SEED_PASSWORD`, `DEV_TENANT_ID`, `CSV_FEED_URL`, `AI_PROVIDER`, `AI_BASE_URL`, `AI_MODEL`, `AI_API_KEY`, `LOG_LEVEL`, `ALERTS_CHANNELS`, `ALERTS_WEBHOOK_URL`, `ALERTS_SEVERITY_MIN`, `AMAZON_CLIENT_ID`, `AMAZON_CLIENT_SECRET`, `AMAZON_REFRESH_TOKEN`) with safe placeholder values only.
+- Updated `Docs/agent-job-board.md` table to DONE and posted `[CHECK-IN]` and `[DONE]` entries.
+
 ### 2026-10-25 — Sweep #8 (Lead review): GC-S1 reviewed, FIXES NEEDED; PR #11 not merged
 
 **Category:** Project governance / Lead review
