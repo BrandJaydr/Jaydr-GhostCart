@@ -10,8 +10,8 @@ This journal tracks documentation maintenance, architectural learnings, and docu
 - **Stage:** Stage 1 Context Ingestion & Stage 9 Documentation.
 - **Actions:**
   - Ingested AOP-CORE v1.0, Scribe Prompt, Production Blueprint & Delivery Guide, `tasks/plan.md`, and `tasks/todo.md`.
-  - Created root [`README.md`](file:///c:/Users/jayst/Documents/GitHub/Jaydr%20GhostCart/README.md) aligning enterprise vision with thin vertical slice delivery strategy.
-  - Initialized shared memory registers [`.logs/errors.md`](file:///c:/Users/jayst/Documents/GitHub/Jaydr%20GhostCart/.logs/errors.md) and [`.logs/patterns.md`](file:///c:/Users/jayst/Documents/GitHub/Jaydr%20GhostCart/.logs/patterns.md).
+  - Created root [`README.md`](../README.md) aligning enterprise vision with thin vertical slice delivery strategy.
+  - Initialized shared memory registers [`.logs/errors.md`](../.logs/errors.md) and [`.logs/patterns.md`](../.logs/patterns.md).
 
 ### [2026-08-06] Stage 1 Documentation Audit & Synchronization
 - **Stage:** Stage 9 Documentation.

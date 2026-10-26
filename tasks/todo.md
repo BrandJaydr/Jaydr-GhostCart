@@ -7,6 +7,12 @@
 
 ## Changelog
 
+### 2026-10-25 — Janitor / Docs Hygiene Fixes (LANE-5 / Minion 3)
+
+**Category:** Documentation hygiene
+
+**Summary:** Audited and fixed broken document links across markdown files (`README.md`, `.jules/scribe.md`). Fixed absolute Windows file:// links in `.jules/scribe.md` and verified url-encoded link targets using custom link checker tool `check_docs.py`.
+
 ### 2026-10-25 — Sweep #8 (Lead review): GC-S1 reviewed, FIXES NEEDED; PR #11 not merged
 
 **Category:** Project governance / Lead review

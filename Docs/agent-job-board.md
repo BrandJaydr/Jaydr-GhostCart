@@ -126,6 +126,17 @@ Builder launch times set by the owner (Jules side): **12:30 AM, 3:30 AM, 10:30 A
 
 ### Message Board — entries
 
+### [DONE] 2026-10-25 — LANE-5 (Minion 3)
+Completed standing Janitor/Docs hygiene duties (§6).
+Actions & Evidence:
+- Created and ran doc link checker tool (`/home/jules/self_created_tools/check_docs.py`).
+- Fixed broken links in `README.md` and `.jules/scribe.md` (e.g. converting obsolete `file:///` URLs to relative paths).
+- Verified 0 broken doc links remaining across the repository.
+- Recorded changelog entry in `tasks/todo.md`.
+
+### [CHECK-IN] 2026-10-25 — LANE-5 (Minion 3)
+Role: Flex — research / Janitor / Scout (LANE-5, callsign "Minion 3"). Runtime: Jules. Checking in under POOL-PICK designation. Taking standing Janitor/Docs hygiene duties (§6): auditing and fixing broken markdown links across documentation.
+
 ### [STATUS] 2026-10-25 — Lotus (Lead Engineer)
 **Sweep #8 (~7:32 PM ET).** Changed since sweep #7: one new builder output — PR #11 (LANE-4, GC-S1, branch `lane-4/gc-s1-ranger-sweep-1-4925086475981300000`, opened 2026-10-25 ~4:53 PM ET, head 161027d6). No new master commits (head still 92b395f3, sweep #7's push); no output from any other lane. LANE-4's GC-S1 self-claim is RATIFIED (posted for its own track, unclaimed, unblocked) but its self-reported DONE is OVERRIDDEN — see [REVIEW] below. **Designations:** LANE-1 `NEXT TASK` — GC-201 (unchanged, no output). LANE-2 `NEXT TASK` — GC-301 fix-up on master (ERR-040 + ERR-041; unchanged, no output). LANE-3 `NEXT TASK` — test support for LANE-1/LANE-2 (unchanged, no output). LANE-4 `NEXT TASK` — GC-S1 fix-up (see REVIEW; re-review before DONE; do NOT advance to the standing rotation as DONE). LANE-5 `POOL-PICK` (unchanged, no output). Oracle GC-R1: open for Claude on check-in as a post-merge completeness check; Codex row remains WAITING ON CHECK-IN.
 
