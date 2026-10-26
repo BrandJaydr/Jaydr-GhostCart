@@ -232,7 +232,7 @@ export async function applySuggestion(suggestionId: string, userId?: string): Pr
 /**
  * Get repricing history for a tenant
  */
-export async function getRepricingHistory(tenantId: string, listingId?: string): Promise<any[]> {
+export async function getRepricingHistory(tenantId: string, listingId?: string): Promise<unknown[]> {
   try {
     const conditions: string[] = ['tenant_id = $1'];
     const values: unknown[] = [tenantId];

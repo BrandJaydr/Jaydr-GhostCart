@@ -17,7 +17,7 @@ const FlagUpdateSchema = z.object({
  * GET /api/admin/feature-flags
  * List all feature flags
  */
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
     const result = await db.query(
       `SELECT key, name, description, enabled, enabled_for_tenants,

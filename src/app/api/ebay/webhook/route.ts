@@ -42,8 +42,9 @@ export async function POST(req: NextRequest) {
   }
 
   // Extract event details
-  const eventType = (payload as any).eventType || 'unknown';
-  const eventId = (payload as any).eventId || '';
+  const payloadObj = (payload && typeof payload === 'object') ? (payload as Record<string, unknown>) : {};
+  const eventType = (typeof payloadObj.eventType === 'string') ? payloadObj.eventType : 'unknown';
+  const eventId = (typeof payloadObj.eventId === 'string') ? payloadObj.eventId : '';
   const timestamp = Date.now();
 
   // @agent:forge Replace this with the tenantId resolved from the
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
 
   try {
     // Store webhook event
-    const { stored, duplicate } = await storeWebhookEvent(tenantId, 'ebay', {
+    const { duplicate } = await storeWebhookEvent(tenantId, 'ebay', {
       eventType,
       eventId,
       payload,
@@ -96,9 +97,11 @@ export async function POST(req: NextRequest) {
 /**
  * Process listing-related webhook events
  */
-async function processListingEvent(tenantId: string, eventId: string, payload: unknown): Promise<void> {
+async function processListingEvent(tenantId: string, _eventId: string, payload: unknown): Promise<void> {
   // Extract listing ID from payload
-  const listingId = (payload as any).listingId || (payload as any).itemId;
+  const payloadObj = (payload && typeof payload === 'object') ? (payload as Record<string, unknown>) : {};
+  const listingId = (typeof payloadObj.listingId === 'string' ? payloadObj.listingId : undefined) ||
+                    (typeof payloadObj.itemId === 'string' ? payloadObj.itemId : undefined);
 
   if (!listingId) {
     console.warn('[api/ebay/webhook] No listing ID in payload');
@@ -106,7 +109,7 @@ async function processListingEvent(tenantId: string, eventId: string, payload: u
   }
 
   // Update listing status based on event type
-  const eventType = (payload as any).eventType;
+  const eventType = payloadObj.eventType;
   let newState: string | null = null;
 
   switch (eventType) {
@@ -134,9 +137,10 @@ async function processListingEvent(tenantId: string, eventId: string, payload: u
 /**
  * Process order-related webhook events
  */
-async function processOrderEvent(tenantId: string, eventId: string, payload: unknown): Promise<void> {
+async function processOrderEvent(_tenantId: string, eventId: string, payload: unknown): Promise<void> {
   // Extract order ID from payload
-  const orderId = (payload as any).orderId;
+  const payloadObj = (payload && typeof payload === 'object') ? (payload as Record<string, unknown>) : {};
+  const orderId = payloadObj.orderId;
 
   if (!orderId) {
     console.warn('[api/ebay/webhook] No order ID in payload');
