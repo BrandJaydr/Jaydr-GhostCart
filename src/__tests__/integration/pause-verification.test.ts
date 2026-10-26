@@ -109,7 +109,7 @@ describe('Pause Verification Tests', () => {
     it('should prevent new jobs from being queued when paused', async () => {
       // This would test the actual queue pause functionality
       // For now, we'll test the pause state tracking
-
+      
       // In a real implementation, the queue would check pause state before accepting jobs
       // We'll verify the pause state is queryable
       

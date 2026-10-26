@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ProductCorrectionForm } from '@/components/import/ProductCorrectionForm';
 import type { CanonicalProduct } from '@/lib/types/canonical';
 
@@ -15,12 +15,7 @@ export function ProductReviewClient({ productId }: ProductReviewClientProps) {
   const [savingCorrections, setSavingCorrections] = useState(false);
   const [reviewStatus, setReviewStatus] = useState<'pending_review' | 'approved' | 'rejected' | null>(null);
 
-  useEffect(() => {
-    fetchProduct();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [productId]);
-
-  const fetchProduct = async () => {
+  const fetchProduct = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -38,7 +33,11 @@ export function ProductReviewClient({ productId }: ProductReviewClientProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [productId]);
+
+  useEffect(() => {
+    fetchProduct();
+  }, [fetchProduct]);
 
   const handleSaveCorrections = async (corrections: Record<string, { original: string; corrected: string }>) => {
     try {

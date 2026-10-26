@@ -172,7 +172,7 @@ describe('CSV Adapter Integration Tests', () => {
       expect(product.confidence).toBeDefined();
       
       // Should have confidence warnings for missing/invalid data
-      const priceField = product.confidence.find((c: { field: string }) => c.field === 'required');
+      const priceField = product.confidence.find((c) => c.field === 'required');
       expect(priceField?.warnings).toBeDefined();
     });
 

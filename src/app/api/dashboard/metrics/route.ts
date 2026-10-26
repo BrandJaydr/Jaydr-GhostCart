@@ -7,6 +7,7 @@ import { db, DEV_TENANT_ID } from '@/lib/db/index';
  * Get dashboard metrics for a tenant
  */
 export async function GET(_req: NextRequest) {
+
   // @agent:forge Replace with session tenantId
   const tenantId = DEV_TENANT_ID;
 

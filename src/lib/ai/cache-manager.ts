@@ -115,10 +115,9 @@ export class CacheManager {
     }
 
     // Try L2 (Redis)
-    if (this.redis) {
+    if (this.redis && typeof this.redis === 'object' && 'get' in this.redis) {
       try {
-        const redisAny = this.redis as { get: (key: string) => Promise<string | null> };
-        const l2Data = await redisAny.get(`ghostcart:l2:${key}`);
+        const l2Data = await (this.redis as { get: (k: string) => Promise<string | null> }).get(`ghostcart:l2:${key}`);
         if (l2Data) {
           const parsed = JSON.parse(l2Data) as CacheEntry<T>;
           if (Date.now() - parsed.timestamp < parsed.ttl) {
@@ -158,9 +157,8 @@ export class CacheManager {
         };
         this.l1Cache.set(key, entry as CacheEntry<unknown>);
 
-        if (this.redis) {
-          const redisAny = this.redis as { setex: (key: string, seconds: number, val: string) => Promise<void> };
-          await redisAny.setex(
+        if (this.redis && typeof this.redis === 'object' && 'setex' in this.redis) {
+          await (this.redis as { setex: (k: string, s: number, v: string) => Promise<unknown> }).setex(
             `ghostcart:l2:${key}`,
             Math.floor(opts.l2TTL / 1000),
             JSON.stringify(entry),
@@ -197,7 +195,7 @@ export class CacheManager {
     this.l1Cache.set(key, l1Entry as CacheEntry<unknown>);
 
     // Set L2 (Redis)
-    if (this.redis) {
+    if (this.redis && typeof this.redis === 'object' && 'setex' in this.redis) {
       const l2Entry: CacheEntry<T> = {
         data,
         timestamp: now,
@@ -205,8 +203,7 @@ export class CacheManager {
         level: 'L2',
       };
       try {
-        const redisAny = this.redis as { setex: (key: string, seconds: number, val: string) => Promise<void> };
-        await redisAny.setex(
+        await (this.redis as { setex: (k: string, s: number, v: string) => Promise<unknown> }).setex(
           `ghostcart:l2:${key}`,
           Math.floor(opts.l2TTL / 1000),
           JSON.stringify(l2Entry),
@@ -255,10 +252,9 @@ export class CacheManager {
     this.l1Cache.delete(key);
 
     // Remove from L2
-    if (this.redis) {
+    if (this.redis && typeof this.redis === 'object' && 'del' in this.redis) {
       try {
-        const redisAny = this.redis as { del: (key: string) => Promise<void> };
-        await redisAny.del(`ghostcart:l2:${key}`);
+        await (this.redis as { del: (k: string) => Promise<unknown> }).del(`ghostcart:l2:${key}`);
       } catch (err) {
         console.error('[CacheManager] L2 cache invalidate error:', err);
       }
@@ -335,12 +331,12 @@ export class CacheManager {
   async clearAll(): Promise<void> {
     this.l1Cache.clear();
 
-    if (this.redis) {
+    if (this.redis && typeof this.redis === 'object' && 'keys' in this.redis && 'del' in this.redis) {
       try {
-        const redisAny = this.redis as { keys: (pattern: string) => Promise<string[]>; del: (...keys: string[]) => Promise<void> };
-        const keys = await redisAny.keys('ghostcart:l2:*');
+        const redisObj = this.redis as { keys: (p: string) => Promise<string[]>; del: (...k: string[]) => Promise<unknown> };
+        const keys = await redisObj.keys('ghostcart:l2:*');
         if (keys.length > 0) {
-          await redisAny.del(...keys);
+          await redisObj.del(...keys);
         }
       } catch (err) {
         console.error('[CacheManager] L2 clear error:', err);

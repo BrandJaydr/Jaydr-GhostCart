@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
 
   const rewriteRequest = parseResult.data;
 
+
   try {
     // Generate cache key
     const cacheKey = CacheManager.generateKey('rewrite', rewriteRequest);
@@ -114,6 +115,7 @@ export async function GET(req: NextRequest) {
   if (!productId && !listingId) {
     return apiError('Either productId or listingId is required', null, 400);
   }
+
 
   try {
     const cacheManager = getCacheManager();

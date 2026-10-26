@@ -17,11 +17,13 @@ const { Pool } = pg;
  * @agent:atlas Use `db` pool in API route handlers for all database queries
  */
 
+const connectionString =
+  process.env.DATABASE_URL ||
+  'postgresql://ghostcart:ghostcart_dev@localhost:5432/ghostcart';
+
 /** Shared PostgreSQL connection pool */
 export const db = new Pool({
-  connectionString:
-    process.env.DATABASE_URL ||
-    'postgresql://ghostcart:ghostcart_dev@localhost:5432/ghostcart',
+  connectionString,
   // TODO: @agent:archivist Tune pool size: max = (web_concurrency + worker_concurrency) * 2
   max: 10,
   idleTimeoutMillis: 30_000,

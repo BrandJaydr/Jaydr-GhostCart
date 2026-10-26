@@ -43,8 +43,9 @@ export async function POST(req: NextRequest) {
 
   const p = payload as Record<string, unknown>;
   // Extract event details
-  const eventType = (p.eventType as string) || 'unknown';
-  const eventId = (p.eventId as string) || '';
+  const payloadObj = (payload && typeof payload === 'object') ? (payload as Record<string, unknown>) : {};
+  const eventType = (typeof payloadObj.eventType === 'string') ? payloadObj.eventType : 'unknown';
+  const eventId = (typeof payloadObj.eventId === 'string') ? payloadObj.eventId : '';
   const timestamp = Date.now();
 
   // @agent:forge Replace this with the tenantId resolved from the
@@ -99,9 +100,10 @@ export async function POST(req: NextRequest) {
  * Process listing-related webhook events
  */
 async function processListingEvent(tenantId: string, _eventId: string, payload: unknown): Promise<void> {
-  const p = payload as Record<string, unknown>;
   // Extract listing ID from payload
-  const listingId = (p.listingId as string) || (p.itemId as string);
+  const payloadObj = (payload && typeof payload === 'object') ? (payload as Record<string, unknown>) : {};
+  const listingId = (typeof payloadObj.listingId === 'string' ? payloadObj.listingId : undefined) ||
+                    (typeof payloadObj.itemId === 'string' ? payloadObj.itemId : undefined);
 
   if (!listingId) {
     console.warn('[api/ebay/webhook] No listing ID in payload');
@@ -109,7 +111,7 @@ async function processListingEvent(tenantId: string, _eventId: string, payload: 
   }
 
   // Update listing status based on event type
-  const eventType = p.eventType as string;
+  const eventType = payloadObj.eventType;
   let newState: string | null = null;
 
   switch (eventType) {
@@ -138,9 +140,9 @@ async function processListingEvent(tenantId: string, _eventId: string, payload: 
  * Process order-related webhook events
  */
 async function processOrderEvent(_tenantId: string, eventId: string, payload: unknown): Promise<void> {
-  const p = payload as Record<string, unknown>;
   // Extract order ID from payload
-  const orderId = p.orderId as string;
+  const payloadObj = (payload && typeof payload === 'object') ? (payload as Record<string, unknown>) : {};
+  const orderId = payloadObj.orderId;
 
   if (!orderId) {
     console.warn('[api/ebay/webhook] No order ID in payload');
