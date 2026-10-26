@@ -129,6 +129,7 @@ export function validateCsv(text: string, requiredKeys: string[]): ValidationRes
 
   // Validate each row
   body.forEach((line, idx) => {
+    if (!line.trim()) return; // skip trailing or blank lines
     const lineNum = idx + 2; // +2 because header is line 1
     const values = splitCsvLine(line);
 

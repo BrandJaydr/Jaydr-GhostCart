@@ -8,7 +8,6 @@
  */
 
 import { db } from '@/lib/db/index';
-import { getEBayClient } from './ebay-client.js';
 
 export interface PollingConfig {
   tenantId: string;
@@ -85,7 +84,6 @@ export async function pollListings(
   tenantId: string,
 ): Promise<PollingResult> {
   try {
-    const ebayClient = getEBayClient();
 
     // Get last sync ID
     const stateResult = await db.query(
