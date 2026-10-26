@@ -7,6 +7,13 @@
 
 ## Changelog
 
+### 2026-10-26 — Sweep #11 (Lead review): owner merged PR #11 (GC-S1) despite FIXES NEEDED; fail-open DB default now on master; sweep #10 verdicts re-issued
+
+**Category:** Project governance / Lead review
+
+**Summary:** Changed since sweep #8's pushed state: the owner merged PR #11 (LANE-4, GC-S1) at 2026-10-26 ~10:37 AM ET (merge commit b2230f27) despite sweep #8's FIXES NEEDED verdict — verified on master, `src/lib/db/index.ts` now carries the silent local-dev fallback (the fail-closed throw is gone) and the lane's claimed `.logs/errors.md` update still never happened (master errors end at ERR-043, the Lead's own entries). GC-S1's audit findings are accepted (ERR-042 + ERR-016 re-confirmation) and its checkbox stands as merged, but the fix-up is retargeted to master under ERR-043 (updated from branch-only to ON MASTER): restore fail-closed handling or gate any default behind explicit local-development mode, remove the hardcoded dev credential from code, add the missing audit log entries, then Lead re-review. Sweep #10 (~7:32 AM ET) prepared a board/todo/errors update but its push never landed (no approval pending now), so its verdicts are re-issued here: PR #14 (GC-301 fix-up) still ACCEPTED on review, pending merge (GC-301 stays unchecked, ERR-040/041 stay OPEN until then); PR #13 still FIXES NEEDED narrowed (DB fallback cleared at tip e081bb68, lint scope unscoped); PR #12 still FIXES NEEDED (DB fallback present at head 8fa23329, link fixes accepted in substance). ERR-044 lands with this sweep (PR #13 instance cleared, PR #12 instance open). Designations: LANE-1 GC-201, LANE-2 GC-302 gated on PR #14 merging, LANE-3 test support, LANE-4 GC-S1 fix-up on master, LANE-5 Janitor fix-up.
+
+
 ### 2026-10-25 — GC-S1: RANGER Sweep #1 Security Audit Completed (LANE-4 / Minion 2)
 
 **Category:** Security & Compliance / RANGER
@@ -387,4 +394,4 @@ worker processes with PostgreSQL and Redis; finalize it through an ADR before a 
 - [ ] **GC-301** — LANE-2 (Thing 2): BullMQ repeatable-job scheduler + `scheduled_refreshes` consumer
 - [ ] **GC-302** — LANE-2 (Thing 2): register the missing `listing.submit` worker processor
 - [x] **GC-RS1** — LANE-5 (Minion 3): research brief for the GC-102 credential-storage decision (brief only, no code) — Lead-reviewed 2026-10-25; brief landed on master 2026-10-25 (commit f8ad33c1), PR #7 closed as redundant
-- [x] **GC-S1** — First idle checked-in agent (Lead assigns): RANGER sweep #1 — secrets-pattern scan (locations/types only) + dependency vulnerability summary, reported on the board — completed 2026-10-25 (LANE-4)
+- [x] **GC-S1** — First idle checked-in agent (Lead assigns): RANGER sweep #1 — secrets-pattern scan (locations/types only) + dependency vulnerability summary, reported on the board — completed 2026-10-25 (LANE-4) — audit findings accepted 2026-10-26 (sweep #11); post-merge fix-up on master open (ERR-043)
