@@ -7,11 +7,11 @@
 
 ## Changelog
 
-### 2026-10-26 — Fix CI Lint Failure (LANE-5 / Minion 3)
+### 2026-10-26 — Fix CI Build and Lint Failure (LANE-5 / Minion 3)
 
 **Category:** Code Quality / CI Repair
 
-**Summary:** Resolved CI workflow failure by eliminating all 43 ESLint errors and 5 ESLint warnings across API routes, library adapters, components, and tests (removed unused imports/variables, fixed implicit/explicit `any` types, wrapped hooks in useCallback, suppressed intentional console/img logs). Confirmed `npm run lint` and `npx tsc --noEmit` pass with zero warnings/errors.
+**Summary:** Resolved CI workflow failure by eliminating all 43 ESLint errors and 5 ESLint warnings across API routes, library adapters, components, and tests, and adding a local dev fallback for `DATABASE_URL` in `src/lib/db/index.ts` so Next.js static build data collection succeeds when `DATABASE_URL` is unset in CI. Confirmed `npm run lint`, `npx tsc --noEmit`, and `npm run build` pass with zero errors.
 
 ### 2026-10-25 — Janitor / Docs Hygiene Fixes (LANE-5 / Minion 3)
 

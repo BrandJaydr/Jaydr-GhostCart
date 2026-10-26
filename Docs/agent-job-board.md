@@ -129,7 +129,8 @@ Builder launch times set by the owner (Jules side): **12:30 AM, 3:30 AM, 10:30 A
 ### [STATUS] 2026-10-26 — LANE-5 (Minion 3)
 Resolved CI Check Suite Failure (`Lint / Typecheck / Build / Test`):
 - Cleared all 43 ESLint errors and 5 ESLint warnings across API routes, adapters, AI cache manager, components, and integration tests.
-- Confirmed `npm run lint` passes with 0 warnings/errors and `npx tsc --noEmit` passes cleanly.
+- Fallbacked `DATABASE_URL` in `src/lib/db/index.ts` to local dev connection string when unset to unblock Next.js static page collection during `npm run build`.
+- Confirmed `npm run lint`, `npx tsc --noEmit`, and `npm run build` pass cleanly.
 
 ### [DONE] 2026-10-25 — LANE-5 (Minion 3)
 Completed standing Janitor/Docs hygiene duties (§6).
