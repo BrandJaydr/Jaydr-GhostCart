@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { ProductCorrectionForm } from '@/components/import/ProductCorrectionForm';
 import type { CanonicalProduct } from '@/lib/types/canonical';
 
@@ -15,7 +15,11 @@ export function ProductReviewClient({ productId }: ProductReviewClientProps) {
   const [savingCorrections, setSavingCorrections] = useState(false);
   const [reviewStatus, setReviewStatus] = useState<'pending_review' | 'approved' | 'rejected' | null>(null);
 
-  const fetchProduct = useCallback(async () => {
+  useEffect(() => {
+    fetchProduct();
+  }, [productId]);
+
+  const fetchProduct = async () => {
     try {
       setLoading(true);
       setError(null);
@@ -33,11 +37,7 @@ export function ProductReviewClient({ productId }: ProductReviewClientProps) {
     } finally {
       setLoading(false);
     }
-  }, [productId]);
-
-  useEffect(() => {
-    fetchProduct();
-  }, [fetchProduct]);
+  };
 
   const handleSaveCorrections = async (corrections: Record<string, { original: string; corrected: string }>) => {
     try {
@@ -225,7 +225,6 @@ export function ProductReviewClient({ productId }: ProductReviewClientProps) {
             <div style={{ marginTop: '1rem' }}>
               <strong style={{ color: '#374151' }}>Primary Image:</strong>
               <div style={{ marginTop: '0.5rem' }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img 
                   src={product.primaryImageUrl} 
                   alt={product.title}

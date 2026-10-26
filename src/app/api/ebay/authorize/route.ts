@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { z } from 'zod';
-import { type eBayConfig, eBayClient } from '@/lib/adapters/ebay/ebay-client';
+import { getEBayClient, type eBayConfig, eBayClient } from '@/lib/adapters/ebay/ebay-client';
 import { db, DEV_TENANT_ID } from '@/lib/db/index';
 
 /**

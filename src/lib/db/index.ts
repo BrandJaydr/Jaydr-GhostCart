@@ -17,13 +17,15 @@ const { Pool } = pg;
  * @agent:atlas Use `db` pool in API route handlers for all database queries
  */
 
-const connectionString =
-  process.env.DATABASE_URL ||
-  'postgresql://ghostcart:ghostcart_dev@localhost:5432/ghostcart';
+if (!process.env.DATABASE_URL) {
+  throw new Error(
+    'DATABASE_URL environment variable is required. Copy .env.example → .env and set your database URL.',
+  );
+}
 
 /** Shared PostgreSQL connection pool */
 export const db = new Pool({
-  connectionString,
+  connectionString: process.env.DATABASE_URL,
   // TODO: @agent:archivist Tune pool size: max = (web_concurrency + worker_concurrency) * 2
   max: 10,
   idleTimeoutMillis: 30_000,

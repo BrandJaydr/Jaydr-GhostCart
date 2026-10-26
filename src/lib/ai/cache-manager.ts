@@ -88,11 +88,9 @@ class LRUCache<K, V> {
  */
 export class CacheManager {
   private l1Cache: LRUCache<string, CacheEntry<unknown>>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private redis: any; // Redis client (configured separately)
   private defaultOptions: Required<CacheOptions>;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(redisClient?: any) {
     this.l1Cache = new LRUCache<string, CacheEntry<unknown>>(100);
     this.redis = redisClient;
@@ -278,7 +276,7 @@ export class CacheManager {
   /**
    * Invalidate cache by tags
    */
-  async invalidateByTag(_tag: string): Promise<void> {
+  async invalidateByTag(tag: string): Promise<void> {
     // Clear L1 cache (simple approach)
     this.l1Cache.clear();
 
@@ -352,7 +350,6 @@ export class CacheManager {
  */
 let cacheManagerInstance: CacheManager | null = null;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getCacheManager(redisClient?: any): CacheManager {
   if (!cacheManagerInstance) {
     cacheManagerInstance = new CacheManager(redisClient);

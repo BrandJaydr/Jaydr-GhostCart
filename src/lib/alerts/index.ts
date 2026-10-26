@@ -159,7 +159,6 @@ export async function notify(
       }),
     );
   } else {
-    // eslint-disable-next-line no-console
     console.debug(`[alerts] "${event.severity}" below ALERTS_SEVERITY_MIN; recorded only`);
   }
 

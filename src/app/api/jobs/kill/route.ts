@@ -8,7 +8,7 @@ import { db, DEV_TENANT_ID } from '@/lib/db/index';
  *
  * @agent:oracle Add tests for kill switch
  */
-export async function POST(_req: NextRequest) {
+export async function POST(req: NextRequest) {
   // @agent:forge Replace this with the tenantId resolved from the
   // authenticated session once next-auth is configured.
   const tenantId = DEV_TENANT_ID;

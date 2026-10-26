@@ -6,7 +6,7 @@ import { db, DEV_TENANT_ID } from '@/lib/db/index';
  * GET /api/ebay/export/csv
  * Export listings to eBay-compatible CSV format
  */
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
   const tenantId = DEV_TENANT_ID;
 
   try {

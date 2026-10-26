@@ -6,7 +6,11 @@ import { db, DEV_TENANT_ID } from '@/lib/db/index';
  * GET /api/dashboard/metrics
  * Get dashboard metrics for a tenant
  */
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
+  const url = new URL(req.url);
+  const startDate = url.searchParams.get('startDate');
+  const endDate = url.searchParams.get('endDate');
+
   // @agent:forge Replace with session tenantId
   const tenantId = DEV_TENANT_ID;
 
