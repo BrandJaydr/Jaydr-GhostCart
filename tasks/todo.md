@@ -7,6 +7,12 @@
 
 ## Changelog
 
+### 2026-10-25 — Sweep #8 (Lead review): GC-S1 reviewed, FIXES NEEDED; PR #11 not merged
+
+**Category:** Project governance / Lead review
+
+**Summary:** One new builder output since sweep #7: PR #11 (LANE-4, GC-S1 RANGER sweep #1, opened ~4:53 PM ET). Lead verified the branch files against the acceptance criterion: the audit findings themselves stand (secrets scan clean apart from one new issue, npm audit 28 vulnerabilities, auth/RLS gap re-confirmed and already covered by ERR-016), but acceptance is blocked — the branch replaces the fail-closed DATABASE_URL throw in `src/lib/db/index.ts` with a silent hardcoded local-dev fallback (ERR-043), and its claimed `.logs/errors.md` update never happened (file identical on branch and master). LANE-4's self-claim is ratified but its DONE is overridden; GC-S1 stays unchecked on master until the fix-up is re-reviewed. Logged ERR-042 (npm audit refresh, superseding ERR-008's counts) and ERR-043. All other lanes: no output; designations unchanged (LANE-1 GC-201, LANE-2 GC-301 fix-up on master, LANE-3 test support, LANE-5 POOL-PICK).
+
 ### 2026-10-25 — Sweep #7 (Lead review): GC-T1 accepted; GC-301 merged with ERR-040/041 open on master; GC-201 unblocked
 
 **Category:** Project governance / Lead review
