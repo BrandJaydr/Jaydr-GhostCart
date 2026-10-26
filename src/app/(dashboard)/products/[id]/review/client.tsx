@@ -17,6 +17,7 @@ export function ProductReviewClient({ productId }: ProductReviewClientProps) {
 
   useEffect(() => {
     fetchProduct();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productId]);
 
   const fetchProduct = async () => {
@@ -225,6 +226,7 @@ export function ProductReviewClient({ productId }: ProductReviewClientProps) {
             <div style={{ marginTop: '1rem' }}>
               <strong style={{ color: '#374151' }}>Primary Image:</strong>
               <div style={{ marginTop: '0.5rem' }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img 
                   src={product.primaryImageUrl} 
                   alt={product.title}

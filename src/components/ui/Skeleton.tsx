@@ -12,8 +12,8 @@ export interface SkeletonProps {
 }
 
 export function Skeleton({ 
-  shape = 'rectangle', 
-  size = 'md',
+  shape: _shape = 'rectangle',
+  size: _size = 'md',
   className,
   isLoaded = false,
   children 

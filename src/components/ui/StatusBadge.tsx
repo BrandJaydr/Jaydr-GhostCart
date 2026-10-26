@@ -26,7 +26,7 @@ export interface StatusBadgeProps {
  * Apply color tokens and icons in Stage 2.
  */
 export function StatusBadge({ state }: StatusBadgeProps) {
-  const badgeConfig: Record<string, { color: string; label: string }> = {
+  const badgeConfig: Record<string, { color: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger'; label: string }> = {
     draft: { color: 'default', label: STATE_LABELS.draft },
     ready_for_review: { color: 'success', label: STATE_LABELS.ready_for_review },
     queued: { color: 'primary', label: STATE_LABELS.queued },
@@ -38,7 +38,7 @@ export function StatusBadge({ state }: StatusBadgeProps) {
   const config = badgeConfig[state as string];
 
   return (
-    <HeroUIChip color={config.color as any} variant="flat" size="sm">
+    <HeroUIChip color={config.color} variant="flat" size="sm">
       {config.label}
     </HeroUIChip>
   );

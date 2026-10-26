@@ -2,7 +2,6 @@ import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { z } from 'zod';
 import { setRepricingPause, isRepricingPaused } from '@/lib/repricing/engine';
-import { DEV_TENANT_ID } from '@/lib/db/index';
 
 /**
  * Schema for pause request
