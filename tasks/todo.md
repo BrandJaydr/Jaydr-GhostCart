@@ -7,6 +7,16 @@
 
 ## Changelog
 
+### 2026-10-25 — GC-301 fix-up: Resolved queue routing (ERR-040) & missing dep (ERR-041) (LANE-2 / Thing 2)
+
+**Category:** Worker Infrastructure / Queue Routing
+
+**Summary:** Fixed the two defects on master identified in Lead review of GC-301:
+- ✅ **ERR-040**: Created and exported `refreshQueue` (`product.refresh`) in `src/lib/queue/index.ts` and updated `src/worker/scheduler.ts` to enqueue onto `refreshQueue` instead of `importQueue`.
+- ✅ **ERR-041**: Added `"cron-parser": "4.9.0"` to dependencies in `package.json`.
+- ✅ Updated unit test in `src/__tests__/worker/scheduler.test.ts` to mock `refreshQueue` and verified all 4 scheduler unit tests pass.
+- ✅ Updated `Docs/agent-job-board.md` §5 table state to `DONE` and appended `[DONE]` entry on Message Board.
+
 ### 2026-10-25 — Sweep #8 (Lead review): GC-S1 reviewed, FIXES NEEDED; PR #11 not merged
 
 **Category:** Project governance / Lead review
@@ -377,7 +387,7 @@ worker processes with PostgreSQL and Redis; finalize it through an ADR before a 
 - [ ] **GC-202** — Jules: AliExpress token provider (transient secret, expiry-aware refresh, mocked-HTTP tests, no plaintext persistence)
 - [ ] **GC-R1** — Claude (on check-in): second-eyes review of GC-101 against `process.env` reads in `src/`
 - [x] **GC-T1** — LANE-3 (Minion 1): `aliexpress.ds.text.search` response fixture pack (full / empty / error envelope) — completed 2026-10-25
-- [ ] **GC-301** — LANE-2 (Thing 2): BullMQ repeatable-job scheduler + `scheduled_refreshes` consumer
+- [x] **GC-301** — LANE-2 (Thing 2): BullMQ repeatable-job scheduler + `scheduled_refreshes` consumer (fix-up completed 2026-10-25)
 - [ ] **GC-302** — LANE-2 (Thing 2): register the missing `listing.submit` worker processor
 - [x] **GC-RS1** — LANE-5 (Minion 3): research brief for the GC-102 credential-storage decision (brief only, no code) — Lead-reviewed 2026-10-25; brief landed on master 2026-10-25 (commit f8ad33c1), PR #7 closed as redundant
 - [ ] **GC-S1** — First idle checked-in agent (Lead assigns): RANGER sweep #1 — secrets-pattern scan (locations/types only) + dependency vulnerability summary, reported on the board
