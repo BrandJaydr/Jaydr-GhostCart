@@ -81,6 +81,7 @@ export async function POST(req: NextRequest) {
         await processOrderEvent(tenantId, eventId, payload);
         break;
       default:
+        // eslint-disable-next-line no-console
         console.log(`[api/ebay/webhook] Unknown event type: ${eventType}`);
     }
 
@@ -149,5 +150,6 @@ async function processOrderEvent(_tenantId: string, eventId: string, payload: un
 
   // Store order information
   // This would be expanded in production to handle order processing
+  // eslint-disable-next-line no-console
   console.log(`[api/ebay/webhook] Order event: ${eventId}`, payload);
 }

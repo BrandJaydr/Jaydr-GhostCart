@@ -11,7 +11,7 @@
 
 **Category:** Code Quality / CI Repair
 
-**Summary:** Resolved CI workflow failure by eliminating 43 ESLint errors/warnings across API routes, library adapters, components, and tests (removed unused imports/variables, fixed implicit/explicit `any` types). Confirmed `npm run lint` and `npx tsc --noEmit` pass with zero warnings.
+**Summary:** Resolved CI workflow failure by eliminating all 43 ESLint errors and 5 ESLint warnings across API routes, library adapters, components, and tests (removed unused imports/variables, fixed implicit/explicit `any` types, wrapped hooks in useCallback, suppressed intentional console/img logs). Confirmed `npm run lint` and `npx tsc --noEmit` pass with zero warnings/errors.
 
 ### 2026-10-25 — Janitor / Docs Hygiene Fixes (LANE-5 / Minion 3)
 
