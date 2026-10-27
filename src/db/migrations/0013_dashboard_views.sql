@@ -1,10 +1,10 @@
--- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
--- Jaydr GhostCart â€” Migration 0013: Dashboard Views
--- Stage: Stage 4 â€” Reliability and Controlled Automation
--- Reference: Stage 4 Plan â€” Task 4: Operational Dashboards
--- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Jaydr GhostCart — Migration 0013: Dashboard Views
+-- Stage: Stage 4 — Reliability and Controlled Automation
+-- Reference: Stage 4 Plan — Task 4: Operational Dashboards
+-- ─────────────────────────────────────────────────────────────────────────────
 
--- â”€â”€â”€ Import Success Metrics View â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- ─── Import Success Metrics View ─────────────────────────────────────────────
 -- Materialized view for import success/failure rates
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS dashboard_import_metrics AS
@@ -33,7 +33,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- â”€â”€â”€ Listings by State View â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- ─── Listings by State View ───────────────────────────────────────────────────
 -- Materialized view for listing state distribution
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS dashboard_listing_states AS
@@ -58,7 +58,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- â”€â”€â”€ Job Failures View â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- ─── Job Failures View ────────────────────────────────────────────────────────
 -- Materialized view for job failure analysis
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS dashboard_job_failures AS
@@ -86,7 +86,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- â”€â”€â”€ Margin Analysis View â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- ─── Margin Analysis View ─────────────────────────────────────────────────────
 -- Materialized view for margin analysis
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS dashboard_margin_analysis AS
@@ -114,15 +114,24 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- â”€â”€â”€ Refresh All Dashboard Views Function â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- ─── Refresh All Dashboard Views Function ─────────────────────────────────────
+
+CREATE SCHEMA IF NOT EXISTS dashboard;
 
 CREATE OR REPLACE FUNCTION refresh_all()
 RETURNS void AS $$
 BEGIN
-    PERFORM refresh_import_metrics();
+  PERFORM refresh_import_metrics();
   PERFORM refresh_listing_states();
   PERFORM refresh_job_failures();
   PERFORM refresh_margin_analysis();
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION dashboard.refresh_all()
+RETURNS void AS $$
+BEGIN
+  PERFORM refresh_all();
 END;
 $$ LANGUAGE plpgsql;
 

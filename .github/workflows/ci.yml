@@ -12,6 +12,32 @@ jobs:
   checks:
     name: Lint / Typecheck / Build / Test
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ghostcart_dev
+          POSTGRES_DB: ghostcart
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:ghostcart_dev@localhost:5432/ghostcart
+      REDIS_URL: redis://localhost:6379
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -23,9 +49,18 @@ jobs:
         run: npm run lint
       - name: Typecheck
         run: npx tsc --noEmit
+      - name: Apply migrations
+      - name: Migrate test database
+        env:
+          DATABASE_URL: postgresql://postgres:ghostcart_dev@localhost:5432/ghostcart
+        run: npm run db:migrate
       - name: Build
+        env:
+          DATABASE_URL: postgresql://postgres:ghostcart_dev@localhost:5432/ghostcart
         run: npm run build
       - name: Unit tests
+        env:
+          DATABASE_URL: postgresql://postgres:ghostcart_dev@localhost:5432/ghostcart
         run: npm test
 
   restore-test:

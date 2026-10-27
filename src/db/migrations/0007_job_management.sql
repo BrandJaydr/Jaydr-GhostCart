@@ -1,12 +1,12 @@
--- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
--- Jaydr GhostCart â€” Migration 0007: Job Management Enhancements
--- Stage: Stage 3 â€” Job Management System
--- Reference: Stage 3 Implementation Plan â€” Task 3: Job Management System
--- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Jaydr GhostCart — Migration 0007: Job Management Enhancements
+-- Stage: Stage 3 — Job Management System
+-- Reference: Stage 3 Implementation Plan — Task 3: Job Management System
+-- ─────────────────────────────────────────────────────────────────────────────
 -- @agent:archivist Add indexes for common query patterns
--- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- ─────────────────────────────────────────────────────────────────────────────
 
--- â”€â”€â”€ Enhance Jobs Table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- ─── Enhance Jobs Table ──────────────────────────────────────────────────────
 -- Add error categorization and retry tracking
 
 ALTER TABLE jobs
@@ -25,17 +25,19 @@ CREATE INDEX IF NOT EXISTS jobs_killed_idx ON jobs(killed) WHERE killed = true;
 -- Index for error category filtering
 CREATE INDEX IF NOT EXISTS jobs_error_category_idx ON jobs(error_category);
 
--- â”€â”€â”€ Row-Level Security Policy Update â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- ─── Row-Level Security Policy Update ─────────────────────────────────────────
 -- Add policy for kill switch (only tenant owner can kill jobs)
 CREATE POLICY jobs_kill_policy ON jobs
   FOR UPDATE
   USING (tenant_id = current_setting('ghostcart.tenant_id', true)::uuid)
   WITH CHECK (tenant_id = current_setting('ghostcart.tenant_id', true)::uuid);
 
--- â”€â”€â”€ Functions for Job Management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- ─── Functions for Job Management ─────────────────────────────────────────────
+
+CREATE SCHEMA IF NOT EXISTS jobs;
 
 -- Function to categorize error
-CREATE OR REPLACE FUNCTION categorize_error(error_message TEXT)
+CREATE OR REPLACE FUNCTION jobs.categorize_error(error_message TEXT)
 RETURNS TEXT AS $$
 BEGIN
   -- Transient errors: network, rate limits, timeouts
@@ -52,15 +54,22 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION categorize_error(error_message TEXT)
+RETURNS TEXT AS $$
+BEGIN
+  RETURN jobs.categorize_error(error_message);
+END;
+$$ LANGUAGE plpgsql;
+
 -- Function to schedule next retry with exponential backoff
-CREATE OR REPLACE FUNCTION schedule_retry(job_id UUID)
+CREATE OR REPLACE FUNCTION jobs.schedule_retry(job_id UUID)
 RETURNS TIMESTAMPTZ AS $$
 DECLARE
   job_record RECORD;
   next_retry TIMESTAMPTZ;
   backoff_seconds INTEGER;
 BEGIN
-  SELECT * INTO job_record FROM jobs WHERE id = job_id;
+  SELECT * INTO job_record FROM public.jobs WHERE id = job_id;
 
   IF job_record.killed THEN
     RAISE EXCEPTION 'Job has been killed';
@@ -74,7 +83,7 @@ BEGIN
   backoff_seconds := POWER(2, job_record.attempts) * 30;
   next_retry := now() + (backoff_seconds || ' seconds')::interval;
 
-  UPDATE jobs
+  UPDATE public.jobs
   SET attempts = attempts + 1,
       next_retry_at = next_retry,
       status = 'pending'
@@ -84,11 +93,18 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION schedule_retry(job_id UUID)
+RETURNS TIMESTAMPTZ AS $$
+BEGIN
+  RETURN jobs.schedule_retry(job_id);
+END;
+$$ LANGUAGE plpgsql;
+
 -- Function to kill a job
-CREATE OR REPLACE FUNCTION kill_job(job_id UUID, user_id UUID)
+CREATE OR REPLACE FUNCTION jobs.kill_job(job_id UUID, user_id UUID)
 RETURNS BOOLEAN AS $$
 BEGIN
-  UPDATE jobs
+  UPDATE public.jobs
   SET killed = true,
       killed_at = now(),
       killed_by = user_id,
@@ -100,23 +116,37 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION kill_job(job_id UUID, user_id UUID)
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN jobs.kill_job(job_id, user_id);
+END;
+$$ LANGUAGE plpgsql;
+
 -- Function to kill all queued jobs for a tenant
-CREATE OR REPLACE FUNCTION kill_all_tenant_jobs(tenant_id UUID, user_id UUID)
+CREATE OR REPLACE FUNCTION jobs.kill_all_tenant_jobs(p_tenant_id UUID, user_id UUID)
 RETURNS INTEGER AS $$
 DECLARE
   killed_count INTEGER;
 BEGIN
-  UPDATE jobs
+  UPDATE public.jobs
   SET killed = true,
       killed_at = now(),
       killed_by = user_id,
       status = 'cancelled',
       next_retry_at = NULL
-  WHERE tenant_id = tenant_id
+  WHERE tenant_id = p_tenant_id
     AND status IN ('pending', 'queued')
     AND killed = false;
 
   GET DIAGNOSTICS killed_count = ROW_COUNT;
   RETURN killed_count;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION kill_all_tenant_jobs(tenant_id UUID, user_id UUID)
+RETURNS INTEGER AS $$
+BEGIN
+  RETURN jobs.kill_all_tenant_jobs(tenant_id, user_id);
 END;
 $$ LANGUAGE plpgsql;
