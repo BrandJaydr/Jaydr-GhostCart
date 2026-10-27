@@ -7,7 +7,16 @@
 
 ## Changelog
 
-### 2026-10-26 — GC-S1 Fix-Up Completed on Master (LANE-4 / Minion 2)
+### 2026-10-26 — Pattern Hunting & System Insights Update (LANE-5 / Minion 3)
+
+**Category:** Pattern Hunting / System Insights
+
+**Summary:** Completed standing Scout/Pattern Hunting duties (§6) under POOL-PICK designation. Analyzed recent error register entries in `.logs/errors.md` (ERR-040, ERR-041, ERR-043, ERR-044) and documented 3 new system patterns in `.logs/patterns.md`:
+- Pattern 19: BullMQ Queue Instance vs. Job Name Disconnect (ERR-040).
+- Pattern 20: Manifest-Source Dependency Sync Pattern (ERR-041).
+- Pattern 21: Environment-Gated Fallback Configuration Pattern (ERR-043, ERR-044).
+
+### 2026-10-26 — Sweep #12 (Lead review): PR #15 (GC-S1 fix-up) accepted, PR #12 merged by owner, sweep #11 board entries restored
 
 **Category:** Security & Configuration / RANGER
 
