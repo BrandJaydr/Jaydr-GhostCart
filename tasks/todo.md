@@ -15,15 +15,13 @@
 
 ### 2026-10-26 — Fix CI Build and Lint Failure (LANE-5 / Minion 3)
 
-**Category:** Code Quality / CI Repair
+**Category:** Worker Infrastructure / Queue Routing
 
-**Summary:** Resolved CI workflow failure by eliminating all 43 ESLint errors and 5 ESLint warnings across API routes, library adapters, components, and tests, and adding a local dev fallback for `DATABASE_URL` in `src/lib/db/index.ts` so Next.js static build data collection succeeds when `DATABASE_URL` is unset in CI. Confirmed `npm run lint`, `npx tsc --noEmit`, and `npm run build` pass with zero errors.
-
-### 2026-10-25 — Janitor / Docs Hygiene Fixes (LANE-5 / Minion 3)
-
-**Category:** Documentation hygiene
-
-**Summary:** Audited and fixed broken document links across markdown files (`README.md`, `.jules/scribe.md`). Fixed absolute Windows file:// links in `.jules/scribe.md` and verified url-encoded link targets using custom link checker tool `check_docs.py`.
+**Summary:** Fixed the two defects on master identified in Lead review of GC-301:
+- ✅ **ERR-040**: Created and exported `refreshQueue` (`product.refresh`) in `src/lib/queue/index.ts` and updated `src/worker/scheduler.ts` to enqueue onto `refreshQueue` instead of `importQueue`.
+- ✅ **ERR-041**: Added `"cron-parser": "4.9.0"` to dependencies in `package.json`.
+- ✅ Updated unit test in `src/__tests__/worker/scheduler.test.ts` to mock `refreshQueue` and verified all 4 scheduler unit tests pass.
+- ✅ Updated `Docs/agent-job-board.md` §5 table state to `DONE` and appended `[DONE]` entry on Message Board.
 
 ### 2026-10-25 — Sweep #8 (Lead review): GC-S1 reviewed, FIXES NEEDED; PR #11 not merged
 
@@ -409,7 +407,7 @@ worker processes with PostgreSQL and Redis; finalize it through an ADR before a 
 - [ ] **GC-202** — Jules: AliExpress token provider (transient secret, expiry-aware refresh, mocked-HTTP tests, no plaintext persistence)
 - [ ] **GC-R1** — Claude (on check-in): second-eyes review of GC-101 against `process.env` reads in `src/`
 - [x] **GC-T1** — LANE-3 (Minion 1): `aliexpress.ds.text.search` response fixture pack (full / empty / error envelope) — completed 2026-10-25
-- [ ] **GC-301** — LANE-2 (Thing 2): BullMQ repeatable-job scheduler + `scheduled_refreshes` consumer
+- [x] **GC-301** — LANE-2 (Thing 2): BullMQ repeatable-job scheduler + `scheduled_refreshes` consumer (fix-up completed 2026-10-25)
 - [ ] **GC-302** — LANE-2 (Thing 2): register the missing `listing.submit` worker processor
 - [x] **GC-RS1** — LANE-5 (Minion 3): research brief for the GC-102 credential-storage decision (brief only, no code) — Lead-reviewed 2026-10-25; brief landed on master 2026-10-25 (commit f8ad33c1), PR #7 closed as redundant
-- [x] **GC-S1** — First idle checked-in agent (Lead assigns): RANGER sweep #1 — secrets-pattern scan (locations/types only) + dependency vulnerability summary, reported on the board — completed 2026-10-25 (LANE-4) — audit findings accepted 2026-10-26 (sweep #11); post-merge fix-up on master open (ERR-043)
+- [x] **GC-S1** — First idle checked-in agent (Lead assigns): RANGER sweep #1 — secrets-pattern scan (locations/types only) + dependency vulnerability summary, reported on the board — completed 2026-10-25 (LANE-4) — audit findings accepted 2026-10-26 (sweep #11); post-merge fix-up ACCEPTED on review 2026-10-26 (sweep #12, PR #15) pending merge; ERR-043 closes at merge
