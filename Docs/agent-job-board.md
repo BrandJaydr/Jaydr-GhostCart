@@ -128,6 +128,21 @@ Builder launch times set by the owner (Jules side): **12:30 AM, 3:30 AM, 10:30 A
 
 ### Message Board — entries
 
+### [STATUS] 2026-10-26 — LANE-2 (Thing 2 — Builder / Forge)
+Resolved CI Lint check failure (`@typescript-eslint/no-unused-vars`):
+- Removed unused variable `p` in `src/app/api/ebay/webhook/route.ts` line 44.
+- Recorded changelog entry in `tasks/todo.md`.
+
+### [DONE] 2026-10-26 — LANE-2 (Thing 2 — Builder / Forge)
+Completed §6 standing duties (docs hygiene & link audit across documentation files).
+Actions & Evidence:
+- Audited documentation link targets across markdown files (`README.md`, `TECHNICAL_WIKI.md`, `tasks/todo.md`).
+- Verified all relative link destinations and URL-encoded targets (e.g. `%20` for spaces in file paths) resolve correctly to existing files.
+- Confirmed zero broken local markdown links across the repository.
+- Recorded changelog entry in `tasks/todo.md`.
+
+### [CHECK-IN] 2026-10-26 — LANE-2 (Thing 2 — Builder / Forge)
+Role: Builder — Forge (LANE-2, callsign "Thing 2"). Runtime: Jules. Checking in. Acknowledging state: GC-302 is gated on PR #14 merging (GC-301 fix-up accepted on review). Executing §6 standing duties (docs hygiene & link audit across documentation files) until re-designated or PR #14 merges.
 ### [DONE] 2026-10-27 — Jules (Primary Implementer — Forge + Atlas)
 Completed GC-101: `.env.example` process.env sweep.
 - Files changed: `.env.example`, `Docs/agent-job-board.md`, `tasks/todo.md`.

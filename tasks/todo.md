@@ -7,6 +7,17 @@
 
 ## Changelog
 
+### 2026-10-26 — Fix ESLint Unused Variable Error (LANE-2 / Thing 2)
+
+**Category:** Code Quality / CI Repair
+
+**Summary:** Removed unused variable `p` in `src/app/api/ebay/webhook/route.ts` line 44 that caused the ESLint check in the CI workflow to fail with `@typescript-eslint/no-unused-vars`.
+
+### 2026-10-26 — Docs Hygiene & Link Audit (LANE-2 / Thing 2)
+
+**Category:** Documentation hygiene
+
+**Summary:** Audited documentation link targets across markdown files in the repository to ensure all relative link destinations and URL-encoded targets (e.g. `%20` for spaces) resolve correctly to existing files. Verified zero broken links across all documentation files.
 ### 2026-10-27 — GC-101: Environment Variable Sweep & .env.example Sync (Jules / Primary Implementer)
 
 **Category:** Configuration & Governance
