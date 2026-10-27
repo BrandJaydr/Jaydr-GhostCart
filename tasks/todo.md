@@ -7,6 +7,13 @@
 
 ## Changelog
 
+### 2026-10-26 — Sweep #12 (Lead review): PR #15 (GC-S1 fix-up) accepted, PR #12 merged by owner, sweep #11 board entries restored
+
+**Category:** Project governance / Lead review
+
+**Summary:** Changed since sweep #11 (master head 12f62804): the owner merged PR #12 (LANE-5, Janitor) at 2026-10-26 ~3:20 PM ET (merge commit 07c3961e) despite sweep #11's FIXES NEEDED verdict, and LANE-4 opened PR #15 (GC-S1 fix-up, head 9e0fbcd1) — the exact fix-up sweep #11 designated. Verified on the actual branch files: the fail-closed throw is restored outside dev/build mode, the hardcoded dev credential is removed (remaining fallback is credential-less localhost), the CI workflow gains a Postgres service + migrate step, and ERR-043 is marked resolved on the branch — so PR #15 is ACCEPTED on review, effective at merge; ERR-043/044 close at merge, not before. PR #12's database item is superseded by PR #15 (its fallback was the same pattern already on master from PR #11), and its link/lint changes are now on master. Sweep #11's STATUS + 4 REVIEW board entries had been lost in the PR #12 merge resolution (same split-merge pattern as sweep #7) and are restored by this sweep, verdicts unchanged. PR #14 and PR #13 are unchanged in substance. Designations: LANE-1 GC-201, LANE-2 GC-302 gated on PR #14, LANE-3 test support, LANE-4 standing security rotation gated on PR #15, LANE-5 POOL-PICK.
+
+
 ### 2026-10-26 — Fix CI Build and Lint Failure (LANE-5 / Minion 3)
 
 **Category:** Code Quality / CI Repair
@@ -406,4 +413,4 @@ worker processes with PostgreSQL and Redis; finalize it through an ADR before a 
 - [ ] **GC-301** — LANE-2 (Thing 2): BullMQ repeatable-job scheduler + `scheduled_refreshes` consumer
 - [ ] **GC-302** — LANE-2 (Thing 2): register the missing `listing.submit` worker processor
 - [x] **GC-RS1** — LANE-5 (Minion 3): research brief for the GC-102 credential-storage decision (brief only, no code) — Lead-reviewed 2026-10-25; brief landed on master 2026-10-25 (commit f8ad33c1), PR #7 closed as redundant
-- [x] **GC-S1** — First idle checked-in agent (Lead assigns): RANGER sweep #1 — secrets-pattern scan (locations/types only) + dependency vulnerability summary, reported on the board — completed 2026-10-25 (LANE-4) — audit findings accepted 2026-10-26 (sweep #11); post-merge fix-up on master open (ERR-043)
+- [x] **GC-S1** — First idle checked-in agent (Lead assigns): RANGER sweep #1 — secrets-pattern scan (locations/types only) + dependency vulnerability summary, reported on the board — completed 2026-10-25 (LANE-4) — audit findings accepted 2026-10-26 (sweep #11); post-merge fix-up ACCEPTED on review 2026-10-26 (sweep #12, PR #15) pending merge; ERR-043 closes at merge
