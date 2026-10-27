@@ -14,7 +14,7 @@
     "lint": "eslint . --ext .ts,.tsx --max-warnings 0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "db:migrate": "ts-node --esm src/db/migrate.ts",
+    "db:migrate": "ts-node-esm src/db/migrate.ts",
     "db:backup": "bash scripts/backup-db.sh",
     "db:restore": "bash scripts/restore-db.sh",
     "db:restore:test": "bash scripts/restore-test.sh",
@@ -24,6 +24,7 @@
   "dependencies": {
     "@heroui/react": "^2.8.10",
     "bullmq": "5.7.5",
+    "cron-parser": "4.9.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^13.1.0",
