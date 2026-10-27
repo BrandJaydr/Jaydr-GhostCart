@@ -7,6 +7,20 @@
 
 ## Changelog
 
+### 2026-10-27 — Sweep #14 (Lead review): PR #18 accepted (LANE-2 standing duties), ERR-046 lands, sweep #13 entries carried forward
+
+**Category:** Project governance / Lead review
+
+**Summary:** One new open pull request since sweep #13 (master head still 7b44a9aa, no new master commits): PR #18 (LANE-2, check-in and standing duties) is ACCEPTED on review — the unused-variable removal in the eBay webhook route, the documentation link audit, and the changelog entries were all verified against the actual branch files; the lane correctly did not start GC-302, which stays gated on PR #14 merging. One follow-up is logged as ERR-046: a continuous-integration workflow change from an intermediate commit on the branch did not survive to the PR head, so merging PR #18 does not deliver it. Sweep #13's board update never landed (its push approval timed out), so its entries are carried forward in this same update. PRs #13–#17 are unchanged; their earlier verdicts stand. Designations: LANE-1 GC-101 fix-up then GC-201, LANE-2 GC-302 gated on PR #14, LANE-3 test support, LANE-4 standing security rotation gated on PR #15, LANE-5 POOL-PICK.
+
+
+### 2026-10-27 — Sweep #13 (Lead review): PR #16 accepted, PR #17 fixes needed, ERR-045 lands
+
+**Category:** Project governance / Lead review
+
+**Summary:** Two new open pull requests since sweep #12 (master head still 7b44a9aa, no new master commits). PR #16 (LANE-5, Pattern Hunting) is ACCEPTED on review — Patterns 19–21 verified against the actual branch files and the error entries they summarize (ERR-040 queue routing, ERR-041 missing dependency declaration, ERR-043/044 environment-gated fallback); claim ratified, DONE effective at merge. PR #17 (LANE-1, GC-101 re-do) is FIXES NEEDED — its 4 added database-script variables are genuinely read by the backup/restore scripts, but its "100% in sync" claim misses 9 further script variables (ERR-045); no [CLAIM] was posted and the GC-101 DONE self-report is overridden. PRs #13, #14, and #15 are unchanged; their earlier verdicts stand. Designations: LANE-1 GC-101 fix-up then GC-201, LANE-2 GC-302 gated on PR #14, LANE-3 test support, LANE-4 standing security rotation gated on PR #15, LANE-5 POOL-PICK.
+
+
 ### 2026-10-26 — Sweep #12 (Lead review): PR #15 (GC-S1 fix-up) accepted, PR #12 merged by owner, sweep #11 board entries restored
 
 **Category:** Project governance / Lead review
