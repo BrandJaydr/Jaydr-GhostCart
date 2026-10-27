@@ -72,6 +72,8 @@ This is the operating model the owner specified; the lanes above are its first s
 
 | Lane | Callsign | Role (slots) | Track (in order) | State |
 |---|---|---|---|---|
+| LANE-1 | Thing 1 | Builder — Forge + Atlas | GC-101 → GC-201 → GC-202 → GC-203 → GC-204 | **DONE (2026-10-27)** — GC-101 (`.env.example` sync verified complete & updated with DB script parameters); **NEXT TASK** — GC-201 (AliExpress HMAC-SHA256 signer + fixture tests, dummy secret only) |
+| LANE-2 | Thing 2 | Builder — Forge | GC-301 → GC-302 → GC-303 | **NEXT TASK** — GC-302 (gated: starts after PR #14 merges; GC-301 fix-up ACCEPTED on review in sweeps #10/#11 — `refreshQueue` export + `cron-parser` 4.9.0 verified, see REVIEW; GC-301 stays unchecked on master until the merge, ERR-040/041 stay OPEN until then) |
 | LANE-1 | Thing 1 | Builder — Forge + Atlas | GC-101 → GC-201 → GC-202 → GC-203 → GC-204 | **NEXT TASK** — GC-201 (AliExpress HMAC-SHA256 signer + fixture tests, dummy secret only; unblocked — PR #8 merged 2026-10-25, commit b3564e00) |
 | LANE-2 | Thing 2 | Builder — Forge | GC-301 → GC-302 → GC-303 | **DONE** — GC-301 fix-up ON MASTER (2026-10-25; exported `refreshQueue` in `src/lib/queue/index.ts`, enqueued onto `refreshQueue` in `scheduler.ts`, added `cron-parser` 4.9.0 to `package.json`, unit tests green) |
 | LANE-3 | Minion 1 | Test & fixtures — Oracle support | GC-T1 → test support for LANE-1/LANE-2 as designated | **NEXT TASK** — test support for LANE-1 (GC-201) and LANE-2 (GC-301 fix-up); GC-T1 accepted 2026-10-25 |
@@ -126,6 +128,14 @@ Builder launch times set by the owner (Jules side): **12:30 AM, 3:30 AM, 10:30 A
 
 ### Message Board — entries
 
+### [DONE] 2026-10-27 — Jules (Primary Implementer — Forge + Atlas)
+Completed GC-101: `.env.example` process.env sweep.
+- Files changed: `.env.example`, `Docs/agent-job-board.md`, `tasks/todo.md`.
+- Sweep details: Scanned all files in `src/` and `scripts/` using custom python sweep tool (`env_sweep.py`) and `grep -rn "process.env"`. Verified 100% of variables referenced in code (`DATABASE_URL`, `REDIS_URL`, `NEXTAUTH_SECRET`, `EBAY_APP_ID`, `EBAY_CERT_ID`, `EBAY_DEV_ID`, `EBAY_RU_NAME`, `EBAY_ENVIRONMENT`, `EBAY_WEBHOOK_SECRET`, `CSV_FEED_URL`, `AI_*`, `ALERTS_*`, `DEV_SEED_*`, `DEV_TENANT_ID`) and script DB connection parameters (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`) are present in `.env.example` with safe placeholder/default values.
+- Findings: Confirmed 0 real credentials or secrets committed in version control.
+
+### [CHECK-IN] 2026-10-27 — Jules (Primary Implementer — Forge + Atlas)
+Role: Primary Implementer (Forge + Atlas slots). Runtime: Jules (via API). Capabilities: TypeScript implementation, API integration, worker queues, DB schema/migrations, unit and integration testing, bash script verification. Constraints: Follow Lead assignments (GC-101 sync), surgical changes only, no real credentials or secrets committed. Confirming assigned Primary Implementer role.
 ### [DONE] 2026-10-26 — LANE-5 (Minion 3)
 Completed standing Pattern Hunting & Docs Hygiene duties (§6).
 Actions & Evidence:
