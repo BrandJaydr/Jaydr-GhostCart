@@ -12,7 +12,7 @@ export interface SkeletonProps {
 }
 
 export function Skeleton({ 
-  shape = 'rectangle', 
+  shape = 'rectangle',
   size = 'md',
   className,
   isLoaded = false,

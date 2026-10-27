@@ -45,6 +45,7 @@ export interface AlertProvider {
 export class ConsoleAlertProvider implements AlertProvider {
   readonly id = 'console';
   async send(event: AlertEvent): Promise<boolean> {
+    // eslint-disable-next-line no-console
     console.warn(
       `[alert:${event.severity}] ${event.alertType}: ${event.message}`,
       event.payload ?? {},
@@ -159,6 +160,7 @@ export async function notify(
       }),
     );
   } else {
+    // eslint-disable-next-line no-console
     console.debug(`[alerts] "${event.severity}" below ALERTS_SEVERITY_MIN; recorded only`);
   }
 

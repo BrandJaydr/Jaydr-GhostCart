@@ -172,7 +172,7 @@ describe('CSV Adapter Integration Tests', () => {
       expect(product.confidence).toBeDefined();
       
       // Should have confidence warnings for missing/invalid data
-      const priceField = product.confidence.find((c: any) => c.field === 'required');
+      const priceField = product.confidence.find((c) => c.field === 'required');
       expect(priceField?.warnings).toBeDefined();
     });
 
@@ -195,7 +195,7 @@ describe('CSV Adapter Integration Tests', () => {
         
         const result = await customAdapter.validateConnection();
         expect(result.valid).toBe(false);
-        expect(result.reason).toContain('missing required columns');
+        expect(result.reason?.toLowerCase()).toContain('missing required columns');
       } finally {
         if (prev === undefined) delete process.env.CSV_FEED_URL;
         else process.env.CSV_FEED_URL = prev;

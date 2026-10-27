@@ -4,9 +4,6 @@ import { z } from 'zod';
 import {
   generateSuggestion,
   getPendingSuggestions,
-  approveSuggestion,
-  rejectSuggestion,
-  applySuggestion,
   isRepricingPaused,
 } from '@/lib/repricing/engine';
 import { DEV_TENANT_ID } from '@/lib/db/index';
@@ -70,7 +67,7 @@ export async function POST(req: NextRequest) {
  * GET /api/repricing/suggest
  * Get pending repricing suggestions
  */
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   // @agent:forge Replace with session tenantId
   const tenantId = DEV_TENANT_ID;
 

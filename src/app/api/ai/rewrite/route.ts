@@ -1,9 +1,8 @@
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { z } from 'zod';
-import { getAIClient, type RewriteRequest } from '@/lib/ai/ai-client';
+import { getAIClient } from '@/lib/ai/ai-client';
 import { getCacheManager, CacheManager } from '@/lib/ai/cache-manager';
-import { DEV_TENANT_ID } from '@/lib/db/index';
 
 /**
  * Schema for AI rewrite request
@@ -42,9 +41,6 @@ export async function POST(req: NextRequest) {
 
   const rewriteRequest = parseResult.data;
 
-  // @agent:forge Replace this with the tenantId resolved from the
-  // authenticated session once next-auth is configured.
-  const tenantId = DEV_TENANT_ID;
 
   try {
     // Generate cache key
@@ -120,8 +116,6 @@ export async function GET(req: NextRequest) {
     return apiError('Either productId or listingId is required', null, 400);
   }
 
-  // @agent:forge Replace with session tenantId
-  const tenantId = DEV_TENANT_ID;
 
   try {
     const cacheManager = getCacheManager();
