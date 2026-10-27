@@ -7,17 +7,18 @@
 
 ## Changelog
 
-### 2026-10-26 — Fix ESLint Unused Variable Error (LANE-2 / Thing 2)
+### 2026-10-27 — Sweep #16 (Lead review): PRs #14–#17 merged by owner; closures verified, board/todo/register wipe restored, ERR-045–ERR-050 land
 
-**Category:** Code Quality / CI Repair
+**Category:** Project governance / Lead review
 
-**Summary:** Removed unused variable `p` in `src/app/api/ebay/webhook/route.ts` line 44 that caused the ESLint check in the CI workflow to fail with `@typescript-eslint/no-unused-vars`.
+**Summary:** Owner merged PR #14 (GC-301 fix-up), #15 (GC-S1 fix-up), #16 (Pattern Hunting), and #17 (GC-101 re-do) during the sweep; PRs #18/#19 still open, unchanged. Verified on master: the refresh-queue export + cron-parser declaration (ERR-040/041 CLOSED), the fail-closed database throw + credential-less fallback (ERR-043 CLOSED, ERR-044 CLOSED), Patterns 19–21 (PR #16), the 4 database-script variables from PR #17 (ERR-045 stays OPEN — 9 variables still missing, now a master fix-up for LANE-1), and the removal of the unused webhook variable (ERR-048 CLOSED by the #15 merge). The merges wiped the error register back to ERR-044 and the board back past sweep #13 (ERR-049/ERR-050); this sweep restores the board, todo, and register from snapshots, removes duplicate §5 rows and a duplicated changelog entry, and re-issues designations: LANE-1 GC-201 (+ ERR-045 remainder), LANE-2 GC-302 ungated, LANE-3 PR #19 fix-up (ERR-047, rebase onto 2347aac4), LANE-4 security rotation, LANE-5 POOL-PICK. The first sweep #16 push attempt is pending approval on pre-merge content and is superseded — it must not be approved as-is. Sweep #15's entry (PR #19 FIXES NEEDED, ERR-047) is posted with this update; its own push never landed.
 
-### 2026-10-26 — Docs Hygiene & Link Audit (LANE-2 / Thing 2)
 
-**Category:** Documentation hygiene
+### 2026-10-27 — Sweep #15 (Lead review, out-of-schedule): PR #19 fixes needed, ERR-047 lands (board push did not land — carried into sweep #16)
 
-**Summary:** Audited documentation link targets across markdown files in the repository to ensure all relative link destinations and URL-encoded targets (e.g. `%20` for spaces) resolve correctly to existing files. Verified zero broken links across all documentation files.
+**Category:** Project governance / Lead review
+
+**Summary:** One new open pull request since sweep #14 (master head still 5fd6a4fc): PR #19 (LANE-3, test support) is FIXES NEEDED — its signer test tests a copy defined in the test file itself (the real signer module, GC-201, is unbuilt) with a self-computed "known answer", and its scheduler test never asserts which queue receives the job, so it cannot catch the ERR-040 routing defect; logged as ERR-047. Its DONE self-report is overridden; no [CLAIM] was posted. PRs #13–#18 unchanged; verdicts stand. Designations: LANE-1 GC-101 fix-up then GC-201, LANE-2 GC-302 gated on PR #14, LANE-3 PR #19 fix-up, LANE-4 standing security rotation gated on PR #15, LANE-5 POOL-PICK. (This entry was drafted in sweep #15 but its board push never landed; it is posted with sweep #16's restoration.)
 ### 2026-10-27 — GC-101: Environment Variable Sweep & .env.example Sync (Jules / Primary Implementer)
 
 **Category:** Configuration & Governance
@@ -35,12 +36,6 @@
 - Pattern 19: BullMQ Queue Instance vs. Job Name Disconnect (ERR-040).
 - Pattern 20: Manifest-Source Dependency Sync Pattern (ERR-041).
 - Pattern 21: Environment-Gated Fallback Configuration Pattern (ERR-043, ERR-044).
-
-### 2026-10-26 — Sweep #12 (Lead review): PR #15 (GC-S1 fix-up) accepted, PR #12 merged by owner, sweep #11 board entries restored
-
-**Category:** Security & Configuration / RANGER
-
-**Summary:** Completed task GC-S1 fix-up on master (ERR-043). Restored fail-closed handling in `src/lib/db/index.ts` when `DATABASE_URL` is missing in production (throws error), removed hardcoded credentials from source code, added postgres service and migration step to `.github/workflows/ci.yml` for CI test suite execution, fixed an unused variable lint error in `src/app/api/ebay/webhook/route.ts`, and updated error logging register in `.logs/errors.md`. Confirmed `npm run lint`, `npx tsc --noEmit`, and `npm run build` pass with zero errors.
 
 ### 2026-10-26 — Fix CI Build and Lint Failure (LANE-5 / Minion 3)
 
