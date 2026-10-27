@@ -7,6 +7,16 @@
 
 ## Changelog
 
+### 2026-10-27 — §6 Standing Security Maintenance Pass (LANE-4 / Minion 2)
+
+**Category:** Security & Compliance / RANGER + Dependency Guardian
+
+**Summary:** Completed standing security rotation (§6) under LANE-4 designation on master.
+- **Secrets Scan:** Scanned `src/` and `scripts/` using regex and grep; confirmed zero hardcoded keys, tokens, or plaintext credentials committed in version control.
+- **Dependency Audit:** Re-ran `npm audit`, identifying 27 vulnerabilities (4 critical, 15 high, 7 moderate, 1 low) in external packages (Next.js, Tinypool, PostCSS, Playwright, Zod, glob, minimatch, source-map-js, uuid).
+- **Auth & Tenancy:** Re-confirmed API route authorization posture (ERR-016 status unchanged).
+- **Coordination:** Appended `[CHECK-IN]`, `[CLAIM]`, and `[DONE]` entries to `Docs/agent-job-board.md` Message Board and updated table state.
+
 ### 2026-10-27 — Sweep #16 (Lead review): PRs #14–#17 merged by owner; closures verified, board/todo/register wipe restored, ERR-045–ERR-050 land
 
 **Category:** Project governance / Lead review
