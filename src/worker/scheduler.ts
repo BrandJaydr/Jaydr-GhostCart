@@ -8,7 +8,7 @@
 
 import cronParser from 'cron-parser';
 import { db } from '../lib/db/index.js';
-import { importQueue } from '../lib/queue/index.js';
+import { refreshQueue } from '../lib/queue/index.js';
 
 export interface ScheduledRefreshRow {
   id: string;
@@ -110,8 +110,8 @@ export async function processScheduledRefreshes(
       };
 
       try {
-        if (importQueue) {
-          await importQueue.add('product.refresh', jobPayload, {
+        if (refreshQueue) {
+          await refreshQueue.add('product.refresh', jobPayload, {
             jobId: idempotencyKey,
           });
         }
