@@ -6,7 +6,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { calculateNextRunAt, processScheduledRefreshes } from '../../worker/scheduler.js';
 
 vi.mock('../../lib/queue/index.js', () => ({
-  importQueue: {
+  refreshQueue: {
     add: vi.fn().mockResolvedValue({ id: 'mock-job-id' }),
   },
 }));
