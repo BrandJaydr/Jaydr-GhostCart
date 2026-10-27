@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
     return apiError('Invalid JSON payload', null, 400);
   }
 
+  const p = payload as Record<string, unknown>;
   // Extract event details
   const payloadObj = (payload && typeof payload === 'object') ? (payload as Record<string, unknown>) : {};
   const eventType = (typeof payloadObj.eventType === 'string') ? payloadObj.eventType : 'unknown';
