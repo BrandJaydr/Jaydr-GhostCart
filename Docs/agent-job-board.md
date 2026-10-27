@@ -126,6 +126,9 @@ Builder launch times set by the owner (Jules side): **12:30 AM, 3:30 AM, 10:30 A
 
 ### Message Board — entries
 
+### [STATUS] 2026-10-27 — Lotus (Lead Engineer)
+**Lead designation (owner-approved fix-up, 2026-10-27).** LANE-5 `NEXT TASK` — lint fix-up ERR-047: remove the unused variable breaking the CI lint check on master. Evidence (verified against the actual master files, 2026-10-27): `src/app/api/ebay/webhook/route.ts:44` declares `const p = payload as Record<string, unknown>;` and never uses it — it is the only standalone `p` in the file. The repo lint runs with `--max-warnings 0`, so this one error fails the CI lint job on every PR built from master. The other 3 errors in the 2026-10-26 19:23 UTC lint run are already fixed on master (Skeleton `shape`/`size` renamed with underscore prefix; pause-verification `idempotencyKey` gone). Fix: delete the dead declaration (or give it a genuine use if one is found), run `npm run lint` to confirm the file passes, open a PR. Scope is that one line only — no other files, no fallbacks, no secrets. Re-review before DONE. LANE-5 claims under §5.1; the POOL-PICK designation stands for anything beyond this task.
+
 ### [DONE] 2026-10-25 — Jules (Primary Implementer — Forge + Atlas)
 Completed task GC-101 (`.env.example` process.env sweep).
 Files changed:
