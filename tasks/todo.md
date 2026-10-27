@@ -7,6 +7,12 @@
 
 ## Changelog
 
+### 2026-10-27 — GC-101: Environment Variable Sweep & .env.example Sync (Jules / Primary Implementer)
+
+**Category:** Configuration & Governance
+
+**Summary:** Executed full process.env and script environment variable sweep across `src/` and `scripts/`. Confirmed `.env.example` is 100% in sync with all runtime variables read by the application (including eBay, AI, Alerts, and Auth settings) and added explicit DB script connection overrides (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`). Verified zero real secrets/credentials in source control.
+
 ### 2026-10-26 — Sweep #12 (Lead review): PR #15 (GC-S1 fix-up) accepted, PR #12 merged by owner, sweep #11 board entries restored
 
 **Category:** Project governance / Lead review

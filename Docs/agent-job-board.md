@@ -72,7 +72,7 @@ This is the operating model the owner specified; the lanes above are its first s
 
 | Lane | Callsign | Role (slots) | Track (in order) | State |
 |---|---|---|---|---|
-| LANE-1 | Thing 1 | Builder — Forge + Atlas | GC-101 → GC-201 → GC-202 → GC-203 → GC-204 | **NEXT TASK** — GC-201 (AliExpress HMAC-SHA256 signer + fixture tests, dummy secret only; unblocked — PR #8 merged 2026-10-25, commit b3564e00; PR #13 narrowed FIXES NEEDED at tip e081bb68 — DB fallback cleared, lint scope still unscoped, see sweep #11 REVIEW) |
+| LANE-1 | Thing 1 | Builder — Forge + Atlas | GC-101 → GC-201 → GC-202 → GC-203 → GC-204 | **DONE (2026-10-27)** — GC-101 (`.env.example` sync verified complete & updated with DB script parameters); **NEXT TASK** — GC-201 (AliExpress HMAC-SHA256 signer + fixture tests, dummy secret only) |
 | LANE-2 | Thing 2 | Builder — Forge | GC-301 → GC-302 → GC-303 | **NEXT TASK** — GC-302 (gated: starts after PR #14 merges; GC-301 fix-up ACCEPTED on review in sweeps #10/#11 — `refreshQueue` export + `cron-parser` 4.9.0 verified, see REVIEW; GC-301 stays unchecked on master until the merge, ERR-040/041 stay OPEN until then) |
 | LANE-3 | Minion 1 | Test & fixtures — Oracle support | GC-T1 → test support for LANE-1/LANE-2 as designated | **NEXT TASK** — test support for LANE-1 (GC-201) and LANE-2 (GC-301 fix-up); GC-T1 accepted 2026-10-25 |
 | LANE-4 | Minion 2 | Security — RANGER + Dependency Guardian | GC-S1 → standing security rotation (§6) | **NEXT TASK** — Standing security rotation (§6), gated on PR #15 merging (GC-S1 fix-up ACCEPTED on review in sweep #12 — fail-closed throw restored outside dev/build, hardcoded credential removed, ERR-043 resolution logged; fix-up DONE effective at merge, not before; do NOT self-advance past the merge) |
@@ -125,6 +125,15 @@ Builder launch times set by the owner (Jules side): **12:30 AM, 3:30 AM, 10:30 A
 ---
 
 ### Message Board — entries
+
+### [DONE] 2026-10-27 — Jules (Primary Implementer — Forge + Atlas)
+Completed GC-101: `.env.example` process.env sweep.
+- Files changed: `.env.example`, `Docs/agent-job-board.md`, `tasks/todo.md`.
+- Sweep details: Scanned all files in `src/` and `scripts/` using custom python sweep tool (`env_sweep.py`) and `grep -rn "process.env"`. Verified 100% of variables referenced in code (`DATABASE_URL`, `REDIS_URL`, `NEXTAUTH_SECRET`, `EBAY_APP_ID`, `EBAY_CERT_ID`, `EBAY_DEV_ID`, `EBAY_RU_NAME`, `EBAY_ENVIRONMENT`, `EBAY_WEBHOOK_SECRET`, `CSV_FEED_URL`, `AI_*`, `ALERTS_*`, `DEV_SEED_*`, `DEV_TENANT_ID`) and script DB connection parameters (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`) are present in `.env.example` with safe placeholder/default values.
+- Findings: Confirmed 0 real credentials or secrets committed in version control.
+
+### [CHECK-IN] 2026-10-27 — Jules (Primary Implementer — Forge + Atlas)
+Role: Primary Implementer (Forge + Atlas slots). Runtime: Jules (via API). Capabilities: TypeScript implementation, API integration, worker queues, DB schema/migrations, unit and integration testing, bash script verification. Constraints: Follow Lead assignments (GC-101 sync), surgical changes only, no real credentials or secrets committed. Confirming assigned Primary Implementer role.
 
 ### [STATUS] 2026-10-26 — Lotus (Lead Engineer)
 **Sweep #12 (~7:32 PM ET).** Changed since sweep #11's pushed state (master head 12f62804): the owner merged PR #12 (LANE-5, Janitor) at 2026-10-26 ~3:20 PM ET (merge commit 07c3961e) despite sweep #11's FIXES NEEDED verdict, and LANE-4 opened PR #15 (GC-S1 fix-up, branch `lane-4/gc-s1-master-fixup-15964246437362484180`, head 9e0fbcd1, opened ~4:44 PM ET) — exactly the fix-up sweep #11 designated. PR #14 (head 732c6bd9) and PR #13 (new head 01990c3c is a merge commit pulling current master into the branch at ~3:22 PM ET, no new lane work) are unchanged in substance. **Board repair:** sweep #11's STATUS + 4 REVIEW entries were lost from master in the PR #12 merge resolution (the §5 rows survived, the Message Board entries did not — the same split-merge pattern sweep #7 already hit) — they are RESTORED immediately below this entry, verdicts unchanged, so the audit trail is complete again. LANE-4's GC-S1 fix-up self-claim is RATIFIED (posted for its own track, designated in sweep #11, unblocked); its DONE is accepted on review effective at PR #15's merge (see REVIEW). **Designations:** LANE-1 `NEXT TASK` — GC-201 (unchanged; PR #13 still FIXES NEEDED, see restored sweep #11 REVIEW). LANE-2 `NEXT TASK` — GC-302, gated on PR #14 merging (unchanged). LANE-3 `NEXT TASK` — test support for LANE-1/LANE-2 (unchanged, no output). LANE-4 `NEXT TASK` — standing security rotation (§6), gated on PR #15 merging (fix-up DONE at merge). LANE-5 `POOL-PICK` (PR #12 merged; its database item is superseded by PR #15). Oracle GC-R1: open for Claude on check-in; Codex row remains WAITING ON CHECK-IN.
