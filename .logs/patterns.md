@@ -103,3 +103,24 @@ This file captures recurring design patterns, integration gotchas, database guid
 - **Risk:** CI/local verification can be falsely reported as complete when only a toolchain startup error was observed.
 - **Required control:** Keep a recorded test command/result matrix and verify the runner loads before interpreting pass/fail counts.
 - **Discovered by:** Investigator — 2026-08-12 (ERR-018)
+
+### 19. BullMQ Queue Instance vs. Job Name Disconnect
+- **Pattern:** Passing a job name string (e.g. `'product.refresh'`) to a BullMQ `Queue` instance enqueues jobs onto *that instance's* queue (e.g. `'product.import'`), regardless of the job name string passed.
+- **Rationale:** BullMQ queue routing is determined entirely by the `Queue` object instance, not by the job name parameter.
+- **Risk:** Enqueued jobs land on the wrong queue, where a different worker (e.g. import worker) consumes them with an incompatible payload schema, causing processing failures or silent job loss.
+- **Solution:** Export dedicated, named `Queue` instances from `src/lib/queue/index.ts` matching each worker queue (e.g. `refreshQueue = new Queue('product.refresh')`) and enqueue directly onto the matching queue instance.
+- **Discovered by:** Minion 3 (Scout) 🔍 — 2026-10-26 (ERR-040)
+
+### 20. Manifest-Source Dependency Sync Pattern
+- **Pattern:** Importing third-party npm packages in new worker or library files without declaring them in `package.json` dependencies.
+- **Rationale:** Code added during development may rely on transitive dependencies already present in `node_modules` during local runs, masking missing manifest declarations.
+- **Risk:** Clean installs (`npm ci`) in fresh environments or CI pipelines fail at runtime with `MODULE_NOT_FOUND`.
+- **Solution:** Always declare external runtime imports as explicit, version-pinned entries in `package.json` `dependencies`.
+- **Discovered by:** Minion 3 (Scout) 🔍 — 2026-10-26 (ERR-041)
+
+### 21. Environment-Gated Fallback Configuration Pattern
+- **Pattern:** Adding local development connection fallbacks directly in source files to resolve build-time static generation failures when environment variables are unset.
+- **Rationale:** Next.js static page collection during `npm run build` evaluates DB modules. Hardcoded fallbacks allow static builds to pass without requiring a live database URL.
+- **Risk:** A misconfigured production environment silently falls back to a dev database URL (potentially with default credentials in source) instead of failing closed.
+- **Solution:** Configuration modules must fail closed in production (`NODE_ENV === 'production'`). Any local or build-time fallback must be strictly gated behind explicit mode checks (`NODE_ENV === 'development'` or `CI === 'true'` or `NEXT_PHASE`) and use credential-less targets (e.g., `postgresql://localhost:5432/ghostcart`).
+- **Discovered by:** Minion 3 (Scout) 🔍 — 2026-10-26 (ERR-043, ERR-044)
