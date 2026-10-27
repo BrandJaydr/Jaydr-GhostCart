@@ -7,6 +7,12 @@
 
 ## Changelog
 
+### 2026-10-26 — Docs Hygiene & Link Audit (LANE-2 / Thing 2)
+
+**Category:** Documentation hygiene
+
+**Summary:** Audited documentation link targets across markdown files in the repository to ensure all relative link destinations and URL-encoded targets (e.g. `%20` for spaces) resolve correctly to existing files. Verified zero broken links across all documentation files.
+
 ### 2026-10-26 — Sweep #12 (Lead review): PR #15 (GC-S1 fix-up) accepted, PR #12 merged by owner, sweep #11 board entries restored
 
 **Category:** Project governance / Lead review
