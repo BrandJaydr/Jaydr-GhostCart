@@ -7,38 +7,14 @@
 
 ## Changelog
 
-### 2026-10-27 — Sweep #14 (Lead review): PR #18 accepted (LANE-2 standing duties), ERR-046 lands, sweep #13 entries carried forward
+### 2026-10-25 — GC-101: Environment Variable Sweep & .env.example Sync (Jules / Primary Implementer)
 
-**Category:** Project governance / Lead review
+**Category:** Governance / Config Hygiene
 
-**Summary:** One new open pull request since sweep #13 (master head still 7b44a9aa, no new master commits): PR #18 (LANE-2, check-in and standing duties) is ACCEPTED on review — the unused-variable removal in the eBay webhook route, the documentation link audit, and the changelog entries were all verified against the actual branch files; the lane correctly did not start GC-302, which stays gated on PR #14 merging. One follow-up is logged as ERR-046: a continuous-integration workflow change from an intermediate commit on the branch did not survive to the PR head, so merging PR #18 does not deliver it. Sweep #13's board update never landed (its push approval timed out), so its entries are carried forward in this same update. PRs #13–#17 are unchanged; their earlier verdicts stand. Designations: LANE-1 GC-101 fix-up then GC-201, LANE-2 GC-302 gated on PR #14, LANE-3 test support, LANE-4 standing security rotation gated on PR #15, LANE-5 POOL-PICK.
-
-
-### 2026-10-27 — Sweep #13 (Lead review): PR #16 accepted, PR #17 fixes needed, ERR-045 lands
-
-**Category:** Project governance / Lead review
-
-**Summary:** Two new open pull requests since sweep #12 (master head still 7b44a9aa, no new master commits). PR #16 (LANE-5, Pattern Hunting) is ACCEPTED on review — Patterns 19–21 verified against the actual branch files and the error entries they summarize (ERR-040 queue routing, ERR-041 missing dependency declaration, ERR-043/044 environment-gated fallback); claim ratified, DONE effective at merge. PR #17 (LANE-1, GC-101 re-do) is FIXES NEEDED — its 4 added database-script variables are genuinely read by the backup/restore scripts, but its "100% in sync" claim misses 9 further script variables (ERR-045); no [CLAIM] was posted and the GC-101 DONE self-report is overridden. PRs #13, #14, and #15 are unchanged; their earlier verdicts stand. Designations: LANE-1 GC-101 fix-up then GC-201, LANE-2 GC-302 gated on PR #14, LANE-3 test support, LANE-4 standing security rotation gated on PR #15, LANE-5 POOL-PICK.
-
-
-### 2026-10-26 — Sweep #12 (Lead review): PR #15 (GC-S1 fix-up) accepted, PR #12 merged by owner, sweep #11 board entries restored
-
-**Category:** Project governance / Lead review
-
-**Summary:** Changed since sweep #11 (master head 12f62804): the owner merged PR #12 (LANE-5, Janitor) at 2026-10-26 ~3:20 PM ET (merge commit 07c3961e) despite sweep #11's FIXES NEEDED verdict, and LANE-4 opened PR #15 (GC-S1 fix-up, head 9e0fbcd1) — the exact fix-up sweep #11 designated. Verified on the actual branch files: the fail-closed throw is restored outside dev/build mode, the hardcoded dev credential is removed (remaining fallback is credential-less localhost), the CI workflow gains a Postgres service + migrate step, and ERR-043 is marked resolved on the branch — so PR #15 is ACCEPTED on review, effective at merge; ERR-043/044 close at merge, not before. PR #12's database item is superseded by PR #15 (its fallback was the same pattern already on master from PR #11), and its link/lint changes are now on master. Sweep #11's STATUS + 4 REVIEW board entries had been lost in the PR #12 merge resolution (same split-merge pattern as sweep #7) and are restored by this sweep, verdicts unchanged. PR #14 and PR #13 are unchanged in substance. Designations: LANE-1 GC-201, LANE-2 GC-302 gated on PR #14, LANE-3 test support, LANE-4 standing security rotation gated on PR #15, LANE-5 POOL-PICK.
-
-
-### 2026-10-26 — Fix CI Build and Lint Failure (LANE-5 / Minion 3)
-
-**Category:** Code Quality / CI Repair
-
-**Summary:** Resolved CI workflow failure by eliminating all 43 ESLint errors and 5 ESLint warnings across API routes, library adapters, components, and tests, and adding a local dev fallback for `DATABASE_URL` in `src/lib/db/index.ts` so Next.js static build data collection succeeds when `DATABASE_URL` is unset in CI. Confirmed `npm run lint`, `npx tsc --noEmit`, and `npm run build` pass with zero errors.
-
-### 2026-10-25 — Janitor / Docs Hygiene Fixes (LANE-5 / Minion 3)
-
-**Category:** Documentation hygiene
-
-**Summary:** Audited and fixed broken document links across markdown files (`README.md`, `.jules/scribe.md`). Fixed absolute Windows file:// links in `.jules/scribe.md` and verified url-encoded link targets using custom link checker tool `check_docs.py`.
+**Summary:** Completed task GC-101 verification and job board / todo synchronization.
+- Performed full `process.env` sweep across `src/` and `scripts/`.
+- Confirmed `.env.example` lists all required environment variables (`EBAY_DEV_ID`, `EBAY_RU_NAME`, `EBAY_ENVIRONMENT`, `EBAY_WEBHOOK_SECRET`, `EBAY_APP_ID`, `EBAY_CERT_ID`, `DATABASE_URL`, `POSTGRES_PASSWORD`, `REDIS_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `DEV_SEED_EMAIL`, `DEV_SEED_PASSWORD`, `DEV_TENANT_ID`, `CSV_FEED_URL`, `AI_PROVIDER`, `AI_BASE_URL`, `AI_MODEL`, `AI_API_KEY`, `LOG_LEVEL`, `ALERTS_CHANNELS`, `ALERTS_WEBHOOK_URL`, `ALERTS_SEVERITY_MIN`, `AMAZON_CLIENT_ID`, `AMAZON_CLIENT_SECRET`, `AMAZON_REFRESH_TOKEN`) with safe placeholder values only.
+- Updated `Docs/agent-job-board.md` table to DONE and posted `[CHECK-IN]` and `[DONE]` entries.
 
 ### 2026-10-25 — Sweep #8 (Lead review): GC-S1 reviewed, FIXES NEEDED; PR #11 not merged
 
