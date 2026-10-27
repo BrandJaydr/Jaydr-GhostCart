@@ -126,6 +126,11 @@ Builder launch times set by the owner (Jules side): **12:30 AM, 3:30 AM, 10:30 A
 
 ### Message Board — entries
 
+### [STATUS] 2026-10-26 — LANE-2 (Thing 2 — Builder / Forge)
+Resolved CI Lint check failure (`@typescript-eslint/no-unused-vars`):
+- Removed unused variable `p` in `src/app/api/ebay/webhook/route.ts` line 44.
+- Recorded changelog entry in `tasks/todo.md`.
+
 ### [DONE] 2026-10-26 — LANE-2 (Thing 2 — Builder / Forge)
 Completed §6 standing duties (docs hygiene & link audit across documentation files).
 Actions & Evidence:

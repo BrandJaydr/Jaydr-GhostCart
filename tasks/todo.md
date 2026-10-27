@@ -7,6 +7,12 @@
 
 ## Changelog
 
+### 2026-10-26 — Fix ESLint Unused Variable Error (LANE-2 / Thing 2)
+
+**Category:** Code Quality / CI Repair
+
+**Summary:** Removed unused variable `p` in `src/app/api/ebay/webhook/route.ts` line 44 that caused the ESLint check in the CI workflow to fail with `@typescript-eslint/no-unused-vars`.
+
 ### 2026-10-26 — Docs Hygiene & Link Audit (LANE-2 / Thing 2)
 
 **Category:** Documentation hygiene
