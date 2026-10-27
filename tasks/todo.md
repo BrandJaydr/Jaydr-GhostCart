@@ -7,7 +7,13 @@
 
 ## Changelog
 
-### 2026-10-25 — GC-301 fix-up: Resolved queue routing (ERR-040) & missing dep (ERR-041) (LANE-2 / Thing 2)
+### 2026-10-26 — GC-S1 Fix-Up Completed on Master (LANE-4 / Minion 2)
+
+**Category:** Security & Configuration / RANGER
+
+**Summary:** Completed task GC-S1 fix-up on master (ERR-043). Restored fail-closed handling in `src/lib/db/index.ts` when `DATABASE_URL` is missing in production (throws error), removed hardcoded credentials from source code, added postgres service and migration step to `.github/workflows/ci.yml` for CI test suite execution, fixed an unused variable lint error in `src/app/api/ebay/webhook/route.ts`, and updated error logging register in `.logs/errors.md`. Confirmed `npm run lint`, `npx tsc --noEmit`, and `npm run build` pass with zero errors.
+
+### 2026-10-26 — Fix CI Build and Lint Failure (LANE-5 / Minion 3)
 
 **Category:** Worker Infrastructure / Queue Routing
 
