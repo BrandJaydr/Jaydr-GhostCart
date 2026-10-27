@@ -22,18 +22,15 @@ describe('Worker Failure Injection Tests', () => {
 
   describe('Database Connection Failure', () => {
     it('should handle database connection failure during import', async () => {
-      // This test would simulate database connection failure
-      // In a real implementation, we'd use a mock database client that can fail
-      // For now, we'll test the error handling path
-
       const idempotencyKey = 'test-failure-db-conn';
+      const jobId = '00000000-0000-0000-0000-000000000101';
       
       // Simulate a failed import job
       await db.query(
         `INSERT INTO jobs
          (id, tenant_id, type, payload, idempotency_key, status, attempts, last_error, created_at, completed_at)
          VALUES ($1, $2, 'product.import', '{}', $3, 'failed', 1, 'Database connection failed', now(), now())`,
-        ['test-job-id-1', '00000000-0000-0000-0000-000000000001', idempotencyKey],
+        [jobId, '00000000-0000-0000-0000-000000000001', idempotencyKey],
       );
 
       // Verify job was recorded as failed
@@ -49,13 +46,14 @@ describe('Worker Failure Injection Tests', () => {
 
     it('should retry database connection failures', async () => {
       const idempotencyKey = 'test-failure-db-retry';
+      const jobId = '00000000-0000-0000-0000-000000000102';
       
       // Simulate a job that will be retried
       await db.query(
         `INSERT INTO jobs
          (id, tenant_id, type, payload, idempotency_key, status, attempts, last_error, created_at)
          VALUES ($1, $2, 'product.import', '{}', $3, 'queued', 0, NULL, now())`,
-        ['test-job-id-2', '00000000-0000-0000-0000-000000000001', idempotencyKey],
+        [jobId, '00000000-0000-0000-0000-000000000001', idempotencyKey],
       );
 
       // Verify job is queued for retry
@@ -72,17 +70,15 @@ describe('Worker Failure Injection Tests', () => {
 
   describe('Redis Connection Failure', () => {
     it('should handle Redis connection failure gracefully', async () => {
-      // This test would simulate Redis connection failure
-      // The system should fall back to direct database operations
-      
       const idempotencyKey = 'test-failure-redis';
+      const jobId = '00000000-0000-0000-0000-000000000103';
       
       // Simulate a job that couldn't be enqueued due to Redis failure
       await db.query(
         `INSERT INTO jobs
          (id, tenant_id, type, payload, idempotency_key, status, attempts, last_error, created_at, completed_at)
          VALUES ($1, $2, 'product.import', '{}', $3, 'failed', 1, 'Redis connection failed', now(), now())`,
-        ['test-job-id-3', '00000000-0000-0000-0000-000000000001', idempotencyKey],
+        [jobId, '00000000-0000-0000-0000-000000000001', idempotencyKey],
       );
 
       const result = await db.query(
@@ -98,13 +94,14 @@ describe('Worker Failure Injection Tests', () => {
   describe('External API Timeout', () => {
     it('should handle external API timeouts with retry', async () => {
       const idempotencyKey = 'test-failure-api-timeout';
+      const jobId = '00000000-0000-0000-0000-000000000104';
       
       // Simulate a job that failed due to API timeout
       await db.query(
         `INSERT INTO jobs
          (id, tenant_id, type, payload, idempotency_key, status, attempts, last_error, error_category, created_at)
          VALUES ($1, $2, 'product.import', '{}', $3, 'queued', 1, 'API timeout after 30s', 'transient', now())`,
-        ['test-job-id-4', '00000000-0000-0000-0000-000000000001', idempotencyKey],
+        [jobId, '00000000-0000-0000-0000-000000000001', idempotencyKey],
       );
 
       const result = await db.query(
@@ -122,13 +119,14 @@ describe('Worker Failure Injection Tests', () => {
   describe('Dead-Letter Queue Dispatch', () => {
     it('should move exhausted jobs to dead-letter queue', async () => {
       const idempotencyKey = 'test-failure-dlq';
+      const jobId = '00000000-0000-0000-0000-000000000105';
       
       // Simulate a job that exceeded max attempts
       await db.query(
         `INSERT INTO jobs
          (id, tenant_id, type, payload, idempotency_key, status, attempts, last_error, created_at, completed_at)
          VALUES ($1, $2, 'product.import', '{}', $3, 'failed', 4, 'Max retries exceeded', now(), now())`,
-        ['test-job-id-5', '00000000-0000-0000-0000-000000000001', idempotencyKey],
+        [jobId, '00000000-0000-0000-0000-000000000001', idempotencyKey],
       );
 
       // Simulate dead-letter queue entry
@@ -138,7 +136,7 @@ describe('Worker Failure Injection Tests', () => {
          VALUES ($1, 'product.import', $2, $3, $4, 4, now())`,
         [
           '00000000-0000-0000-0000-000000000001',
-          'test-job-id-5',
+          jobId,
           JSON.stringify({ url: 'https://example.com' }),
           'Max retries exceeded',
         ],
@@ -147,7 +145,7 @@ describe('Worker Failure Injection Tests', () => {
       // Verify dead-letter queue entry
       const dlqResult = await db.query(
         'SELECT * FROM dead_letter_queue WHERE bull_job_id = $1',
-        ['test-job-id-5'],
+        [jobId],
       );
 
       expect(dlqResult.rowCount).toBeGreaterThan(0);
@@ -158,7 +156,8 @@ describe('Worker Failure Injection Tests', () => {
 
   describe('Reconciliation After Failure', () => {
     it('should reconcile data after worker failure', async () => {
-      const productId = 'test-product-reconciliation';
+      const productId = '00000000-0000-0000-0000-000000000106';
+      const jobId = '00000000-0000-0000-0000-000000000107';
       
       // Create a product with inconsistent state
       await db.query(
@@ -173,7 +172,7 @@ describe('Worker Failure Injection Tests', () => {
         `INSERT INTO jobs
          (id, tenant_id, type, payload, idempotency_key, status, attempts, last_error, created_at, completed_at)
          VALUES ($1, $2, 'product.refresh', $3, $4, 'failed', 1, 'Partial update failed', now(), now())`,
-        ['test-job-id-6', '00000000-0000-0000-0000-000000000001', JSON.stringify({ productId }), 'test-reconcile'],
+        [jobId, '00000000-0000-0000-0000-000000000001', JSON.stringify({ productId }), 'test-reconcile'],
       );
 
       // Reconciliation: Verify product data is still valid

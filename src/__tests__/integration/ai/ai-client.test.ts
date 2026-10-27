@@ -82,7 +82,10 @@ describe('AI Client', () => {
     });
 
     it('should handle API errors gracefully', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('ECONNREFUSED'));
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        statusText: 'Internal Server Error',
+      });
 
       await expect(
         aiClient.rewriteListing({
@@ -168,15 +171,24 @@ describe('AI Client', () => {
 
   describe('cache management', () => {
     it('should clear cache on request', async () => {
-      const mockResponse = {
+      const mockResponse1 = {
         response: JSON.stringify({ title: 'Test', description: 'Test' }),
         eval_count: 50,
       };
+      const mockResponse2 = {
+        response: JSON.stringify({ title: 'Test 2', description: 'Test 2' }),
+        eval_count: 50,
+      };
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockResponse1,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockResponse2,
+        });
 
       const request = { title: 'Test', description: 'Test' };
 

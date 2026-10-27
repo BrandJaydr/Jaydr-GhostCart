@@ -40,6 +40,17 @@ export const importQueue = new Queue('product.import', {
   },
 });
 
+/** Queue for product refresh jobs — enqueued by scheduled refreshes (GC-301) */
+export const refreshQueue = new Queue('product.refresh', {
+  connection: redis,
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 5_000 },
+    removeOnComplete: { age: 24 * 3600 },
+    removeOnFail: { age: 7 * 24 * 3600 },
+  },
+});
+
 /** Queue for listing submission jobs — enqueued by POST /api/listings/[id]/submit (Stage 3+) */
 export const listingQueue = new Queue('listing.submit', {
   connection: redis,

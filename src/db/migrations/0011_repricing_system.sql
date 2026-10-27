@@ -1,10 +1,10 @@
--- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
--- Jaydr GhostCart â€” Migration 0011: Repricing System
--- Stage: Stage 4 â€” Reliability and Controlled Automation
--- Reference: Stage 4 Plan â€” Task 3: Repricing Suggestions System
--- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Jaydr GhostCart — Migration 0011: Repricing System
+-- Stage: Stage 4 — Reliability and Controlled Automation
+-- Reference: Stage 4 Plan — Task 3: Repricing Suggestions System
+-- ─────────────────────────────────────────────────────────────────────────────
 
--- â”€â”€â”€ Repricing Rules Table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- ─── Repricing Rules Table ───────────────────────────────────────────────────
 -- Store per-tenant repricing rules
 
 CREATE TABLE IF NOT EXISTS repricing_rules (
@@ -32,7 +32,7 @@ ALTER TABLE repricing_rules ENABLE ROW LEVEL SECURITY;
 CREATE POLICY repricing_rules_tenant_isolation ON repricing_rules
   FOR ALL USING (tenant_id = current_setting('ghostcart.tenant_id', true)::uuid);
 
--- â”€â”€â”€ Repricing Suggestions Table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- ─── Repricing Suggestions Table ─────────────────────────────────────────────
 -- Store generated repricing suggestions
 
 CREATE TABLE IF NOT EXISTS repricing_suggestions (
@@ -63,7 +63,7 @@ ALTER TABLE repricing_suggestions ENABLE ROW LEVEL SECURITY;
 CREATE POLICY repricing_suggestions_tenant_isolation ON repricing_suggestions
   FOR ALL USING (tenant_id = current_setting('ghostcart.tenant_id', true)::uuid);
 
--- â”€â”€â”€ Repricing History Table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- ─── Repricing History Table ──────────────────────────────────────────────────
 -- Track applied repricing changes
 
 CREATE TABLE IF NOT EXISTS repricing_history (
@@ -97,7 +97,7 @@ ALTER TABLE repricing_history ENABLE ROW LEVEL SECURITY;
 CREATE POLICY repricing_history_tenant_isolation ON repricing_history
   FOR ALL USING (tenant_id = current_setting('ghostcart.tenant_id', true)::uuid);
 
--- â”€â”€â”€ Global Repricing Pause Table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- ─── Global Repricing Pause Table ─────────────────────────────────────────────
 -- Store global pause state for repricing
 
 CREATE TABLE IF NOT EXISTS repricing_pause (
@@ -123,7 +123,9 @@ CREATE POLICY repricing_pause_global_read ON repricing_pause
 CREATE POLICY repricing_pause_tenant_isolation ON repricing_pause
   FOR ALL USING (tenant_id = current_setting('ghostcart.tenant_id', true)::uuid OR tenant_id IS NULL);
 
--- â”€â”€â”€ Functions for Repricing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- ─── Functions for Repricing ──────────────────────────────────────────────────
+
+CREATE SCHEMA IF NOT EXISTS repricing;
 
 -- Function to check if repricing is paused
 CREATE OR REPLACE FUNCTION is_paused(p_tenant_id UUID DEFAULT NULL)
@@ -160,10 +162,17 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION repricing.is_paused(p_tenant_id UUID DEFAULT NULL)
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN public.is_paused(p_tenant_id);
+END;
+$$ LANGUAGE plpgsql;
+
 -- Function to set pause state
 CREATE OR REPLACE FUNCTION set_pause(
-  p_paused BOOLEAN,
   p_tenant_id UUID DEFAULT NULL,
+  p_paused BOOLEAN DEFAULT true,
   p_reason TEXT DEFAULT NULL,
   p_user_id UUID DEFAULT NULL
 )
@@ -173,6 +182,18 @@ BEGIN
   VALUES (p_tenant_id, p_paused, CASE WHEN p_paused THEN now() ELSE NULL END, p_user_id, p_reason);
 
   RETURN true;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION repricing.set_pause(
+  p_tenant_id UUID DEFAULT NULL,
+  p_paused BOOLEAN DEFAULT true,
+  p_reason TEXT DEFAULT NULL,
+  p_user_id UUID DEFAULT NULL
+)
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN public.set_pause(p_tenant_id, p_paused, p_reason, p_user_id);
 END;
 $$ LANGUAGE plpgsql;
 
@@ -253,6 +274,19 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION repricing.generate_suggestion(
+  p_tenant_id UUID,
+  p_listing_id UUID,
+  p_current_price_cents INTEGER,
+  p_cost_cents INTEGER,
+  p_competitor_price_cents INTEGER DEFAULT NULL
+)
+RETURNS UUID AS $$
+BEGIN
+  RETURN public.generate_suggestion(p_tenant_id, p_listing_id, p_current_price_cents, p_cost_cents, p_competitor_price_cents);
+END;
+$$ LANGUAGE plpgsql;
+
 -- Function to apply repricing
 CREATE OR REPLACE FUNCTION apply_suggestion(
   p_suggestion_id UUID,
@@ -301,5 +335,15 @@ BEGIN
   WHERE id = p_suggestion_id;
 
   RETURN true;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION repricing.apply_suggestion(
+  p_suggestion_id UUID,
+  p_user_id UUID DEFAULT NULL
+)
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN public.apply_suggestion(p_suggestion_id, p_user_id);
 END;
 $$ LANGUAGE plpgsql;

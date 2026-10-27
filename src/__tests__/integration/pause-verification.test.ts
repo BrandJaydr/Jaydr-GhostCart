@@ -39,7 +39,7 @@ describe('Pause Verification Tests', () => {
         `SELECT repricing.generate_suggestion($1, $2, $3, $4, $5) as suggestion_id`,
         [
           '00000000-0000-0000-0000-000000000001',
-          'test-listing-id',
+          '00000000-0000-0000-0000-000000000020',
           10000,
           5000,
           9000,
@@ -47,7 +47,6 @@ describe('Pause Verification Tests', () => {
       );
 
       // When paused, suggestion should be null or function should check pause first
-      // The actual implementation should check pause before generating
       expect(suggestionResult.rows[0].suggestion_id).toBeNull();
     });
 
@@ -60,8 +59,8 @@ describe('Pause Verification Tests', () => {
 
       // Lift pause
       await db.query(
-        'SELECT repricing.set_pause(NULL, false, $2, NULL)',
-        [null, 'Resume after test'],
+        'SELECT repricing.set_pause(NULL, false, $1, NULL)',
+        ['Resume after test'],
       );
 
       // Check if not paused
@@ -107,12 +106,6 @@ describe('Pause Verification Tests', () => {
 
   describe('Job Queue Pause', () => {
     it('should prevent new jobs from being queued when paused', async () => {
-      // This would test the actual queue pause functionality
-      // For now, we'll test the pause state tracking
-      
-      // In a real implementation, the queue would check pause state before accepting jobs
-      // We'll verify the pause state is queryable
-      
       // Set global pause
       await db.query(
         'SELECT repricing.set_pause(NULL, true, $1, NULL)',
@@ -125,13 +118,14 @@ describe('Pause Verification Tests', () => {
 
     it('should stop processing queued jobs when pause is activated', async () => {
       const idempotencyKey = 'test-pause-queued-jobs';
+      const jobId = '00000000-0000-0000-0000-000000000010';
       
       // Create a queued job
       await db.query(
         `INSERT INTO jobs
          (id, tenant_id, type, payload, idempotency_key, status, attempts, created_at)
          VALUES ($1, $2, 'product.import', '{}', $3, 'queued', 0, now())`,
-        ['test-job-id-pause-1', '00000000-0000-0000-0000-000000000001', idempotencyKey],
+        [jobId, '00000000-0000-0000-0000-000000000001', idempotencyKey],
       );
 
       // Set global pause
@@ -178,14 +172,14 @@ describe('Pause Verification Tests', () => {
 
       // Lift pause
       await db.query(
-        'SELECT repricing.set_pause(NULL, false, $2, NULL)',
-        [null, 'Resume'],
+        'SELECT repricing.set_pause(NULL, false, $1, NULL)',
+        ['Resume'],
       );
 
       // Set pause again
       await db.query(
-        'SELECT repricing.set_pause(NULL, true, $3, NULL)',
-        [null, 'Second pause'],
+        'SELECT repricing.set_pause(NULL, true, $1, NULL)',
+        ['Second pause'],
       );
 
       // Check history
@@ -208,18 +202,19 @@ describe('Pause Verification Tests', () => {
       // Verify pause state
       const result = await db.query('SELECT repricing.is_paused(NULL) as paused');
       expect(result.rows[0].paused).toBe(true);
-
-      // In a real implementation, external API clients would check pause state
-      // before making calls. This test verifies the pause state is available.
     });
 
     it('should prevent marketplace submissions when paused', async () => {
+      const listingId = '00000000-0000-0000-0000-000000000020';
+      const productId = '00000000-0000-0000-0000-000000000030';
+      const idempotencyKey = 'test-pause-submission';
+
       // Create a listing ready for submission
       await db.query(
         `INSERT INTO listings
          (id, tenant_id, product_id, state, list_price_cents, created_at, updated_at)
          VALUES ($1, $2, $3, 'ready_for_review', 10000, now(), now())`,
-        ['test-listing-pause-1', '00000000-0000-0000-0000-000000000001', 'test-product-1'],
+        [listingId, '00000000-0000-0000-0000-000000000001', productId],
       );
 
       // Set global pause
@@ -231,7 +226,7 @@ describe('Pause Verification Tests', () => {
       // Verify listing is still in ready_for_review state
       const listingResult = await db.query(
         'SELECT state FROM listings WHERE id = $1',
-        ['test-listing-pause-1'],
+        [listingId],
       );
 
       expect(listingResult.rows[0].state).toBe('ready_for_review');

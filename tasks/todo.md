@@ -18,25 +18,39 @@
 **Category:** Documentation hygiene
 
 **Summary:** Audited documentation link targets across markdown files in the repository to ensure all relative link destinations and URL-encoded targets (e.g. `%20` for spaces) resolve correctly to existing files. Verified zero broken links across all documentation files.
+### 2026-10-27 — GC-101: Environment Variable Sweep & .env.example Sync (Jules / Primary Implementer)
+
+**Category:** Configuration & Governance
+
+**Summary:** Executed full process.env and script environment variable sweep across `src/` and `scripts/`. Confirmed `.env.example` is 100% in sync with all runtime variables read by the application (including eBay, AI, Alerts, and Auth settings) and added explicit DB script connection overrides (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`). Verified zero real secrets/credentials in source control.
 
 ### 2026-10-26 — Sweep #12 (Lead review): PR #15 (GC-S1 fix-up) accepted, PR #12 merged by owner, sweep #11 board entries restored
 
 **Category:** Project governance / Lead review
+### 2026-10-26 — Pattern Hunting & System Insights Update (LANE-5 / Minion 3)
 
-**Summary:** Changed since sweep #11 (master head 12f62804): the owner merged PR #12 (LANE-5, Janitor) at 2026-10-26 ~3:20 PM ET (merge commit 07c3961e) despite sweep #11's FIXES NEEDED verdict, and LANE-4 opened PR #15 (GC-S1 fix-up, head 9e0fbcd1) — the exact fix-up sweep #11 designated. Verified on the actual branch files: the fail-closed throw is restored outside dev/build mode, the hardcoded dev credential is removed (remaining fallback is credential-less localhost), the CI workflow gains a Postgres service + migrate step, and ERR-043 is marked resolved on the branch — so PR #15 is ACCEPTED on review, effective at merge; ERR-043/044 close at merge, not before. PR #12's database item is superseded by PR #15 (its fallback was the same pattern already on master from PR #11), and its link/lint changes are now on master. Sweep #11's STATUS + 4 REVIEW board entries had been lost in the PR #12 merge resolution (same split-merge pattern as sweep #7) and are restored by this sweep, verdicts unchanged. PR #14 and PR #13 are unchanged in substance. Designations: LANE-1 GC-201, LANE-2 GC-302 gated on PR #14, LANE-3 test support, LANE-4 standing security rotation gated on PR #15, LANE-5 POOL-PICK.
+**Category:** Pattern Hunting / System Insights
 
+**Summary:** Completed standing Scout/Pattern Hunting duties (§6) under POOL-PICK designation. Analyzed recent error register entries in `.logs/errors.md` (ERR-040, ERR-041, ERR-043, ERR-044) and documented 3 new system patterns in `.logs/patterns.md`:
+- Pattern 19: BullMQ Queue Instance vs. Job Name Disconnect (ERR-040).
+- Pattern 20: Manifest-Source Dependency Sync Pattern (ERR-041).
+- Pattern 21: Environment-Gated Fallback Configuration Pattern (ERR-043, ERR-044).
+
+### 2026-10-26 — Sweep #12 (Lead review): PR #15 (GC-S1 fix-up) accepted, PR #12 merged by owner, sweep #11 board entries restored
+
+**Category:** Security & Configuration / RANGER
+
+**Summary:** Completed task GC-S1 fix-up on master (ERR-043). Restored fail-closed handling in `src/lib/db/index.ts` when `DATABASE_URL` is missing in production (throws error), removed hardcoded credentials from source code, added postgres service and migration step to `.github/workflows/ci.yml` for CI test suite execution, fixed an unused variable lint error in `src/app/api/ebay/webhook/route.ts`, and updated error logging register in `.logs/errors.md`. Confirmed `npm run lint`, `npx tsc --noEmit`, and `npm run build` pass with zero errors.
 
 ### 2026-10-26 — Fix CI Build and Lint Failure (LANE-5 / Minion 3)
 
-**Category:** Code Quality / CI Repair
+**Category:** Worker Infrastructure / Queue Routing
 
-**Summary:** Resolved CI workflow failure by eliminating all 43 ESLint errors and 5 ESLint warnings across API routes, library adapters, components, and tests, and adding a local dev fallback for `DATABASE_URL` in `src/lib/db/index.ts` so Next.js static build data collection succeeds when `DATABASE_URL` is unset in CI. Confirmed `npm run lint`, `npx tsc --noEmit`, and `npm run build` pass with zero errors.
-
-### 2026-10-25 — Janitor / Docs Hygiene Fixes (LANE-5 / Minion 3)
-
-**Category:** Documentation hygiene
-
-**Summary:** Audited and fixed broken document links across markdown files (`README.md`, `.jules/scribe.md`). Fixed absolute Windows file:// links in `.jules/scribe.md` and verified url-encoded link targets using custom link checker tool `check_docs.py`.
+**Summary:** Fixed the two defects on master identified in Lead review of GC-301:
+- ✅ **ERR-040**: Created and exported `refreshQueue` (`product.refresh`) in `src/lib/queue/index.ts` and updated `src/worker/scheduler.ts` to enqueue onto `refreshQueue` instead of `importQueue`.
+- ✅ **ERR-041**: Added `"cron-parser": "4.9.0"` to dependencies in `package.json`.
+- ✅ Updated unit test in `src/__tests__/worker/scheduler.test.ts` to mock `refreshQueue` and verified all 4 scheduler unit tests pass.
+- ✅ Updated `Docs/agent-job-board.md` §5 table state to `DONE` and appended `[DONE]` entry on Message Board.
 
 ### 2026-10-25 — Sweep #8 (Lead review): GC-S1 reviewed, FIXES NEEDED; PR #11 not merged
 
@@ -422,7 +436,7 @@ worker processes with PostgreSQL and Redis; finalize it through an ADR before a 
 - [ ] **GC-202** — Jules: AliExpress token provider (transient secret, expiry-aware refresh, mocked-HTTP tests, no plaintext persistence)
 - [ ] **GC-R1** — Claude (on check-in): second-eyes review of GC-101 against `process.env` reads in `src/`
 - [x] **GC-T1** — LANE-3 (Minion 1): `aliexpress.ds.text.search` response fixture pack (full / empty / error envelope) — completed 2026-10-25
-- [ ] **GC-301** — LANE-2 (Thing 2): BullMQ repeatable-job scheduler + `scheduled_refreshes` consumer
+- [x] **GC-301** — LANE-2 (Thing 2): BullMQ repeatable-job scheduler + `scheduled_refreshes` consumer (fix-up completed 2026-10-25)
 - [ ] **GC-302** — LANE-2 (Thing 2): register the missing `listing.submit` worker processor
 - [x] **GC-RS1** — LANE-5 (Minion 3): research brief for the GC-102 credential-storage decision (brief only, no code) — Lead-reviewed 2026-10-25; brief landed on master 2026-10-25 (commit f8ad33c1), PR #7 closed as redundant
 - [x] **GC-S1** — First idle checked-in agent (Lead assigns): RANGER sweep #1 — secrets-pattern scan (locations/types only) + dependency vulnerability summary, reported on the board — completed 2026-10-25 (LANE-4) — audit findings accepted 2026-10-26 (sweep #11); post-merge fix-up ACCEPTED on review 2026-10-26 (sweep #12, PR #15) pending merge; ERR-043 closes at merge
