@@ -7,6 +7,17 @@
 
 ## Changelog
 
+### 2026-10-28 — §6 Standing Security Maintenance Pass & Dependency Upgrade Proposal (LANE-4 / Minion 2)
+
+**Category:** Security & Compliance / RANGER + Dependency Guardian
+
+**Summary:** Completed standing security rotation (§6) under LANE-4 designation on master.
+- **Secrets Scan:** Scanned `src/` and `scripts/`; confirmed zero hardcoded production secrets, private keys, or API tokens committed in version control.
+- **Dependency Audit:** Captured active `npm audit` findings — 81 total vulnerabilities (4 critical, 15 high, 8 moderate, 54 low).
+- **Single Dependency Upgrade Proposal:** Prepared and tested upgrade proposal for `vitest` from `2.0.3` to `2.1.9` in `package.json` addressing critical Vitest RCE vulnerabilities (GHSA-9crc-q9x8-hgqq, GHSA-5xrq-8626-4rwp). Verified `vitest run` on v2.1.9.
+- **Auth & Tenancy:** Re-confirmed route-level auth and tenancy posture (ERR-016 status unchanged).
+- **Coordination:** Appended `[CHECK-IN]`, `[CLAIM]`, and `[DONE]` entries to `Docs/agent-job-board.md` Message Board.
+
 ### 2026-10-28 — Sweep #19 (Lead review): PR #24 accepted (scheduler part of ERR-047), PR #23 accepted on re-review (ERR-051 corrected/closed), sweep #17/#18 verdicts landed
 
 **Category:** Project governance / Lead review
