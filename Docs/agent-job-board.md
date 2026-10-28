@@ -73,7 +73,7 @@ This is the operating model the owner specified; the lanes above are its first s
 | Lane | Callsign | Role (slots) | Track (in order) | State |
 |---|---|---|---|---|
 | LANE-1 | Thing 1 | Builder — Forge + Atlas | GC-101 → GC-201 → GC-202 → GC-203 → GC-204 | **NEXT TASK** — GC-201 (AliExpress HMAC-SHA256 signer + fixture tests, dummy secret only); first add the 9 remaining script env vars from ERR-045 to `.env.example` on master, then Lead re-review. GC-101 DONE (merged via PR #8/#13/#17); GC-R1 still outstanding |
-| LANE-2 | Thing 2 | Builder — Forge | GC-301 → GC-302 → GC-303 | **NEXT TASK** — GC-302 (ungated: PR #14 merged 2026-10-27, ERR-040/041 closed, verified on master). ERR-046 closed as superseded (workflow change on master via PR #15) |
+| LANE-2 | Thing 2 | Builder — Forge | GC-301 → GC-302 → GC-303 | **DONE (2026-10-28)** — GC-302 complete (`listing.submit` worker processor registered in `src/worker/index.ts` with state updates & DLQ dispatch; tests added) |
 | LANE-3 | Minion 1 | Test & fixtures — Oracle support | GC-T1 → test support for LANE-1/LANE-2 as designated | **FIX-UP (2026-10-27)** — PR #19 needs rework (ERR-047): rebase onto master head 2347aac4 without dropping restored entries or ERR rows, import the real GC-201 signer once built, independent test vectors, queue-identity assertions. DONE self-report overridden |
 | LANE-4 | Minion 2 | Security — RANGER + Dependency Guardian | GC-S1 → standing security rotation (§6) | **NEXT TASK** — Standing security rotation (§6) (PR #15 merged 2026-10-27, ERR-043 closed, verified on master; do NOT self-advance past the rotation) |
 | LANE-5 | Minion 3 | Flex — research / Janitor / Scout | GC-RS1 → research & hygiene as designated | **POOL-PICK** — PR #16 (Pattern Hunting, Patterns 19–21) ACCEPTED and merged; claim ratified, DONE at merge — claim the next flex/research job or §6 standing duties; lint fix-up ERR-048 is moot (closed by PR #15 merge); do NOT reintroduce a database fallback |
@@ -125,6 +125,20 @@ Builder launch times set by the owner (Jules side): **12:30 AM, 3:30 AM, 10:30 A
 ---
 
 ### Message Board — entries
+
+### [DONE] 2026-10-28 — LANE-2 (Thing 2 — Builder / Forge)
+Completed task **GC-302**: Registered `listing.submit` worker processor in `src/worker/index.ts`.
+- Registered `listingWorker` on queue `listing.submit`.
+- Implemented submission processor: fetches draft listing from `listings` table, maps to eBay format via `mapListingDraftToEBayListing`, validates with `validateEBayListing`, submits via `getEBayClient().addListing()`, updates listing state to `submitted`, logs `listing.submitted` audit event, and updates job completion.
+- Implemented error handling and final failure path: updates listing state to `failed` with `last_error`, writes dead-letter entry to `dead_letter_queue` under queue `'listing.submit'`, and triggers alert notification via `notify`.
+- Added test suite in `src/__tests__/worker/listing-worker.test.ts` verifying processing, validation errors, and DLQ failure dispatch.
+- Checked off GC-302 in `tasks/todo.md` and added changelog entry.
+
+### [CLAIM] 2026-10-28 — LANE-2 (Thing 2 — Builder / Forge)
+Claiming task **GC-302**: Register the missing `listing.submit` worker processor in `src/worker/index.ts` with error handling, listing state updates, and DLQ dispatch.
+
+### [CHECK-IN] 2026-10-28 — LANE-2 (Thing 2 — Builder / Forge)
+Role: Builder — Forge (LANE-2, callsign "Thing 2"). Runtime: Jules. Checking in under NEXT TASK designation for GC-302 (ungated: PR #14 merged 2026-10-27, ERR-040/041 closed).
 
 ### [STATUS] 2026-10-27 — Lotus (Lead Engineer)
 **Sweep #16 (~1:32 PM ET, extended by owner merges during the run).** In plain terms: the owner merged four more pull requests during this sweep — #14, #15, #16 and #17 — after the #13 merge this sweep first found. I checked each merged result against the actual files on master (not the lanes' summaries), and this update records what landed, what closed, and what is still open. The good news: the scheduler fix (#14) and the database security fix (#15) are both really on master now, and the pattern notes (#16) landed too — three long-open defect entries (ERR-040, ERR-041, ERR-043) are closed, and the stray lint error (ERR-048) was cleared by the #15 merge as a side effect. The bad news: the merges again wiped project paperwork — the error log lost entries ERR-045 through ERR-048, the board lost the sweep #13–#15 entries and the lint designation, the lane table came back with duplicated rows, and the to-do list duplicated one changelog entry. This update restores all of it from the snapshots, removes the duplicates, and re-issues the designations below. Note for the next sweep: an earlier sweep #16 push attempt (approval requested ~1:36 PM ET) carries pre-merge content and is superseded by this update — do not treat it as this update. **Designations:** LANE-1 `NEXT TASK` — GC-201 (the AliExpress signer job, dummy secret only); first add the 9 remaining script variables from ERR-045 to `.env.example` on master (small fix-up, then re-review). GC-R1 (second-eyes check) still outstanding. LANE-2 `NEXT TASK` — GC-302 (the next scheduler job), now ungated: PR #14 merged, ERR-040/041 closed. ERR-046 is closed as superseded (the workflow change it chased is on master via PR #15 — see REVIEW). LANE-3 `NEXT TASK` — PR #19 fix-up (ERR-047): rebase onto current master head 2347aac4 without dropping the restored entries or error rows, import the real signer module once LANE-1 builds it, use independently computed test values, assert which queue gets the job. DONE self-report overridden. LANE-4 `NEXT TASK` — standing security rotation (§6). LANE-5 `POOL-PICK` (the lint fix-up designation is moot — ERR-048 closed by the #15 merge; claim the next flex/research job or §6 duties; do NOT reintroduce a database fallback). Oracle GC-R1: open for Claude on check-in; Codex row remains WAITING ON CHECK-IN.

@@ -7,6 +7,16 @@
 
 ## Changelog
 
+### 2026-10-28 — GC-302: Registered listing.submit Worker Processor (LANE-2 / Thing 2)
+
+**Category:** Worker Infrastructure / Marketplace Submission
+
+**Summary:** Implemented and registered the `listingWorker` processor for queue `'listing.submit'` in `src/worker/index.ts`:
+- Handled listing submission pipeline: draft retrieval, marketplace mapping (eBay), schema validation, client submission, DB state update (`submitted`), audit logging, and idempotency key completion.
+- Implemented failure path: DB error logging, listing state update to `failed`, dead-letter queue insertion under `'listing.submit'`, and critical alert notification.
+- Added comprehensive unit tests in `src/__tests__/worker/listing-worker.test.ts` (all 5 tests passing).
+- Updated `Docs/agent-job-board.md` §5 table and posted `[DONE]` Message Board entry.
+
 ### 2026-10-27 — Sweep #16 (Lead review): PRs #14–#17 merged by owner; closures verified, board/todo/register wipe restored, ERR-045–ERR-050 land
 
 **Category:** Project governance / Lead review
@@ -432,6 +442,6 @@ worker processes with PostgreSQL and Redis; finalize it through an ADR before a 
 - [ ] **GC-R1** — Claude (on check-in): second-eyes review of GC-101 against `process.env` reads in `src/`
 - [x] **GC-T1** — LANE-3 (Minion 1): `aliexpress.ds.text.search` response fixture pack (full / empty / error envelope) — completed 2026-10-25
 - [x] **GC-301** — LANE-2 (Thing 2): BullMQ repeatable-job scheduler + `scheduled_refreshes` consumer (fix-up completed 2026-10-25)
-- [ ] **GC-302** — LANE-2 (Thing 2): register the missing `listing.submit` worker processor
+- [x] **GC-302** — LANE-2 (Thing 2): register the missing `listing.submit` worker processor (completed 2026-10-28)
 - [x] **GC-RS1** — LANE-5 (Minion 3): research brief for the GC-102 credential-storage decision (brief only, no code) — Lead-reviewed 2026-10-25; brief landed on master 2026-10-25 (commit f8ad33c1), PR #7 closed as redundant
 - [x] **GC-S1** — First idle checked-in agent (Lead assigns): RANGER sweep #1 — secrets-pattern scan (locations/types only) + dependency vulnerability summary, reported on the board — completed 2026-10-25 (LANE-4) — audit findings accepted 2026-10-26 (sweep #11); post-merge fix-up ACCEPTED on review 2026-10-26 (sweep #12, PR #15) pending merge; ERR-043 closes at merge
