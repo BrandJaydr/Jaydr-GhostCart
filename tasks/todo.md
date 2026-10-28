@@ -7,6 +7,16 @@
 
 ## Changelog
 
+### 2026-10-27 — PR #19 Fix-Up / ERR-047 Rework Completed (LANE-3 / Minion 1)
+
+**Category:** Test Infrastructure / Worker Queue Assertions
+
+**Summary:** Completed PR #19 fix-up (ERR-047) directly on master.
+- Updated `src/__tests__/worker/scheduler.test.ts` with explicit queue identity assertions verifying `refreshQueue.add` is called with `'product.refresh'` and expected payload/jobId options, and `importQueue.add` is not called.
+- Cleared ESLint unused variable errors in `src/components/ui/Skeleton.tsx` and `src/__tests__/integration/pause-verification.test.ts`.
+- Removed duplicate `db:migrate` key from `package.json`.
+- GC-201 test support held until LANE-1 delivers `src/lib/adapters/aliexpress/sign.ts` module (LANE-3 does not build another lane's track).
+
 ### 2026-10-27 — Sweep #16 (Lead review): PRs #14–#17 merged by owner; closures verified, board/todo/register wipe restored, ERR-045–ERR-050 land
 
 **Category:** Project governance / Lead review

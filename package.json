@@ -15,7 +15,6 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "db:migrate": "tsx src/db/migrate.ts",
-    "db:migrate": "ts-node-esm src/db/migrate.ts",
     "db:backup": "bash scripts/backup-db.sh",
     "db:restore": "bash scripts/restore-db.sh",
     "db:restore:test": "bash scripts/restore-test.sh",
