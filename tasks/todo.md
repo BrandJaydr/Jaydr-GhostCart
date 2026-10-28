@@ -7,6 +7,12 @@
 
 ## Changelog
 
+### 2026-10-28 — Sweep #19 (Lead review): PR #24 accepted (scheduler part of ERR-047), PR #23 accepted on re-review (ERR-051 corrected/closed), sweep #17/#18 verdicts landed
+
+**Category:** Project governance / Lead review
+
+**Summary:** One new open pull request since sweep #18, one owner merge during this sweep (PR #20, 2:08 PM ET, verified clean — head now 71e93930). PR #24 (LANE-3, PR #19 fix-up) is ACCEPTED on review, effective at merge: the scheduler test now asserts queue identity against the real production routing (refresh queue, verified on master), the duplicate `db:migrate` key removal and lint fixes verify clean, and the branch paperwork diff is clean — the scheduler/queue-identity part of ERR-047 is done at merge; the signer-test part stays open, gated on GC-201 (no signer module on master yet), and PR #19 must not merge as-is (PR #24 supersedes its scheduler/lint changes). PR #23 (LANE-2, GC-302) is ACCEPTED on re-review: ERR-051 is corrected and closed — master `package.json` carries `db:migrate` twice and the branch removes only the duplicate key, so the command survives (runner changes to `tsx`, a declared dependency); the worker code re-verified clean. No [CLAIM] was posted for PR #24 (designated work); PR #23's claim stands ratified. This push also lands sweep #17's and sweep #18's board/to-do/register updates, which never reached master. Designations: LANE-1 GC-201, LANE-2 GC-303 (gated on GC-202) with standing duties meanwhile, LANE-3 ERR-047 signer remainder (gated on GC-201), LANE-4 security rotation continues, LANE-5 POOL-PICK. PR #20 merged by the owner during this sweep and verified clean (paperwork-only, no wipe); its board/todo entries are preserved in this update. Merge-time warning for PRs #21/#22/#23/#24 (Pattern 22): reconcile board/todo/error-log copies against master at merge so sweep entries are not wiped.
+
 ### 2026-10-27 — §6 Standing Security Maintenance Pass (LANE-4 / Minion 2)
 
 **Category:** Security & Compliance / RANGER + Dependency Guardian
@@ -16,6 +22,18 @@
 - **Dependency Audit:** Re-ran `npm audit`, identifying 27 vulnerabilities (4 critical, 15 high, 7 moderate, 1 low) in external packages (Next.js, Tinypool, PostCSS, Playwright, Zod, glob, minimatch, source-map-js, uuid).
 - **Auth & Tenancy:** Re-confirmed API route authorization posture (ERR-016 status unchanged).
 - **Coordination:** Appended `[CHECK-IN]`, `[CLAIM]`, and `[DONE]` entries to `Docs/agent-job-board.md` Message Board and updated table state.
+
+### 2026-10-28 — Sweep #18 (Lead review): PR #21/#22 accepted, PR #23 fixes needed (ERR-051), sweep #17 verdicts carried forward
+
+**Category:** Project governance / Lead review
+
+**Summary:** Three new open pull requests since sweep #17, no new master commits (head still 18c081d). PR #22 (LANE-1, GC-101 fix-up) is ACCEPTED on review, effective at merge: all 9 ERR-045 script variables are present in `.env.example` with values verified against the script defaults on master; ERR-045 closes when it merges; GC-R1 still outstanding; no [CLAIM] was posted (designated work). PR #21 (LANE-5, Pattern 22) is ACCEPTED on review, effective at merge; its §6 standing-duties claim is ratified. PR #23 (LANE-2, GC-302 listing.submit worker) is FIXES NEEDED (ERR-051): the processor, failure/DLQ handling, queue registration, and tests verify against the real queue, eBay client/mapper, and schema, but the branch deletes the `db:migrate` script line from `package.json` — restore it, then re-review; DONE overridden; claim ratified. PR #20 (LANE-4 rotation pass, ACCEPTED as a report) and PR #19 (LANE-3, still FIXES NEEDED, ERR-047, rebase target 18c081d) are unchanged; sweep #17's board/todo/register update never landed, so its STATUS/REVIEW entries and ERR-042/ERR-047 updates are carried forward in this push. ERR-049/ERR-050 closed as verified-restored on master. GC-302 stays unchecked until the PR #23 fix-up is accepted. Designations: LANE-1 GC-201, LANE-2 PR #23 fix-up, LANE-3 PR #19 fix-up, LANE-4 security rotation continues, LANE-5 POOL-PICK. Merge-time warning for PRs #21/#22/#23 (Pattern 22): reconcile board/todo/error-log copies against master at merge so sweep entries are not wiped.
+
+### 2026-10-27 — Sweep #17 (Lead review): PR #20 rotation pass accepted as a report; PR #19 still fixes-needed; no other new builder output
+
+**Category:** Project governance / Lead review
+
+**Summary:** One new open pull request since sweep #16 (master head still 18c081d): PR #20 (LANE-4, standing security rotation) is ACCEPTED as a report-only pass — branch verified by file diff as paperwork-only (board + todo), cleanly based on current master, reporting zero hard-coded secrets, 27 dependency vulnerabilities (down from ERR-042's 28, same families), and ERR-016 unchanged; claim ratified; not merged (merges need the owner's word per PR). No upgrade proposal was attached — LANE-4's next rotation must propose one upgrade at a time with test evidence. PR #19 (LANE-3) re-checked: its 18:30 UTC merge-sync merged pre-restoration master, so the branch still lacks sweep #16 entries and ERR-045–ERR-050; merging it would wipe the paperwork a third time — still FIXES NEEDED (ERR-047), rebase target now 18c081d. LANE-1 (GC-201), LANE-2 (GC-302), and LANE-5 produced nothing new. Designations: LANE-1 GC-201 (+ ERR-045 remainder), LANE-2 GC-302, LANE-3 PR #19 fix-up, LANE-4 security rotation continues, LANE-5 POOL-PICK. ERR-042 and ERR-047 updated with this sweep's findings; no new ERR number issued.
 
 ### 2026-10-27 — Sweep #16 (Lead review): PRs #14–#17 merged by owner; closures verified, board/todo/register wipe restored, ERR-045–ERR-050 land
 
