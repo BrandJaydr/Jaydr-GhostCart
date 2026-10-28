@@ -7,6 +7,11 @@
 
 ## Changelog
 
+### 2026-10-28 — Sweep #20 (Lead review): PR #25 accepted, LANE-4 rotation pass
+
+**Summary:** Lead review sweep #20 (~7:32 PM ET). One new builder output since sweep #19: PR #25 (LANE-4 / Minion 2) — §6 standing security rotation pass with a single dependency-upgrade proposal (vitest 2.0.3 → 2.1.9, GHSA-9crc-q9x8-hgqq verified patched in 2.1.9). Verdict: ACCEPTED on review, effective at merge; claim ratified. Open question carried forward: reported `npm audit` total 81 (54 low) does not reconcile with ERR-042's 27 (1 low) — next rotation must state its audit command/flags and reconcile. No new merges on master (head 98543600). LANE-1/2/3/5 designations unchanged; PRs #21–#24 still unmerged and awaiting the owner's word.
+
+
 ### 2026-10-28 — Sweep #19 (Lead review): PR #24 accepted (scheduler part of ERR-047), PR #23 accepted on re-review (ERR-051 corrected/closed), sweep #17/#18 verdicts landed
 
 **Category:** Project governance / Lead review
