@@ -7,6 +7,12 @@
 
 ## Changelog
 
+### 2026-10-27 — GC-101: Environment Variable Sweep & .env.example Sync Fix-Up (Jules / Primary Implementer)
+
+**Category:** Configuration & Governance
+
+**Summary:** Executed full process.env and script environment variable sweep across `src/` and `scripts/`. Added all 9 missing script environment variables (`DB_PASSWORD`, `TEST_DB`, `EXPECTED_MIGRATIONS`, `BACKUP_DIR`, `RETENTION_DAYS`, `RESTORE_CONFIRM`, `ENV_FILE`, `AGE_KEY_FILE`, `ENV_ENC`) to `.env.example` with safe placeholder/default values, resolving ERR-045. Verified 100% sync and zero real credentials/secrets in version control.
+
 ### 2026-10-27 — Sweep #16 (Lead review): PRs #14–#17 merged by owner; closures verified, board/todo/register wipe restored, ERR-045–ERR-050 land
 
 **Category:** Project governance / Lead review
