@@ -7,6 +7,13 @@
 
 ## Changelog
 
+### 2026-10-28 — Pattern Hunting & Stale-Branch Merge Analysis (LANE-5 / Minion 3)
+
+**Category:** Pattern Hunting / System Insights
+
+**Summary:** Completed standing Scout/Pattern Hunting duties (§6) under POOL-PICK designation. Analyzed recent error register entries in `.logs/errors.md` (ERR-049, ERR-050) and documented Pattern 22 in `.logs/patterns.md`:
+- Pattern 22: Stale-Branch Document Merge Overwrite (ERR-049, ERR-050) detailing stale branch merge risks on shared coordination documents and specifying rebase/reconciliation rules.
+
 ### 2026-10-27 — Sweep #16 (Lead review): PRs #14–#17 merged by owner; closures verified, board/todo/register wipe restored, ERR-045–ERR-050 land
 
 **Category:** Project governance / Lead review
