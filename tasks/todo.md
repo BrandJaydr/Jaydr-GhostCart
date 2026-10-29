@@ -7,6 +7,16 @@
 
 ## Changelog
 
+### 2026-10-29 — Standing Security Rotation Pass & ERR-042 Reconciliation (LANE-4 / Minion 2)
+
+**Category:** Security & Compliance / RANGER + Dependency Guardian
+
+**Summary:** Executed standing security rotation (§6) and reconciled ERR-042 under LANE-4 designation.
+- **Secrets Scan:** Scanned `src/` and `scripts/` using custom `security_scan.py` script and regex matching; confirmed zero plaintext production credentials or private keys in source control.
+- **Dependency Audit & ERR-042 Reconciliation:** Documented exact audit execution (`npm audit` default vs `npm audit --omit=dev`). Reconciled the 81 vs 27 vulnerability count jump: confirmed 100% of the 53 low-severity count jump (1 → 54) originates from `@heroui/*` package sub-dependencies transitively depending on low-severity advisories in `deepmerge` (GHSA-gcqx-w48m-w2h4) and `cookie` (GHSA-pxg6-pf52-xh8x).
+- **Auth & Tenancy:** Re-confirmed API route auth and tenancy posture (ERR-016 status unchanged).
+- **Coordination:** Updated `Docs/agent-job-board.md` Message Board (`[CHECK-IN]`, `[CLAIM]`, `[DONE]`) and updated `.logs/errors.md`.
+
 ### 2026-10-29 — Cleanup (Lead): dead branches closed, lanes re-pointed, coordination model + GC-102 decision recorded
 
 **Category:** Project governance / Lead cleanup (no ticket parts — ticket-outbox proposal not adopted)
