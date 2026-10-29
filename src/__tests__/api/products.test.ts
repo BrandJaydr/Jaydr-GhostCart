@@ -100,6 +100,20 @@ describe('/api/products API routes', () => {
     expect(queueModule.importQueue.add).not.toHaveBeenCalled();
   });
 
+  it('POST /api/products returns 503 if the queue does not confirm a job ID', async () => {
+    vi.stubEnv('REDIS_URL', 'redis://localhost:6379');
+    vi.spyOn(idempotencyModule, 'checkDuplicateSourceUrl').mockResolvedValue(false);
+    (queueModule.importQueue.add as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({});
+    const req = new NextRequest('http://localhost:3000/api/products', {
+      method: 'POST',
+      body: JSON.stringify({ url: 'https://example.com/product/no-job-id', supplierId: 'sup_demo', idempotencyKey: 'no_job_id' }),
+    });
+    const res = await postProducts(req);
+    expect(res.status).toBe(503);
+    const body = await res.json();
+    expect(body.error).toBe('Failed to enqueue product import');
+  });
+
   it('POST /api/products returns 503 when enqueueing throws', async () => {
     vi.stubEnv('REDIS_URL', 'redis://localhost:6379');
     vi.spyOn(idempotencyModule, 'checkDuplicateSourceUrl').mockResolvedValue(false);
