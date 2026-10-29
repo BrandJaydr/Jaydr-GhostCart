@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
-import { db, DEV_TENANT_ID } from '@/lib/db/index';
+import { withTenant } from '@/lib/db/index';
+import { getAuthenticatedTenantId } from '@/lib/auth/tenant';
 
 /**
  * GET /api/products/[id]
@@ -12,6 +13,11 @@ export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } },
 ) {
+  const tenantId = await getAuthenticatedTenantId();
+  if (!tenantId) {
+    return apiError('Authentication required', null, 401);
+  }
+
   const productId = params.id;
 
   // Validate UUID format
@@ -20,12 +26,8 @@ export async function GET(
     return apiError('Invalid product ID format', null, 400);
   }
 
-  // @agent:forge Replace this with the tenantId resolved from the
-  // authenticated session once next-auth is configured.
-  const tenantId = DEV_TENANT_ID;
-
   try {
-        const result = await db.query(
+    const result = await withTenant(tenantId, async (client) => client.query(
       `SELECT
         p.id, p.tenant_id, p.title, p.description, p.identifiers, p.primary_image_url,
         p.additional_image_urls, p.supplier_price_cents, p.currency, p.availability,
@@ -36,7 +38,7 @@ export async function GET(
        WHERE p.id = $1 AND p.tenant_id = $2
        LIMIT 1`,
       [productId, tenantId],
-    );
+    ));
 
     if (result.rowCount === 0) {
       return apiError('Product not found', null, 404);

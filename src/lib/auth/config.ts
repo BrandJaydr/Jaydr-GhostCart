@@ -27,7 +27,7 @@ export const authOptions: AuthOptions = {
             id: 'dev-user-1',
             name: 'Dev User',
             email: devUserEmail,
-            tenantId: process.env.DEV_TENANT_ID || 'tenant_dev_001',
+            tenantId: process.env.DEV_TENANT_ID || '00000000-0000-0000-0000-000000000001',
           };
         }
 

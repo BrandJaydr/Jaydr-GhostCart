@@ -14,10 +14,42 @@ vi.mock('@/lib/db/index.js', () => ({
   setTenantContextOn: vi.fn(async () => undefined),
 }));
 
+vi.mock('@/lib/auth/tenant', () => ({
+  getAuthenticatedTenantId: vi.fn(async () => '00000000-0000-0000-0000-000000000001'),
+}));
+
 const { GET: getListings, POST: postListings } = await import('@/app/api/listings/route');
+const { GET: getListingById, PUT: putListingById } = await import('@/app/api/listings/[id]/route');
+const authModule = await import('@/lib/auth/tenant');
 import { NextRequest } from 'next/server';
 
 describe('/api/listings API routes', () => {
+  it('GET /api/listings/[id] rejects requests without an authenticated tenant', async () => {
+    (authModule.getAuthenticatedTenantId as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(null);
+    const id = '00000000-0000-0000-0000-000000000001';
+    const res = await getListingById(new NextRequest('http://localhost:3000/api/listings/'+id), { params: { id } });
+    expect(res.status).toBe(401);
+  });
+
+  it('PUT /api/listings/[id] rejects requests without an authenticated tenant', async () => {
+    (authModule.getAuthenticatedTenantId as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(null);
+    const id = '00000000-0000-0000-0000-000000000001';
+    const res = await putListingById(new NextRequest('http://localhost:3000/api/listings/'+id, { method: 'PUT', body: '{}' }), { params: { id } });
+    expect(res.status).toBe(401);
+  });
+
+  it('GET /api/listings rejects requests without an authenticated tenant', async () => {
+    (authModule.getAuthenticatedTenantId as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(null);
+    const res = await getListings(new NextRequest('http://localhost:3000/api/listings'));
+    expect(res.status).toBe(401);
+  });
+
+  it('POST /api/listings rejects requests without an authenticated tenant', async () => {
+    (authModule.getAuthenticatedTenantId as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(null);
+    const res = await postListings(new NextRequest('http://localhost:3000/api/listings', { method: 'POST', body: '{}' }));
+    expect(res.status).toBe(401);
+  });
+
   it('GET /api/listings returns paginated listing drafts', async () => {
     const mockWithTenant = (await import('@/lib/db/index.js')).withTenant as unknown as ReturnType<typeof vi.fn>;
     mockWithTenant.mockResolvedValue({

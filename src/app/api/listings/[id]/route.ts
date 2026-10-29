@@ -1,7 +1,8 @@
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { ListingUpdateSchema } from '@/lib/validation/schemas';
-import { db, DEV_TENANT_ID, withTenant } from '@/lib/db/index';
+import { withTenant } from '@/lib/db/index';
+import { getAuthenticatedTenantId } from '@/lib/auth/tenant';
 
 /**
  * GET /api/listings/[id]
@@ -13,6 +14,11 @@ export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } },
 ) {
+  const tenantId = await getAuthenticatedTenantId();
+  if (!tenantId) {
+    return apiError('Authentication required', null, 401);
+  }
+
   const listingId = params.id;
 
   // Validate UUID format
@@ -21,12 +27,8 @@ export async function GET(
     return apiError('Invalid listing ID format', null, 400);
   }
 
-  // @agent:forge Replace this with the tenantId resolved from the
-  // authenticated session once next-auth is configured.
-  const tenantId = DEV_TENANT_ID;
-
   try {
-    const result = await db.query(
+    const result = await withTenant(tenantId, async (client) => client.query(
       `SELECT
         id, tenant_id, product_id, marketplace, state, title, description,
         attributes, list_price_cents, currency, shipping, image_urls,
@@ -35,7 +37,7 @@ export async function GET(
        WHERE id = $1 AND tenant_id = $2
        LIMIT 1`,
       [listingId, tenantId],
-    );
+    ));
 
     if (result.rowCount === 0) {
       return apiError('Listing not found', null, 404);
@@ -81,6 +83,11 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } },
 ) {
+  const tenantId = await getAuthenticatedTenantId();
+  if (!tenantId) {
+    return apiError('Authentication required', null, 401);
+  }
+
   const listingId = params.id;
 
   // Validate UUID format
@@ -108,16 +115,12 @@ export async function PUT(
     return apiError('No fields to update', null, 400);
   }
 
-  // @agent:forge Replace this with the tenantId resolved from the
-  // authenticated session once next-auth is configured.
-  const tenantId = DEV_TENANT_ID;
-
   try {
     const updatedListing = await withTenant(tenantId, async (client) => {
       // Verify listing exists and belongs to tenant
       const checkResult = await client.query(
-        'SELECT id FROM listing_drafts WHERE id = $1 LIMIT 1',
-        [listingId],
+        'SELECT id FROM listing_drafts WHERE id = $1 AND tenant_id = $2 LIMIT 1',
+        [listingId, tenantId],
       );
 
       if (checkResult.rowCount === 0) {
@@ -126,8 +129,8 @@ export async function PUT(
 
       // Build dynamic SET clause
       const setClauses: string[] = [];
-      const values: unknown[] = [listingId];
-      let paramIndex = 2;
+      const values: unknown[] = [listingId, tenantId];
+      let paramIndex = 3;
 
       const columnMap: Record<string, string> = {
         title: 'title',
@@ -152,7 +155,7 @@ export async function PUT(
 
       setClauses.push(`updated_at = now()`);
 
-            const sql = `UPDATE listing_drafts SET ${setClauses.join(', ')} WHERE id = $1 RETURNING *`;
+      const sql = `UPDATE listing_drafts SET ${setClauses.join(', ')} WHERE id = $1 AND tenant_id = $2 RETURNING *`;
       const result = await client.query(sql, values);
 
       if (result.rowCount === 0) {
