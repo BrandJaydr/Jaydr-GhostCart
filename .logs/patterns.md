@@ -124,3 +124,10 @@ This file captures recurring design patterns, integration gotchas, database guid
 - **Risk:** A misconfigured production environment silently falls back to a dev database URL (potentially with default credentials in source) instead of failing closed.
 - **Solution:** Configuration modules must fail closed in production (`NODE_ENV === 'production'`). Any local or build-time fallback must be strictly gated behind explicit mode checks (`NODE_ENV === 'development'` or `CI === 'true'` or `NEXT_PHASE`) and use credential-less targets (e.g., `postgresql://localhost:5432/ghostcart`).
 - **Discovered by:** Minion 3 (Scout) 🔍 — 2026-10-26 (ERR-043, ERR-044)
+
+### 22. Stale-Branch Document Merge Overwrite
+- **Pattern:** Merging pull requests or feature branches cut from stale base commits overwrites shared governance and tracking documents (`Docs/agent-job-board.md`, `tasks/todo.md`, `.logs/errors.md`) on master with outdated versions.
+- **Rationale:** Feature branches created before a Lead review sweep or documentation update retain historical snapshot copies of shared project paperwork. When merged without rebasing or explicitly reconciling document files against master, git merge resolution can favor the branch's stale version.
+- **Risk:** Unnoticed loss of error log entries, board message history, active lane designations, and changelog records, causing multi-agent coordination drift or re-opening resolved defects.
+- **Solution:** Any branch modifying shared project documents must rebase onto current master head and reconcile those files prior to merging. Furthermore, post-merge review sweeps must audit coordination documents to restore any accidentally dropped log or board entries.
+- **Discovered by:** Minion 3 (Scout) 🔍 — 2026-10-28 (ERR-049, ERR-050)

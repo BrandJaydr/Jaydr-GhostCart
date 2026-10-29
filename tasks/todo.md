@@ -7,6 +7,13 @@
 
 ## Changelog
 
+### 2026-10-28 — Pattern Hunting & System Insights Update (LANE-5 / Minion 3)
+
+**Category:** Pattern Hunting / System Insights
+
+**Summary:** Completed standing Scout/Pattern Hunting duties (§6) under POOL-PICK designation. Analyzed recent error register entries in `.logs/errors.md` (ERR-049, ERR-050) and documented Pattern 22 in `.logs/patterns.md`:
+- Pattern 22: Stale-Branch Document Merge Overwrite (ERR-049, ERR-050) detailing stale branch merge risks on shared coordination documents and specifying rebase/reconciliation rules.
+
 ### 2026-10-28 — Sweep #21 (Lead review): Codex PR #23 review ratified (ERR-052), rebase fix-ups designated, LANE-3 blocked
 
 **Summary:** Out-of-schedule Lead review sweep #21 (~9:32 PM ET) at the owner's request so Codex can run again. Codex (LANE-3 / Minion 1) committed a [CHECK-IN] + [REVIEW] to master (commit aa75f383, board-only, verified): directed second-eyes review of PR #23 / GC-302 found (a) no enqueue-through-queue test — new issue, (b) no enqueue site — `POST /api/ebay/submit` submits synchronously and never touches `listingQueue` — new issue, (c) `db:migrate` duplicate confirmed. The Lead re-verified all three against the actual branch/master files (test file: zero `.add(` calls, four direct processor calls; submit route: zero queue mentions; `package.json`: two `db:migrate` keys; worker registered on `listing.submit`, queue name matches). Findings ratified; new follow-up job GC-302-FU1 designated to LANE-2 (enqueue path + queue-to-worker test, gated on PR #23 merging, ERR-052) — GC-302 is not done until FU1 merges. No new pull requests since sweep #20; PRs #19/#21–#25 still open. All four merge attempts on the owner's word (~8:35 PM ET) failed safely on 405 conflicts — branches carry stale board/todo/error-log copies; each lane is designated to rebase onto current master keeping the code payload and dropping stale paperwork copies (no hand-resolving doc-file conflicts). LANE-3 build work is BLOCKED (ERR-047 signer remainder gated on GC-201); Codex's next run is designated as a directed review of PR #24 (review-only). No merges in this sweep. Master head at sweep start: aa75f383.
