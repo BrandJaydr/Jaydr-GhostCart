@@ -1,6 +1,7 @@
 ﻿import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
-import { withTenant, DEV_TENANT_ID } from '@/lib/db/index';
+import { withTenant } from '@/lib/db/index';
+import { getAuthenticatedTenantId } from '@/lib/auth/tenant';
 import type { CorrectionEntry } from '@/lib/types/canonical';
 
 /**
@@ -35,6 +36,11 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } },
 ) {
+  const tenantId = await getAuthenticatedTenantId();
+  if (!tenantId) {
+    return apiError('Authentication required', null, 401);
+  }
+
   const productId = params.id;
 
   let body: CorrectionBody;
@@ -61,17 +67,14 @@ export async function PATCH(
   let result;
   try {
     result = await withTenant<{ corrected: boolean; fields: string[] }>(
-      DEV_TENANT_ID,
+      tenantId,
       async (client) => {
-        await client.query('BEGIN');
-
-        // Fetch current product within tenant scope.
+remove nested begin        // Fetch current product within tenant scope.
         const productRes = await client.query(
-          'SELECT id, user_corrections FROM products WHERE id = $1 LIMIT 1',
-          [productId],
+          'SELECT id, user_corrections FROM products WHERE id = $1 AND tenant_id = $2 LIMIT 1',
+          [productId, tenantId],
         );
         if (productRes.rowCount === 0) {
-          await client.query('ROLLBACK');
           throw new Error('NOT_FOUND');
         }
 
@@ -81,8 +84,8 @@ export async function PATCH(
         >;
 
         const setClauses: string[] = [];
-        const values: unknown[] = [productId];
-        let idx = 2;
+        const values: unknown[] = [productId, tenantId];
+        let idx = 3;
 
         const auditMetadata: Record<string, { original: unknown; corrected: unknown }> = {};
 
@@ -93,14 +96,14 @@ export async function PATCH(
           // Preserve original if not already corrected.
           if (!(field in currentCorrections)) {
             const originalRes = await client.query(
-              `SELECT ${column} AS original FROM products WHERE id = $1`,
-              [productId],
+              `SELECT ${column} AS original FROM products WHERE id = $1 AND tenant_id = $2`,
+              [productId, tenantId],
             );
             currentCorrections[field] = {
               original: originalRes.rows[0]?.original,
               corrected: newValue,
               correctedAt: new Date().toISOString(),
-              correctedBy: DEV_TENANT_ID,
+              correctedBy: tenantId,
             };
             auditMetadata[field] = {
               original: originalRes.rows[0]?.original,
@@ -124,7 +127,7 @@ export async function PATCH(
         values.push(JSON.stringify(currentCorrections));
         idx += 1;
 
-        const sql = `UPDATE products SET ${setClauses.join(', ')} WHERE id = $1 RETURNING *`;
+        const sql = `UPDATE products SET ${setClauses.join(', ')} WHERE id = $1 AND tenant_id = $2 RETURNING *`;
         await client.query(sql, values);
 
         // Audit event.
@@ -132,10 +135,9 @@ export async function PATCH(
           `INSERT INTO audit_events
               (tenant_id, user_id, action, entity_type, entity_id, metadata, created_at)
             VALUES ($1, NULL, 'product.corrected', 'products', $2, $3, now())`,
-          [DEV_TENANT_ID, productId, JSON.stringify(auditMetadata)],
+          [tenantId, productId, JSON.stringify(auditMetadata)],
         );
 
-        await client.query('COMMIT');
         return { corrected: true, fields };
       },
     );
