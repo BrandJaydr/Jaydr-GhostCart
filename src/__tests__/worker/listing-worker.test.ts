@@ -11,7 +11,7 @@ import type { Job } from 'bullmq';
 
 vi.mock('../../lib/db/index.js', () => {
   const mockQuery = vi.fn();
-  const mockWithTenant = vi.fn((tenantId: string, fn: (client: any) => Promise<any>) =>
+  const mockWithTenant = vi.fn((tenantId: string, fn: (client: { query: typeof mockQuery }) => Promise<unknown>) =>
     fn({ query: mockQuery }),
   );
   return {
@@ -43,7 +43,7 @@ describe('GC-302 Listing Submission Worker Processor', () => {
     vi.clearAllMocks();
     vi.mocked(getEBayClient).mockReturnValue({
       addListing: mockAddListing,
-    } as any);
+    } as unknown as ReturnType<typeof getEBayClient>);
   });
 
   describe('processListingSubmitJob', () => {
@@ -61,7 +61,8 @@ describe('GC-302 Listing Submission Worker Processor', () => {
       } as unknown as Job;
 
       // Mock database SELECT for listing draft
-      vi.mocked(db.query).mockResolvedValueOnce({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (db.query as any).mockResolvedValueOnce({
         rowCount: 1,
         rows: [
           {
@@ -73,7 +74,7 @@ describe('GC-302 Listing Submission Worker Processor', () => {
             image_urls: ['https://example.com/keyboard.jpg'],
           },
         ],
-      } as any);
+      });
 
       // Mock eBay client response
       mockAddListing.mockResolvedValueOnce({
@@ -123,10 +124,11 @@ describe('GC-302 Listing Submission Worker Processor', () => {
         },
       } as unknown as Job;
 
-      vi.mocked(db.query).mockResolvedValueOnce({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (db.query as any).mockResolvedValueOnce({
         rowCount: 0,
         rows: [],
-      } as any);
+      });
 
       await expect(processListingSubmitJob(mockJob)).rejects.toThrow(
         'Listing not found: non-existent-listing',
@@ -144,7 +146,8 @@ describe('GC-302 Listing Submission Worker Processor', () => {
       } as unknown as Job;
 
       // Mock listing with missing title or invalid price
-      vi.mocked(db.query).mockResolvedValueOnce({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (db.query as any).mockResolvedValueOnce({
         rowCount: 1,
         rows: [
           {
@@ -156,7 +159,7 @@ describe('GC-302 Listing Submission Worker Processor', () => {
             image_urls: [],
           },
         ],
-      } as any);
+      });
 
       await expect(processListingSubmitJob(mockJob)).rejects.toThrow(
         /Listing validation failed/,

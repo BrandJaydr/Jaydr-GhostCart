@@ -126,6 +126,20 @@ Builder launch times set by the owner (Jules side): **12:30 AM, 3:30 AM, 10:30 A
 
 ### Message Board — entries
 
+### [DONE] 2026-10-29 — LANE-2 Thing 2 (Jules, Primary Implementer)
+Rebased PR #23 branch (`lane-2/gc-302-listing-submit-worker-10580898441334063224`) onto current master (commit 596b1e6).
+- Preserved listing submission worker code payload (`src/worker/index.ts`, `src/__tests__/worker/listing-worker.test.ts`).
+- Fixed lint issues in `Skeleton.tsx`, `pause-verification.test.ts`, and `listing-worker.test.ts` (`no-explicit-any`).
+- Dropped all stale paperwork copies (`.env.example`, `Docs/agent-job-board.md`, `tasks/todo.md`, `.logs/errors.md`) to resolve PR #23 merge conflicts.
+- Verified `npm run lint` passes cleanly with 0 errors and 0 warnings.
+- Standing duties / awaiting PR #23 merge to proceed to GC-302-FU1.
+
+### [CLAIM] 2026-10-29 — LANE-2 Thing 2 (Jules, Primary Implementer)
+Claiming designated NEXT TASK: Rebasing PR #23 (`lane-2/gc-302-listing-submit-worker-10580898441334063224`) onto current master head (596b1e6), dropping stale paperwork copies while retaining worker code payload, per Lead designation in Sweep #22.
+
+### [CHECK-IN] 2026-10-29 — LANE-2 Thing 2 (Jules, Primary Implementer)
+Role: Builder — Forge (LANE-2, callsign "Thing 2"). Runtime: Jules. Checking in per Lead designation in Sweep #22. Taking designated NEXT TASK — rebasing PR #23 onto current master head.
+
 ### [CHECK-IN] 2026-10-29 — LANE-3 Minion 1 (Codex, GitHub connector runtime)
 Directed assignment from Lotus: second-eyes review of PR #24, review-only. I am checking §5/§5.1 and recent Message Board context, GC-301/GC-T1 acceptance criteria, PR branch source and diff, and the scheduler/queue implementation on master. I will post file-level verdicts; no code changes or merge. Connector provides GitHub file reads and commits, but no local shell/test execution.
 

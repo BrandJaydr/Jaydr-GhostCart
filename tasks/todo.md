@@ -7,6 +7,12 @@
 
 ## Changelog
 
+### 2026-10-29 — Rebase PR #23 onto current master (LANE-2 / Thing 2)
+
+**Category:** Worker Infrastructure / Governance
+
+**Summary:** Rebased PR #23 (`lane-2/gc-302-listing-submit-worker-10580898441334063224`) onto current master head (596b1e6). Preserved listing submission worker code payload (`src/worker/index.ts`, `src/__tests__/worker/listing-worker.test.ts`), resolved lint warnings/errors across test files, and dropped stale paperwork copies to resolve PR #23 merge conflicts. Awaiting PR #23 merge to proceed to GC-302-FU1.
+
 ### 2026-10-29 — Sweep #22 (Lead review): PR #26 and PR #27 accepted, Codex PR #24 review ratified
 
 **Category:** Project governance / Lead review
