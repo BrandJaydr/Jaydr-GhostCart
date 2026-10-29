@@ -115,10 +115,6 @@ export async function PUT(
     return apiError('No fields to update', null, 400);
   }
 
-  // @agent:forge Replace this with the tenantId resolved from the
-  // authenticated session once next-auth is configured.
-  const tenantId = tenantId;
-
   try {
     const updatedListing = await withTenant(tenantId, async (client) => {
       // Verify listing exists and belongs to tenant
