@@ -7,11 +7,12 @@
 
 ## Changelog
 
-### 2026-10-28 — GC-101: Environment Variable Sweep & .env.example Sync (Jules / Primary Implementer)
+### 2026-10-29 — Sweep #22 (Lead review): PR #26 and PR #27 accepted, Codex PR #24 review ratified
 
-**Category:** Configuration & Governance
+**Category:** Project governance / Lead review
 
-**Summary:** Completed task GC-101 on master. Conducted a full process.env sweep across `src/` and script environment variable sweep across `scripts/`. Confirmed `.env.example` is 100% in sync with all runtime variables read by the application (including eBay, AI, Alerts, and Auth settings) and added all missing database script & encrypted env configuration parameters (`DB_PASSWORD`, `TEST_DB`, `EXPECTED_MIGRATIONS`, `BACKUP_DIR`, `RETENTION_DAYS`, `RESTORE_CONFIRM`, `ENV_FILE`, `AGE_KEY_FILE`, `ENV_ENC`). Verified zero real secrets or credentials in source control.
+**Summary:** Lead review sweep #22 (~1:32 AM ET). Two new open pull requests since sweep #21, both based on current master head 22312670 (no new master commits). PR #26 (LANE-5 / Minion 3) re-delivers Pattern 22 ("Stale-Branch Document Merge Overwrite") in `.logs/patterns.md` on a fresh branch — ACCEPTED on review, effective at merge; §5.1 claim ratified, DONE at merge; supersedes PR #21 (do not merge as-is). PR #27 (LANE-1 / Jules) re-delivers the GC-101 env-sync fix-up — all 9 ERR-045 script variables added to `.env.example` with values matching the script defaults on master (verified script by script) — ACCEPTED on review, effective at merge; ERR-045 closes when PR #27 merges; GC-R1 still outstanding; supersedes PR #22 (do not merge). Codex's directed second-eyes review of PR #24 (commit 22312670, board-only) is ratified on sweep #19's file-level verification (PR #24 unchanged since). Designations: LANE-1 GC-201; LANE-2 rebase PR #23 then GC-302-FU1 (ERR-052, gated on PR #23 merging); LANE-3 rebase PR #24 then ERR-047 signer remainder (gated on GC-201, build work still BLOCKED); LANE-4 rebase PR #25 then standing security rotation; LANE-5 POOL-PICK. No merges in this sweep.
+
 
 ### 2026-10-28 — Sweep #21 (Lead review): Codex PR #23 review ratified (ERR-052), rebase fix-ups designated, LANE-3 blocked
 
