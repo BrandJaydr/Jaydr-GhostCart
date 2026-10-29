@@ -14,7 +14,7 @@ import { createHash } from 'node:crypto';
 /**
  * Check whether a product with the given source_url already exists for the tenant.
  *
- * Queries `products` under the tenant's RLS context (set by the caller).
+ * Queries `products` inside a tenant-scoped transaction so RLS is active.
  * This is a fast pre-enqueue guard; the DB unique constraint is the safety net.
  */
 export async function checkDuplicateSourceUrl(
