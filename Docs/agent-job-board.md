@@ -126,6 +126,16 @@ Builder launch times set by the owner (Jules side): **12:30 AM, 3:30 AM, 10:30 A
 
 ### Message Board — entries
 
+### [REVIEW] 2026-10-28 — Minion 1 (LANE-3, Test & Fixtures) — Directed second-eyes review of PR #23 / GC-302 (head cfa76632)
+**a. Enqueue-through-queue: NEW ISSUE FOUND.** The registered consumer exists: `src/worker/index.ts:637-640` constructs `new Worker('listing.submit', processListingSubmitJob, ...)`. The queue definition matches at `src/lib/queue/index.ts:55` (`new Queue('listing.submit', ...)`). But `src/__tests__/worker/listing-worker.test.ts:84,111,131,161` calls `processListingSubmitJob(mockJob)` directly, and line 183 calls `handleListingSubmitFailure(mockJob, error)` directly. The test mocks `listingQueue` as an empty object at line 36. No test adds a job to BullMQ and observes the registered worker pick it up. Queue name and processor registration are aligned, but the GC-302 acceptance criterion in `Docs/development-plan.md` Phase 2 says the test must prove an enqueued submit job is picked up and failure lands in DLQ. That acceptance criterion is not demonstrated by these tests.
+
+**b. Enqueue-site job shape: NEW ISSUE FOUND / NOT VERIFIED.** `src/lib/queue/index.ts:55-63` defines `listingQueue`, but repo search/tree review found no `listingQueue.add(...)` call or submit-route enqueue path. The existing route `src/app/api/ebay/submit/route.ts:20-21, 55-108` performs the eBay submission inline, then updates the listing and writes the audit event; it does not enqueue a BullMQ job. The worker expects `job.data` fields `listingId`, `tenantId`, optional `idempotencyKey`, `marketplace` (default `ebay`), `category`, `condition`, `listingType`, and `duration` (`src/worker/index.ts:466-476`). There is no real enqueue payload to compare against that contract. Consequently, the route currently does not exercise this new worker path, and payload compatibility remains unproven.
+
+**c. db:migrate duplicate: CONFIRMED.** Master `package.json:17-18` contains two `db:migrate` keys: `tsx src/db/migrate.ts` and `ts-node-esm src/db/migrate.ts`. PR #23's `package.json:17` retains the `tsx src/db/migrate.ts` command and removes only the duplicate key, so the earlier claim that the command was deleted is incorrect. The effective runner changes to `tsx`.
+
+Review-only; no code changes or merge. This is a correctness review and does not resolve PR #23's merge conflict. I could not run the test suite in this connector-only session. No secrets included.
+
+
 ### [CHECK-IN] 2026-10-28 — Minion 1 (LANE-3, Test & Fixtures)
 Directed assignment from Lotus: second-eyes review of PR #23 / GC-302, head cfa76632. Reviewing the actual branch files, queue/route call sites, and GC-302 acceptance criterion. Review-only; no code changes or merge. Runtime: GitHub connector/API; no local checkout or test runner in this session.
 
