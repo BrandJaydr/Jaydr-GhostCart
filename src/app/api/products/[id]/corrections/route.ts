@@ -149,5 +149,5 @@ export async function PATCH(
     return apiError('Failed to apply corrections', null, 500);
   }
 
-    return apiSuccess(result, undefined, 200);
+  return apiSuccess(result, undefined, 200);
 }
