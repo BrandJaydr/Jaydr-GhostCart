@@ -1,0 +1,213 @@
+/**
+ * Unit tests for GC-302 Listing Submission Worker Processor
+ */
+
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { processListingSubmitJob, handleListingSubmitFailure } from '../../worker/index.js';
+import { db, withTenant } from '../../lib/db/index.js';
+import { getEBayClient } from '../../lib/adapters/ebay/ebay-client.js';
+import { notify } from '../../lib/alerts/index.js';
+import type { Job } from 'bullmq';
+
+vi.mock('../../lib/db/index.js', () => {
+  const mockQuery = vi.fn();
+  const mockWithTenant = vi.fn((tenantId: string, fn: (client: any) => Promise<any>) =>
+    fn({ query: mockQuery }),
+  );
+  return {
+    db: { query: mockQuery },
+    withTenant: mockWithTenant,
+    setTenantContextOn: vi.fn(),
+  };
+});
+
+vi.mock('../../lib/adapters/ebay/ebay-client.js', () => ({
+  getEBayClient: vi.fn(),
+}));
+
+vi.mock('../../lib/alerts/index.js', () => ({
+  notify: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('../../lib/queue/index.js', () => ({
+  redis: {},
+  importQueue: {},
+  refreshQueue: {},
+  listingQueue: {},
+}));
+
+describe('GC-302 Listing Submission Worker Processor', () => {
+  const mockAddListing = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(getEBayClient).mockReturnValue({
+      addListing: mockAddListing,
+    } as any);
+  });
+
+  describe('processListingSubmitJob', () => {
+    it('successfully processes listing submission for eBay', async () => {
+      const mockJob = {
+        id: 'job-123',
+        data: {
+          listingId: 'list-111',
+          tenantId: 'tenant-222',
+          idempotencyKey: 'idemp-333',
+          marketplace: 'ebay',
+          category: '1234',
+          condition: 'New',
+        },
+      } as unknown as Job;
+
+      // Mock database SELECT for listing draft
+      vi.mocked(db.query).mockResolvedValueOnce({
+        rowCount: 1,
+        rows: [
+          {
+            id: 'list-111',
+            title: 'Test Ergonomic Mechanical Keyboard',
+            description: 'A great mechanical keyboard with custom switches',
+            list_price_cents: 12999,
+            currency: 'USD',
+            image_urls: ['https://example.com/keyboard.jpg'],
+          },
+        ],
+      } as any);
+
+      // Mock eBay client response
+      mockAddListing.mockResolvedValueOnce({
+        itemId: 'ebay-item-999',
+        viewItemURL: 'https://ebay.com/itm/999',
+      });
+
+      const result = await processListingSubmitJob(mockJob);
+
+      expect(result).toEqual({
+        listingId: 'list-111',
+        ebayItemId: 'ebay-item-999',
+        state: 'submitted',
+      });
+
+      expect(db.query).toHaveBeenCalledWith(
+        expect.stringContaining('SELECT id, title, description'),
+        ['list-111', 'tenant-222'],
+      );
+
+      expect(mockAddListing).toHaveBeenCalledTimes(1);
+      expect(withTenant).toHaveBeenCalledWith('tenant-222', expect.any(Function));
+    });
+
+    it('throws error if marketplace is unsupported', async () => {
+      const mockJob = {
+        id: 'job-456',
+        data: {
+          listingId: 'list-111',
+          tenantId: 'tenant-222',
+          marketplace: 'amazon',
+        },
+      } as unknown as Job;
+
+      await expect(processListingSubmitJob(mockJob)).rejects.toThrow(
+        'Unsupported marketplace: amazon',
+      );
+    });
+
+    it('throws error if listing is not found in database', async () => {
+      const mockJob = {
+        id: 'job-789',
+        data: {
+          listingId: 'non-existent-listing',
+          tenantId: 'tenant-222',
+          marketplace: 'ebay',
+        },
+      } as unknown as Job;
+
+      vi.mocked(db.query).mockResolvedValueOnce({
+        rowCount: 0,
+        rows: [],
+      } as any);
+
+      await expect(processListingSubmitJob(mockJob)).rejects.toThrow(
+        'Listing not found: non-existent-listing',
+      );
+    });
+
+    it('throws error if eBay listing validation fails', async () => {
+      const mockJob = {
+        id: 'job-000',
+        data: {
+          listingId: 'list-111',
+          tenantId: 'tenant-222',
+          marketplace: 'ebay',
+        },
+      } as unknown as Job;
+
+      // Mock listing with missing title or invalid price
+      vi.mocked(db.query).mockResolvedValueOnce({
+        rowCount: 1,
+        rows: [
+          {
+            id: 'list-111',
+            title: '', // empty title fails validation
+            description: 'Short desc',
+            list_price_cents: -100, // negative price fails validation
+            currency: 'USD',
+            image_urls: [],
+          },
+        ],
+      } as any);
+
+      await expect(processListingSubmitJob(mockJob)).rejects.toThrow(
+        /Listing validation failed/,
+      );
+    });
+  });
+
+  describe('handleListingSubmitFailure', () => {
+    it('dispatches to DLQ and updates listing state when attempts run out', async () => {
+      const mockJob = {
+        id: 'job-failed-123',
+        attemptsMade: 3,
+        opts: { attempts: 3 },
+        data: {
+          listingId: 'list-111',
+          tenantId: 'tenant-222',
+          idempotencyKey: 'idemp-555',
+          marketplace: 'ebay',
+        },
+      } as unknown as Job;
+
+      const error = new Error('eBay API authorization expired');
+
+      await handleListingSubmitFailure(mockJob, error);
+
+      // Verify jobs table update (failed status)
+      expect(db.query).toHaveBeenCalledWith(
+        expect.stringContaining('INSERT INTO jobs'),
+        expect.arrayContaining(['tenant-222', 'idemp-555', 3, 'eBay API authorization expired']),
+      );
+
+      // Verify listings state update to 'failed'
+      expect(db.query).toHaveBeenCalledWith(
+        expect.stringContaining("UPDATE listings SET state = 'failed'"),
+        ['eBay API authorization expired', 'list-111', 'tenant-222'],
+      );
+
+      // Verify dead_letter_queue insertion
+      expect(db.query).toHaveBeenCalledWith(
+        expect.stringContaining('INSERT INTO dead_letter_queue'),
+        expect.arrayContaining(['tenant-222', 'job-failed-123', 'eBay API authorization expired', 3]),
+      );
+
+      // Verify notification sent
+      expect(notify).toHaveBeenCalledWith(
+        expect.objectContaining({
+          alertType: 'job.failed_final',
+          severity: 'critical',
+          message: expect.stringContaining('Listing submit job job-failed-123 failed after 3 attempts; moved to DLQ'),
+        }),
+      );
+    });
+  });
+});

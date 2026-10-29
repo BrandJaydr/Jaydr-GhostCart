@@ -16,8 +16,10 @@
 
 import { Worker, type Job } from 'bullmq';
 import { redis } from '../lib/queue/index.js';
-import { db, setTenantContextOn } from '../lib/db/index.js';
+import { db, setTenantContextOn, withTenant } from '../lib/db/index.js';
 import { getSupplierAdapter } from '../lib/adapters/factory.js';
+import { getEBayClient } from '../lib/adapters/ebay/ebay-client.js';
+import { mapListingDraftToEBayListing, validateEBayListing } from '../lib/adapters/ebay/listing-mapper.js';
 import type { CanonicalProduct } from '../lib/types/canonical.js';
 import { randomUUID } from 'node:crypto';
 import { notify } from '../lib/alerts/index.js';
@@ -246,7 +248,7 @@ async function recordJobFailure(
 // @agent:atlas Implement job processor to call ISupplierAdapter.importProduct()
 // @agent:atlas Add: tenant_id propagation, audit event creation, error classification
 
-const importWorker = new Worker(
+export const importWorker = new Worker(
   'product.import',
   async (job) => {
     const { url, supplierId, tenantId, idempotencyKey } = job.data;
@@ -348,7 +350,7 @@ importWorker.on('failed', (job, err) => {
 // Stage 2: refreshes an already-imported product from its supplier feed by
 // re-running the adapter's fetchProduct and re-persisting (upsert).
 // Stage 4: Extended to handle stock/price refresh with change detection and logging.
-const refreshWorker = new Worker(
+export const refreshWorker = new Worker(
   'product.refresh',
   async (job) => {
     const { productId, tenantId, supplierId, idempotencyKey, refreshType = 'both' } = job.data;
@@ -459,10 +461,197 @@ refreshWorker.on('failed', (job, err) => {
   }
 });
 
+// ─── Listing Submit Worker ───────────────────────────────────────────────────
+// Stage 3: Processes listing submission to external marketplaces (e.g. eBay).
+export async function processListingSubmitJob(job: Job) {
+  const {
+    listingId,
+    tenantId,
+    idempotencyKey,
+    marketplace = 'ebay',
+    category,
+    condition,
+    listingType,
+    duration,
+  } = job.data;
+
+  if (marketplace !== 'ebay') {
+    throw new Error(`Unsupported marketplace: ${marketplace}`);
+  }
+
+  // Fetch listing draft from database
+  const listingResult = await db.query(
+    `SELECT id, title, description, list_price_cents, currency, image_urls
+     FROM listings
+     WHERE id = $1 AND tenant_id = $2
+     LIMIT 1`,
+    [listingId, tenantId],
+  );
+
+  if ((listingResult.rowCount ?? 0) === 0) {
+    throw new Error(`Listing not found: ${listingId}`);
+  }
+
+  const listingRow = listingResult.rows[0];
+  const listingDraft = {
+    title: listingRow.title,
+    description: listingRow.description,
+    listPriceCents: listingRow.list_price_cents,
+    currency: listingRow.currency,
+    imageUrls: listingRow.image_urls,
+  };
+
+  // Map to eBay format
+  const ebayListing = mapListingDraftToEBayListing(listingDraft, {
+    category,
+    condition,
+    listingType,
+    duration,
+  });
+
+  // Validate eBay listing requirements
+  const validation = validateEBayListing(ebayListing);
+  if (!validation.valid) {
+    throw new Error(`Listing validation failed: ${validation.errors.join(', ')}`);
+  }
+
+  // Submit to eBay
+  const ebayClient = getEBayClient();
+  const ebayResponse = await ebayClient.addListing(ebayListing);
+
+  // Update listing with eBay item ID and state
+  await withTenant(tenantId, async (client) => {
+    await client.query(
+      `UPDATE listings
+       SET marketplace_listing_id = $1,
+           state = 'submitted',
+           updated_at = now()
+       WHERE id = $2`,
+      [ebayResponse.itemId, listingId],
+    );
+
+    // Log submission
+    await client.query(
+      `INSERT INTO audit_events
+         (tenant_id, user_id, action, entity_type, entity_id, metadata, created_at)
+       VALUES ($1, NULL, 'listing.submitted', 'listings', $2, $3, now())`,
+      [
+        tenantId,
+        listingId,
+        JSON.stringify({
+          marketplace: 'ebay',
+          itemId: ebayResponse.itemId,
+          viewItemURL: ebayResponse.viewItemURL,
+        }),
+      ],
+    );
+
+    if (idempotencyKey) {
+      await client.query(
+        `INSERT INTO jobs
+           (id, tenant_id, type, payload, idempotency_key, status, attempts, last_error, created_at, completed_at)
+         VALUES ($1, $2, 'listing.submit', $3, $4, 'completed', 0, NULL, now(), now())
+         ON CONFLICT (idempotency_key) DO UPDATE
+           SET status = 'completed', completed_at = now(), last_error = NULL`,
+        [
+          randomUUID(),
+          tenantId,
+          JSON.stringify({ jobId: job.id, listingId, marketplace }),
+          idempotencyKey,
+        ],
+      );
+    }
+  });
+
+  return { listingId, ebayItemId: ebayResponse.itemId, state: 'submitted' };
+}
+
+export async function handleListingSubmitFailure(job: Job | undefined, err: Error) {
+  console.error(`[Worker] Listing submit job ${job?.id} failed:`, err.message);
+  if (!job) return;
+
+  const { tenantId, listingId, idempotencyKey } = job.data ?? {};
+
+  if (idempotencyKey && tenantId) {
+    try {
+      await db.query(
+        `INSERT INTO jobs
+           (id, tenant_id, type, payload, idempotency_key, status, attempts, last_error, created_at, completed_at)
+         VALUES ($1, $2, 'listing.submit', '{}', $3, 'failed', $4, $5, now(), now())
+         ON CONFLICT (idempotency_key) DO UPDATE
+           SET status = 'failed', last_error = $5, attempts = jobs.attempts + 1`,
+        [randomUUID(), tenantId, idempotencyKey, job.attemptsMade ?? 0, err.message],
+      );
+    } catch {
+      /* DB unavailable */
+    }
+  }
+
+  const maxAttempts = job.opts?.attempts ?? 3;
+  if (job.attemptsMade >= maxAttempts) {
+    if (listingId && tenantId) {
+      try {
+        await db.query(
+          `UPDATE listings SET state = 'failed', last_error = $1, updated_at = now() WHERE id = $2 AND tenant_id = $3`,
+          [err.message, listingId, tenantId],
+        );
+      } catch (e) {
+        console.error('[Worker] Could not update listing failure state:', (e as Error).message);
+      }
+    }
+
+    try {
+      await db.query(
+        `INSERT INTO dead_letter_queue
+           (tenant_id, queue, bull_job_id, payload, error, attempts, created_at)
+         VALUES ($1, 'listing.submit', $2, $3, $4, $5, now())`,
+        [
+          tenantId ?? null,
+          job.id,
+          JSON.stringify(job.data ?? {}),
+          err.message,
+          job.attemptsMade,
+        ],
+      );
+      console.warn(`[Worker] Listing submit job ${job.id} moved to dead-letter queue`);
+    } catch (e) {
+      console.error('[Worker] Could not write DLQ for listing submission:', (e as Error).message);
+    }
+
+    await notify({
+      tenantId: tenantId ?? null,
+      alertType: 'job.failed_final',
+      severity: 'critical',
+      message: `Listing submit job ${job.id} failed after ${job.attemptsMade} attempts; moved to DLQ`,
+      payload: {
+        queue: 'listing.submit',
+        jobId: job.id,
+        listingId: listingId ?? null,
+        error: err.message,
+        attempts: job.attemptsMade,
+      },
+    });
+  }
+}
+
+export const listingWorker = new Worker(
+  'listing.submit',
+  processListingSubmitJob,
+  { connection: redis, concurrency: 5 },
+);
+
+listingWorker.on('completed', (job) => {
+  console.warn(`[Worker] Listing submit job ${job.id} completed`);
+});
+
+listingWorker.on('failed', (job, err) => {
+  void handleListingSubmitFailure(job, err);
+});
+
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   console.warn('[Worker] Shutting down...');
   clearInterval(schedulerTimer);
-  await Promise.allSettled([importWorker.close(), refreshWorker.close()]);
+  await Promise.allSettled([importWorker.close(), refreshWorker.close(), listingWorker.close()]);
   process.exit(0);
 });
