@@ -1,6 +1,8 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/config';
 
+type SessionUserWithTenant = { tenantId?: unknown };
+
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
@@ -10,7 +12,7 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
  */
 export async function getAuthenticatedTenantId(): Promise<string | null> {
   const session = await getServerSession(authOptions);
-  const tenantId = (session?.user as (typeof session.user & { tenantId?: unknown }) | undefined)?.tenantId;
+  const tenantId = (session?.user as SessionUserWithTenant | undefined)?.tenantId;
 
   if (!session?.user || typeof tenantId !== 'string' || !UUID_PATTERN.test(tenantId)) {
     return null;
