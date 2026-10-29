@@ -33,6 +33,7 @@ const queueModule = await import('@/lib/queue');
 
 afterEach(() => {
   vi.unstubAllEnvs();
+  vi.restoreAllMocks();
   vi.clearAllMocks();
 });
 
@@ -82,7 +83,7 @@ describe('/api/products API routes', () => {
     expect(body.data.status).toBe('queued');
     expect(body.data.jobId).toBe('import_idemp_key_123');
     expect(body.data.idempotencyKey).toBe('idemp_key_123');
-    expect(queueModule.importQueue.add).toHaveBeenCalledOnce();
+    expect(queueModule.importQueue.add).toHaveBeenCalledTimes(1);
   });
 
   it('POST /api/products returns 503 when Redis is not configured instead of inventing a queued job', async () => {
