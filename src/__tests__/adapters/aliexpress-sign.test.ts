@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canonicalizeParams, sign } from '../../../lib/adapters/aliexpress/sign';
+import { canonicalizeParams, sign } from '../../lib/adapters/aliexpress/sign';
 
 // Expected signatures were independently calculated with Python's standard
 // library hmac.new(secret, canonical.encode(), hashlib.sha256).hexdigest().upper()
