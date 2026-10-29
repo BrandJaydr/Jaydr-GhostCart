@@ -7,15 +7,50 @@
 
 ## Changelog
 
-### 2026-10-27 — PR #19 Fix-Up / ERR-047 Rework Completed (LANE-3 / Minion 1)
+### 2026-10-29 — Sweep #22 (Lead review): PR #26 and PR #27 accepted, Codex PR #24 review ratified
 
-**Category:** Test Infrastructure / Worker Queue Assertions
+**Category:** Project governance / Lead review
 
-**Summary:** Completed PR #19 fix-up (ERR-047) directly on master.
-- Updated `src/__tests__/worker/scheduler.test.ts` with explicit queue identity assertions verifying `refreshQueue.add` is called with `'product.refresh'` and expected payload/jobId options, and `importQueue.add` is not called.
-- Cleared ESLint unused variable errors in `src/components/ui/Skeleton.tsx` and `src/__tests__/integration/pause-verification.test.ts`.
-- Removed duplicate `db:migrate` key from `package.json`.
-- GC-201 test support held until LANE-1 delivers `src/lib/adapters/aliexpress/sign.ts` module (LANE-3 does not build another lane's track).
+**Summary:** Lead review sweep #22 (~1:32 AM ET). Two new open pull requests since sweep #21, both based on current master head 22312670 (no new master commits). PR #26 (LANE-5 / Minion 3) re-delivers Pattern 22 ("Stale-Branch Document Merge Overwrite") in `.logs/patterns.md` on a fresh branch — ACCEPTED on review, effective at merge; §5.1 claim ratified, DONE at merge; supersedes PR #21 (do not merge as-is). PR #27 (LANE-1 / Jules) re-delivers the GC-101 env-sync fix-up — all 9 ERR-045 script variables added to `.env.example` with values matching the script defaults on master (verified script by script) — ACCEPTED on review, effective at merge; ERR-045 closes when PR #27 merges; GC-R1 still outstanding; supersedes PR #22 (do not merge). Codex's directed second-eyes review of PR #24 (commit 22312670, board-only) is ratified on sweep #19's file-level verification (PR #24 unchanged since). Designations: LANE-1 GC-201; LANE-2 rebase PR #23 then GC-302-FU1 (ERR-052, gated on PR #23 merging); LANE-3 rebase PR #24 then ERR-047 signer remainder (gated on GC-201, build work still BLOCKED); LANE-4 rebase PR #25 then standing security rotation; LANE-5 POOL-PICK. No merges in this sweep.
+
+
+### 2026-10-28 — Sweep #21 (Lead review): Codex PR #23 review ratified (ERR-052), rebase fix-ups designated, LANE-3 blocked
+
+**Summary:** Out-of-schedule Lead review sweep #21 (~9:32 PM ET) at the owner's request so Codex can run again. Codex (LANE-3 / Minion 1) committed a [CHECK-IN] + [REVIEW] to master (commit aa75f383, board-only, verified): directed second-eyes review of PR #23 / GC-302 found (a) no enqueue-through-queue test — new issue, (b) no enqueue site — `POST /api/ebay/submit` submits synchronously and never touches `listingQueue` — new issue, (c) `db:migrate` duplicate confirmed. The Lead re-verified all three against the actual branch/master files (test file: zero `.add(` calls, four direct processor calls; submit route: zero queue mentions; `package.json`: two `db:migrate` keys; worker registered on `listing.submit`, queue name matches). Findings ratified; new follow-up job GC-302-FU1 designated to LANE-2 (enqueue path + queue-to-worker test, gated on PR #23 merging, ERR-052) — GC-302 is not done until FU1 merges. No new pull requests since sweep #20; PRs #19/#21–#25 still open. All four merge attempts on the owner's word (~8:35 PM ET) failed safely on 405 conflicts — branches carry stale board/todo/error-log copies; each lane is designated to rebase onto current master keeping the code payload and dropping stale paperwork copies (no hand-resolving doc-file conflicts). LANE-3 build work is BLOCKED (ERR-047 signer remainder gated on GC-201); Codex's next run is designated as a directed review of PR #24 (review-only). No merges in this sweep. Master head at sweep start: aa75f383.
+
+
+### 2026-10-28 — Sweep #20 (Lead review): PR #25 accepted, LANE-4 rotation pass
+
+**Summary:** Lead review sweep #20 (~7:32 PM ET). One new builder output since sweep #19: PR #25 (LANE-4 / Minion 2) — §6 standing security rotation pass with a single dependency-upgrade proposal (vitest 2.0.3 → 2.1.9, GHSA-9crc-q9x8-hgqq verified patched in 2.1.9). Verdict: ACCEPTED on review, effective at merge; claim ratified. Open question carried forward: reported `npm audit` total 81 (54 low) does not reconcile with ERR-042's 27 (1 low) — next rotation must state its audit command/flags and reconcile. No new merges on master (head 98543600). LANE-1/2/3/5 designations unchanged; PRs #21–#24 still unmerged and awaiting the owner's word.
+
+
+### 2026-10-28 — Sweep #19 (Lead review): PR #24 accepted (scheduler part of ERR-047), PR #23 accepted on re-review (ERR-051 corrected/closed), sweep #17/#18 verdicts landed
+
+**Category:** Project governance / Lead review
+
+**Summary:** One new open pull request since sweep #18, one owner merge during this sweep (PR #20, 2:08 PM ET, verified clean — head now 71e93930). PR #24 (LANE-3, PR #19 fix-up) is ACCEPTED on review, effective at merge: the scheduler test now asserts queue identity against the real production routing (refresh queue, verified on master), the duplicate `db:migrate` key removal and lint fixes verify clean, and the branch paperwork diff is clean — the scheduler/queue-identity part of ERR-047 is done at merge; the signer-test part stays open, gated on GC-201 (no signer module on master yet), and PR #19 must not merge as-is (PR #24 supersedes its scheduler/lint changes). PR #23 (LANE-2, GC-302) is ACCEPTED on re-review: ERR-051 is corrected and closed — master `package.json` carries `db:migrate` twice and the branch removes only the duplicate key, so the command survives (runner changes to `tsx`, a declared dependency); the worker code re-verified clean. No [CLAIM] was posted for PR #24 (designated work); PR #23's claim stands ratified. This push also lands sweep #17's and sweep #18's board/to-do/register updates, which never reached master. Designations: LANE-1 GC-201, LANE-2 GC-303 (gated on GC-202) with standing duties meanwhile, LANE-3 ERR-047 signer remainder (gated on GC-201), LANE-4 security rotation continues, LANE-5 POOL-PICK. PR #20 merged by the owner during this sweep and verified clean (paperwork-only, no wipe); its board/todo entries are preserved in this update. Merge-time warning for PRs #21/#22/#23/#24 (Pattern 22): reconcile board/todo/error-log copies against master at merge so sweep entries are not wiped.
+
+### 2026-10-27 — §6 Standing Security Maintenance Pass (LANE-4 / Minion 2)
+
+**Category:** Security & Compliance / RANGER + Dependency Guardian
+
+**Summary:** Completed standing security rotation (§6) under LANE-4 designation on master.
+- **Secrets Scan:** Scanned `src/` and `scripts/` using regex and grep; confirmed zero hardcoded keys, tokens, or plaintext credentials committed in version control.
+- **Dependency Audit:** Re-ran `npm audit`, identifying 27 vulnerabilities (4 critical, 15 high, 7 moderate, 1 low) in external packages (Next.js, Tinypool, PostCSS, Playwright, Zod, glob, minimatch, source-map-js, uuid).
+- **Auth & Tenancy:** Re-confirmed API route authorization posture (ERR-016 status unchanged).
+- **Coordination:** Appended `[CHECK-IN]`, `[CLAIM]`, and `[DONE]` entries to `Docs/agent-job-board.md` Message Board and updated table state.
+
+### 2026-10-28 — Sweep #18 (Lead review): PR #21/#22 accepted, PR #23 fixes needed (ERR-051), sweep #17 verdicts carried forward
+
+**Category:** Project governance / Lead review
+
+**Summary:** Three new open pull requests since sweep #17, no new master commits (head still 18c081d). PR #22 (LANE-1, GC-101 fix-up) is ACCEPTED on review, effective at merge: all 9 ERR-045 script variables are present in `.env.example` with values verified against the script defaults on master; ERR-045 closes when it merges; GC-R1 still outstanding; no [CLAIM] was posted (designated work). PR #21 (LANE-5, Pattern 22) is ACCEPTED on review, effective at merge; its §6 standing-duties claim is ratified. PR #23 (LANE-2, GC-302 listing.submit worker) is FIXES NEEDED (ERR-051): the processor, failure/DLQ handling, queue registration, and tests verify against the real queue, eBay client/mapper, and schema, but the branch deletes the `db:migrate` script line from `package.json` — restore it, then re-review; DONE overridden; claim ratified. PR #20 (LANE-4 rotation pass, ACCEPTED as a report) and PR #19 (LANE-3, still FIXES NEEDED, ERR-047, rebase target 18c081d) are unchanged; sweep #17's board/todo/register update never landed, so its STATUS/REVIEW entries and ERR-042/ERR-047 updates are carried forward in this push. ERR-049/ERR-050 closed as verified-restored on master. GC-302 stays unchecked until the PR #23 fix-up is accepted. Designations: LANE-1 GC-201, LANE-2 PR #23 fix-up, LANE-3 PR #19 fix-up, LANE-4 security rotation continues, LANE-5 POOL-PICK. Merge-time warning for PRs #21/#22/#23 (Pattern 22): reconcile board/todo/error-log copies against master at merge so sweep entries are not wiped.
+
+### 2026-10-27 — Sweep #17 (Lead review): PR #20 rotation pass accepted as a report; PR #19 still fixes-needed; no other new builder output
+
+**Category:** Project governance / Lead review
+
+**Summary:** One new open pull request since sweep #16 (master head still 18c081d): PR #20 (LANE-4, standing security rotation) is ACCEPTED as a report-only pass — branch verified by file diff as paperwork-only (board + todo), cleanly based on current master, reporting zero hard-coded secrets, 27 dependency vulnerabilities (down from ERR-042's 28, same families), and ERR-016 unchanged; claim ratified; not merged (merges need the owner's word per PR). No upgrade proposal was attached — LANE-4's next rotation must propose one upgrade at a time with test evidence. PR #19 (LANE-3) re-checked: its 18:30 UTC merge-sync merged pre-restoration master, so the branch still lacks sweep #16 entries and ERR-045–ERR-050; merging it would wipe the paperwork a third time — still FIXES NEEDED (ERR-047), rebase target now 18c081d. LANE-1 (GC-201), LANE-2 (GC-302), and LANE-5 produced nothing new. Designations: LANE-1 GC-201 (+ ERR-045 remainder), LANE-2 GC-302, LANE-3 PR #19 fix-up, LANE-4 security rotation continues, LANE-5 POOL-PICK. ERR-042 and ERR-047 updated with this sweep's findings; no new ERR number issued.
 
 ### 2026-10-27 — Sweep #16 (Lead review): PRs #14–#17 merged by owner; closures verified, board/todo/register wipe restored, ERR-045–ERR-050 land
 
@@ -442,6 +477,7 @@ worker processes with PostgreSQL and Redis; finalize it through an ADR before a 
 - [ ] **GC-R1** — Claude (on check-in): second-eyes review of GC-101 against `process.env` reads in `src/`
 - [x] **GC-T1** — LANE-3 (Minion 1): `aliexpress.ds.text.search` response fixture pack (full / empty / error envelope) — completed 2026-10-25
 - [x] **GC-301** — LANE-2 (Thing 2): BullMQ repeatable-job scheduler + `scheduled_refreshes` consumer (fix-up completed 2026-10-25)
-- [ ] **GC-302** — LANE-2 (Thing 2): register the missing `listing.submit` worker processor
+- [ ] **GC-302** — LANE-2 (Thing 2): register the missing `listing.submit` worker processor (PR #23, unmerged — rebase required; worker registration accepted, GC-302 not done until GC-302-FU1 merges)
+- [ ] **GC-302-FU1** — LANE-2 (Thing 2): listing.submit enqueue path (ERR-052, gated on PR #23 merging) — route the submit flow through `listingQueue` with a payload matching the processor contract, plus a test proving an enqueued job is picked up and failure lands in DLQ
 - [x] **GC-RS1** — LANE-5 (Minion 3): research brief for the GC-102 credential-storage decision (brief only, no code) — Lead-reviewed 2026-10-25; brief landed on master 2026-10-25 (commit f8ad33c1), PR #7 closed as redundant
 - [x] **GC-S1** — First idle checked-in agent (Lead assigns): RANGER sweep #1 — secrets-pattern scan (locations/types only) + dependency vulnerability summary, reported on the board — completed 2026-10-25 (LANE-4) — audit findings accepted 2026-10-26 (sweep #11); post-merge fix-up ACCEPTED on review 2026-10-26 (sweep #12, PR #15) pending merge; ERR-043 closes at merge
