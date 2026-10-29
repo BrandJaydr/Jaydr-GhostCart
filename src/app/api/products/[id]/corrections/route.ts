@@ -69,7 +69,7 @@ export async function PATCH(
     result = await withTenant<{ corrected: boolean; fields: string[] }>(
       tenantId,
       async (client) => {
-remove nested begin        // Fetch current product within tenant scope.
+        // Fetch current product within tenant scope.
         const productRes = await client.query(
           'SELECT id, user_corrections FROM products WHERE id = $1 AND tenant_id = $2 LIMIT 1',
           [productId, tenantId],
