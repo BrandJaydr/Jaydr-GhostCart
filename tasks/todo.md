@@ -7,6 +7,13 @@
 
 ## Changelog
 
+### 2026-10-29 — Sweep #25 (Lead review): PR #31 accepted as a report, PR #32 review recorded, ERR-053 closed, ERR-054 logged
+
+**Category:** Project governance / Lead review
+
+**Summary:** Lead review sweep #25 (~7:32 PM ET). No new master commits since sweep #24 (head 13f397e0). PR #31 (LANE-4, standing security rotation + ERR-042 reconciliation) is ACCEPTED as a report-only pass, effective at merge; claim ratified; single commit on current master, paperwork-only diff verified file by file (board/todo/error-log). PR #32 (LANE-6, Job 1 draft: tenant-scoped API auth + fail-closed queue errors) — Lead REVIEW completed ~6:20 PM ET, recorded on the board by this sweep; accepted in substance as a draft; merge gated on execution evidence (tests/lint/typecheck/build — none ever executed; automated-check workflow itself broken, Job 3) + owner word + paperwork refresh if PR #31 lands first. Follow-up defect logged as ERR-054 (listing-draft conflict path crashes instead of returning the existing draft). ERR-053 CLOSED (one full cycle, zero paperwork-conflict merge failures). Designations: LANE-1 GC-202 (ungated — GC-201 merged, GC-102 decided); LANE-2 GC-302-FU1; LANE-3 test support as designated (ERR-047 closed); LANE-4 standing rotation continues; LANE-5 POOL-PICK; LANE-6 branch stays open, no new implementation authorized pending owner decision on Jobs 1/2/3 + CI repair; Oracle GC-R1 open for Claude. Merge warning: this push makes PR #31/#32 paperwork copies stale — refresh immediately before merging. No merges in this sweep.
+
+
 ### 2026-10-29 — Cleanup (Lead): dead branches closed, lanes re-pointed, coordination model + GC-102 decision recorded
 
 **Category:** Project governance / Lead cleanup (no ticket parts — ticket-outbox proposal not adopted)
@@ -478,12 +485,13 @@ worker processes with PostgreSQL and Redis; finalize it through an ADR before a 
 
 - [ ] **GC-100** — All agents: check in on the job board Message Board and confirm roles (Lead: Lotus)
 - [x] **GC-101** — Jules: sync `.env.example` with every env var the code reads (full `process.env` sweep of `src/` + `scripts/`)
-- [ ] **GC-201** — Jules: AliExpress HMAC-SHA256 signer module + fixture unit tests (dummy secret only)
-- [ ] **GC-202** — Jules: AliExpress token provider (transient secret, expiry-aware refresh, mocked-HTTP tests, no plaintext persistence; GC-102 DECIDED 2026-10-29 — Option 2 hybrid AES-256-GCM; still gated on GC-201).
+- [x] **GC-201** — Jules: AliExpress HMAC-SHA256 signer module + fixture unit tests (dummy secret only) — merged (PR #29, 2026-10-29); ERR-047 CLOSED
+- [ ] **GC-202** — Jules: AliExpress token provider (transient secret, expiry-aware refresh, mocked-HTTP tests, no plaintext persistence; GC-102 DECIDED 2026-10-29 — Option 2 hybrid AES-256-GCM; UNGATED — GC-201 merged 2026-10-29).
 - [ ] **GC-R1** — Claude (on check-in): second-eyes review of GC-101 against `process.env` reads in `src/`
 - [x] **GC-T1** — LANE-3 (Minion 1): `aliexpress.ds.text.search` response fixture pack (full / empty / error envelope) — completed 2026-10-25
 - [x] **GC-301** — LANE-2 (Thing 2): BullMQ repeatable-job scheduler + `scheduled_refreshes` consumer (fix-up completed 2026-10-25)
 - [ ] **GC-302** — LANE-2 (Thing 2): register the missing `listing.submit` worker processor — worker merged (PR #23, 2026-10-29); acceptance gap tracked in GC-302-FU1 (ERR-052).
-- [ ] **GC-302-FU1** — LANE-2 (Thing 2): listing.submit enqueue path (ERR-052, gated on PR #23 merging) — route the submit flow through `listingQueue` with a payload matching the processor contract, plus a test proving an enqueued job is picked up and failure lands in DLQ
+- [ ] **GC-302-FU1** — LANE-2 (Thing 2): listing.submit enqueue path (ERR-052; PR #23 merged 2026-10-29, ungated) — route the submit flow through `listingQueue` with a payload matching the processor contract, plus a test proving an enqueued job is picked up and failure lands in DLQ
+- [ ] **GC-L6-02** — Listing-draft creation conflict path (ERR-054, follow-up from PR #32 review): on duplicate source, return the existing draft instead of crashing; test the duplicate path
 - [x] **GC-RS1** — LANE-5 (Minion 3): research brief for the GC-102 credential-storage decision (brief only, no code) — Lead-reviewed 2026-10-25; brief landed on master 2026-10-25 (commit f8ad33c1), PR #7 closed as redundant
 - [x] **GC-S1** — First idle checked-in agent (Lead assigns): RANGER sweep #1 — secrets-pattern scan (locations/types only) + dependency vulnerability summary, reported on the board — completed 2026-10-25 (LANE-4) — audit findings accepted 2026-10-26 (sweep #11); post-merge fix-up ACCEPTED on review 2026-10-26 (sweep #12, PR #15) pending merge; ERR-043 closes at merge
