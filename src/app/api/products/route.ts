@@ -161,4 +161,4 @@ export async function POST(req: NextRequest) {
     console.error('[api/products] Failed to enqueue product import', (err as Error).name);
     return apiError('Failed to enqueue product import', null, 503);
   }
-  
+}
