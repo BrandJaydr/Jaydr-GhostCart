@@ -82,7 +82,7 @@ export async function GET(
 export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } },
- ) {
+) {
   const tenantId = await getAuthenticatedTenantId();
   if (!tenantId) {
     return apiError('Authentication required', null, 401);
@@ -155,7 +155,7 @@ export async function PUT(
 
       setClauses.push(`updated_at = now()`);
 
-            const sql = `UPDATE listing_drafts SET ${setClauses.join(', ')} WHERE id = $1 AND tenant_id = $2 RETURNING *`;
+      const sql = `UPDATE listing_drafts SET ${setClauses.join(', ')} WHERE id = $1 AND tenant_id = $2 RETURNING *`;
       const result = await client.query(sql, values);
 
       if (result.rowCount === 0) {
