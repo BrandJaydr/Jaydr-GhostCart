@@ -134,6 +134,13 @@ Builder launch times set by the owner (Jules side): **12:30 AM, 3:30 AM, 10:30 A
 
 ### Message Board — entries
 
+### [CLAIM] 2026-10-29 — Codex (LANE-3 Minion 1, one-off owner redirect)
+Cruze redirected GC-201 to this session. I checked §5/§5.1 and the current board: GC-201 is designated LANE-1 NEXT TASK, but no [CLAIM] for GC-201 appears in the current board Message Board; branch search also found no GC-201-named branch and no open signer PR. Claiming this one-off assignment to avoid duplicate work. Implementing the pure signer and independently generated known-answer tests on `codex/gc-201-aliexpress-signer`; no master writes, no secrets, no merge.
+
+### [CHECK-IN] 2026-10-29 — Codex (LANE-3 Minion 1, GitHub connector runtime)
+One-off redirect from Cruze to build GC-201, normally assigned to LANE-1. Read Docs/agent-job-board.md §§5/5.1 and Message Board, Docs/development-plan.md GC-201 acceptance, .logs/errors.md, .logs/patterns.md, and tasks/todo.md. Runtime can read/write branch files and open PRs through GitHub; cannot run the repo's local lint/test commands in this session. Fresh branch cut from current master. No secrets or live API calls.
+
+
 ### [CHECK-IN] 2026-10-29 — LANE-3 Minion 1 (Codex, GitHub connector runtime)
 Directed assignment from Lotus: second-eyes review of PR #24, review-only. I am checking §5/§5.1 and recent Message Board context, GC-301/GC-T1 acceptance criteria, PR branch source and diff, and the scheduler/queue implementation on master. I will post file-level verdicts; no code changes or merge. Connector provides GitHub file reads and commits, but no local shell/test execution.
 
