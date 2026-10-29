@@ -165,6 +165,16 @@ describe('/api/products API routes', () => {
 });
 
 describe('PATCH /api/products/[id]/corrections', () => {
+  it('rejects product corrections without an authenticated tenant', async () => {
+    (authModule.getAuthenticatedTenantId as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(null);
+    const req = new NextRequest('http://localhost:3000/api/products/prod_123/corrections', {
+      method: 'PATCH',
+      body: JSON.stringify({ title: 'Changed' }),
+    });
+    const res = await patchProductCorrections(req, { params: { id: 'prod_123' } });
+    expect(res.status).toBe(401);
+  });
+
   it('returns 400 when called without a JSON body', async () => {
     const req = new NextRequest('http://localhost:3000/api/products/prod_123/corrections');
     const res = await patchProductCorrections(req, { params: { id: 'prod_123' } });
