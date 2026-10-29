@@ -14,10 +14,27 @@ vi.mock('@/lib/db/index.js', () => ({
   setTenantContextOn: vi.fn(async () => undefined),
 }));
 
+vi.mock('@/lib/auth/tenant', () => ({
+  getAuthenticatedTenantId: vi.fn(async () => '00000000-0000-0000-0000-000000000001'),
+}));
+
 const { GET: getListings, POST: postListings } = await import('@/app/api/listings/route');
+const authModule = await import('@/lib/auth/tenant');
 import { NextRequest } from 'next/server';
 
 describe('/api/listings API routes', () => {
+  it('GET /api/listings rejects requests without an authenticated tenant', async () => {
+    (authModule.getAuthenticatedTenantId as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(null);
+    const res = await getListings(new NextRequest('http://localhost:3000/api/listings'));
+    expect(res.status).toBe(401);
+  });
+
+  it('POST /api/listings rejects requests without an authenticated tenant', async () => {
+    (authModule.getAuthenticatedTenantId as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(null);
+    const res = await postListings(new NextRequest('http://localhost:3000/api/listings', { method: 'POST', body: '{}' }));
+    expect(res.status).toBe(401);
+  });
+
   it('GET /api/listings returns paginated listing drafts', async () => {
     const mockWithTenant = (await import('@/lib/db/index.js')).withTenant as unknown as ReturnType<typeof vi.fn>;
     mockWithTenant.mockResolvedValue({
