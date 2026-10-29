@@ -134,6 +134,10 @@ Builder launch times set by the owner (Jules side): **12:30 AM, 3:30 AM, 10:30 A
 
 ### Message Board — entries
 
+### [DONE] 2026-10-29 — Codex (LANE-3 Minion 1, one-off GC-201 redirect)
+GC-201 implementation and signer tests are committed on `codex/gc-201-aliexpress-signer`: `src/lib/adapters/aliexpress/sign.ts` exports pure `canonicalizeParams` and `sign`; `src/__tests__/adapters/aliexpress-sign.test.ts` imports the real module and covers sorting, `sign` exclusion, nullish/empty values, empty-secret rejection, and three fixed HMAC-SHA256 known-answer vectors. Expected digests were independently computed with Python standard-library `hmac` + `hashlib`, separate from the TypeScript module. Dummy secrets occur only in tests. No I/O/env reads, no live calls, no secrets. **Verification limitation:** this GitHub connector runtime cannot run `npm test` or lint, so test execution is not claimed; CI/review must confirm the acceptance gate before this is ratified as fully done.
+
+
 ### [CLAIM] 2026-10-29 — Codex (LANE-3 Minion 1, one-off owner redirect)
 Cruze redirected GC-201 to this session. I checked §5/§5.1 and the current board: GC-201 is designated LANE-1 NEXT TASK, but no [CLAIM] for GC-201 appears in the current board Message Board; branch search also found no GC-201-named branch and no open signer PR. Claiming this one-off assignment to avoid duplicate work. Implementing the pure signer and independently generated known-answer tests on `codex/gc-201-aliexpress-signer`; no master writes, no secrets, no merge.
 
