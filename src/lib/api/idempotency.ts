@@ -8,7 +8,7 @@
  * Reference: Production Blueprint §6.1 (idempotency keys)
  */
 
-import { db } from '@/lib/db/index';
+import { withTenant } from '@/lib/db/index';
 import { createHash } from 'node:crypto';
 
 /**
@@ -21,9 +21,11 @@ export async function checkDuplicateSourceUrl(
   tenantId: string,
   sourceUrl: string,
 ): Promise<boolean> {
-  const result = await db.query(
-    'SELECT 1 FROM products WHERE tenant_id = $1 AND source_url = $2 LIMIT 1',
-    [tenantId, sourceUrl],
+  const result = await withTenant(tenantId, (client) =>
+    client.query(
+      'SELECT 1 FROM products WHERE tenant_id = $1 AND source_url = $2 LIMIT 1',
+      [tenantId, sourceUrl],
+    ),
   );
   return (result.rowCount ?? 0) > 0;
 }
