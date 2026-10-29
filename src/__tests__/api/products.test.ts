@@ -25,6 +25,7 @@ vi.mock('@/lib/queue', () => ({
 }));
 
 const { GET: getProducts, POST: postProducts } = await import('@/app/api/products/route');
+const { GET: getProductById } = await import('@/app/api/products/[id]/route');
 const { PATCH: patchProductCorrections } = await import('@/app/api/products/[id]/corrections/route');
 const idempotencyModule = await import('@/lib/api/idempotency');
 const authModule = await import('@/lib/auth/tenant');
@@ -112,6 +113,12 @@ describe('/api/products API routes', () => {
     const body = await res.json();
     expect(body.status).toBe('error');
     expect(body.error).toBe('Failed to enqueue product import');
+  });
+
+  it('GET /api/products/[id] rejects requests without an authenticated tenant', async () => {
+    (authModule.getAuthenticatedTenantId as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(null);
+    const res = await getProductById(new NextRequest('http://localhost:3000/api/products/00000000-0000-0000-0000-000000000001'), { params: { id: '00000000-0000-0000-0000-000000000001' } });
+    expect(res.status).toBe(401);
   });
 
   it('GET /api/products rejects requests without an authenticated tenant', async () => {
