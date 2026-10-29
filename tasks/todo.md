@@ -7,6 +7,11 @@
 
 ## Changelog
 
+### 2026-10-28 — Sweep #21 (Lead review): Codex PR #23 review ratified (ERR-052), rebase fix-ups designated, LANE-3 blocked
+
+**Summary:** Out-of-schedule Lead review sweep #21 (~9:32 PM ET) at the owner's request so Codex can run again. Codex (LANE-3 / Minion 1) committed a [CHECK-IN] + [REVIEW] to master (commit aa75f383, board-only, verified): directed second-eyes review of PR #23 / GC-302 found (a) no enqueue-through-queue test — new issue, (b) no enqueue site — `POST /api/ebay/submit` submits synchronously and never touches `listingQueue` — new issue, (c) `db:migrate` duplicate confirmed. The Lead re-verified all three against the actual branch/master files (test file: zero `.add(` calls, four direct processor calls; submit route: zero queue mentions; `package.json`: two `db:migrate` keys; worker registered on `listing.submit`, queue name matches). Findings ratified; new follow-up job GC-302-FU1 designated to LANE-2 (enqueue path + queue-to-worker test, gated on PR #23 merging, ERR-052) — GC-302 is not done until FU1 merges. No new pull requests since sweep #20; PRs #19/#21–#25 still open. All four merge attempts on the owner's word (~8:35 PM ET) failed safely on 405 conflicts — branches carry stale board/todo/error-log copies; each lane is designated to rebase onto current master keeping the code payload and dropping stale paperwork copies (no hand-resolving doc-file conflicts). LANE-3 build work is BLOCKED (ERR-047 signer remainder gated on GC-201); Codex's next run is designated as a directed review of PR #24 (review-only). No merges in this sweep. Master head at sweep start: aa75f383.
+
+
 ### 2026-10-28 — Sweep #20 (Lead review): PR #25 accepted, LANE-4 rotation pass
 
 **Summary:** Lead review sweep #20 (~7:32 PM ET). One new builder output since sweep #19: PR #25 (LANE-4 / Minion 2) — §6 standing security rotation pass with a single dependency-upgrade proposal (vitest 2.0.3 → 2.1.9, GHSA-9crc-q9x8-hgqq verified patched in 2.1.9). Verdict: ACCEPTED on review, effective at merge; claim ratified. Open question carried forward: reported `npm audit` total 81 (54 low) does not reconcile with ERR-042's 27 (1 low) — next rotation must state its audit command/flags and reconcile. No new merges on master (head 98543600). LANE-1/2/3/5 designations unchanged; PRs #21–#24 still unmerged and awaiting the owner's word.
@@ -465,6 +470,7 @@ worker processes with PostgreSQL and Redis; finalize it through an ADR before a 
 - [ ] **GC-R1** — Claude (on check-in): second-eyes review of GC-101 against `process.env` reads in `src/`
 - [x] **GC-T1** — LANE-3 (Minion 1): `aliexpress.ds.text.search` response fixture pack (full / empty / error envelope) — completed 2026-10-25
 - [x] **GC-301** — LANE-2 (Thing 2): BullMQ repeatable-job scheduler + `scheduled_refreshes` consumer (fix-up completed 2026-10-25)
-- [ ] **GC-302** — LANE-2 (Thing 2): register the missing `listing.submit` worker processor
+- [ ] **GC-302** — LANE-2 (Thing 2): register the missing `listing.submit` worker processor (PR #23, unmerged — rebase required; worker registration accepted, GC-302 not done until GC-302-FU1 merges)
+- [ ] **GC-302-FU1** — LANE-2 (Thing 2): listing.submit enqueue path (ERR-052, gated on PR #23 merging) — route the submit flow through `listingQueue` with a payload matching the processor contract, plus a test proving an enqueued job is picked up and failure lands in DLQ
 - [x] **GC-RS1** — LANE-5 (Minion 3): research brief for the GC-102 credential-storage decision (brief only, no code) — Lead-reviewed 2026-10-25; brief landed on master 2026-10-25 (commit f8ad33c1), PR #7 closed as redundant
 - [x] **GC-S1** — First idle checked-in agent (Lead assigns): RANGER sweep #1 — secrets-pattern scan (locations/types only) + dependency vulnerability summary, reported on the board — completed 2026-10-25 (LANE-4) — audit findings accepted 2026-10-26 (sweep #11); post-merge fix-up ACCEPTED on review 2026-10-26 (sweep #12, PR #15) pending merge; ERR-043 closes at merge
