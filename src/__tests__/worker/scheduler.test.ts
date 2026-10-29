@@ -4,9 +4,13 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { calculateNextRunAt, processScheduledRefreshes } from '../../worker/scheduler.js';
+import { refreshQueue, importQueue } from '../../lib/queue/index.js';
 
 vi.mock('../../lib/queue/index.js', () => ({
   refreshQueue: {
+    add: vi.fn().mockResolvedValue({ id: 'mock-job-id' }),
+  },
+  importQueue: {
     add: vi.fn().mockResolvedValue({ id: 'mock-job-id' }),
   },
 }));
@@ -75,6 +79,23 @@ describe('GC-301 Scheduled Refresh Scheduler', () => {
         refreshType: 'both',
       });
 
+      // Queue identity assertions (ERR-047 requirement)
+      expect(refreshQueue.add).toHaveBeenCalledTimes(1);
+      expect(refreshQueue.add).toHaveBeenCalledWith(
+        'product.refresh',
+        expect.objectContaining({
+          scheduleId: 'sched-1',
+          productId: 'prod-456',
+          tenantId: 'tenant-123',
+          supplierId: 'aliexpress',
+          refreshType: 'both',
+        }),
+        expect.objectContaining({
+          jobId: expect.stringMatching(/^refresh:sched-1:prod-456:/),
+        }),
+      );
+      expect(importQueue.add).not.toHaveBeenCalled();
+
       expect(mockQuery).toHaveBeenCalledTimes(3);
       expect(mockQuery.mock.calls[2][0]).toContain('UPDATE scheduled_refreshes');
     });
@@ -120,6 +141,10 @@ describe('GC-301 Scheduled Refresh Scheduler', () => {
       expect(enqueuedJobs).toHaveLength(2);
       expect(enqueuedJobs[0].productId).toBe('prod-1');
       expect(enqueuedJobs[1].productId).toBe('prod-2');
+
+      // Queue identity assertions (ERR-047 requirement)
+      expect(refreshQueue.add).toHaveBeenCalledTimes(2);
+      expect(importQueue.add).not.toHaveBeenCalled();
     });
   });
 });

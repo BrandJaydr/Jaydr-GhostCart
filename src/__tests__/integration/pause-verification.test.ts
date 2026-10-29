@@ -207,7 +207,6 @@ describe('Pause Verification Tests', () => {
     it('should prevent marketplace submissions when paused', async () => {
       const listingId = '00000000-0000-0000-0000-000000000020';
       const productId = '00000000-0000-0000-0000-000000000030';
-      const idempotencyKey = 'test-pause-submission';
 
       // Create a listing ready for submission
       await db.query(
