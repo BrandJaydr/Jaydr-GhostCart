@@ -7,6 +7,12 @@
 
 ## Changelog
 
+### 2026-10-29 — Cleanup (Lead): dead branches closed, lanes re-pointed, coordination model + GC-102 decision recorded
+
+**Category:** Project governance / Lead cleanup (no ticket parts — ticket-outbox proposal not adopted)
+
+**Summary:** Closed PR #19 (superseded), #21 (superseded by #26), #22 (superseded by #27), #28 (verified regressive). Verified merges #23/#24/#25/#27 on master (head 103bcc5f); zero open proposals. §5 designations refreshed with compiled lessons (ERR-052 findings into GC-302-FU1; #28 regression finding into LANE-5). Coordination model written into §5.1 (workers never write to master; Lead coordinates; worker-fixes-branch preferred; close-and-recompile). ERR-053 added to the error register. GC-102 DECIDED: Option 2 (hybrid AES-256-GCM).
+
 ### 2026-10-29 — Sweep #22 (Lead review): PR #26 and PR #27 accepted, Codex PR #24 review ratified
 
 **Category:** Project governance / Lead review
@@ -473,11 +479,11 @@ worker processes with PostgreSQL and Redis; finalize it through an ADR before a 
 - [ ] **GC-100** — All agents: check in on the job board Message Board and confirm roles (Lead: Lotus)
 - [x] **GC-101** — Jules: sync `.env.example` with every env var the code reads (full `process.env` sweep of `src/` + `scripts/`)
 - [ ] **GC-201** — Jules: AliExpress HMAC-SHA256 signer module + fixture unit tests (dummy secret only)
-- [ ] **GC-202** — Jules: AliExpress token provider (transient secret, expiry-aware refresh, mocked-HTTP tests, no plaintext persistence)
+- [ ] **GC-202** — Jules: AliExpress token provider (transient secret, expiry-aware refresh, mocked-HTTP tests, no plaintext persistence; GC-102 DECIDED 2026-10-29 — Option 2 hybrid AES-256-GCM; still gated on GC-201).
 - [ ] **GC-R1** — Claude (on check-in): second-eyes review of GC-101 against `process.env` reads in `src/`
 - [x] **GC-T1** — LANE-3 (Minion 1): `aliexpress.ds.text.search` response fixture pack (full / empty / error envelope) — completed 2026-10-25
 - [x] **GC-301** — LANE-2 (Thing 2): BullMQ repeatable-job scheduler + `scheduled_refreshes` consumer (fix-up completed 2026-10-25)
-- [ ] **GC-302** — LANE-2 (Thing 2): register the missing `listing.submit` worker processor (PR #23, unmerged — rebase required; worker registration accepted, GC-302 not done until GC-302-FU1 merges)
+- [ ] **GC-302** — LANE-2 (Thing 2): register the missing `listing.submit` worker processor — worker merged (PR #23, 2026-10-29); acceptance gap tracked in GC-302-FU1 (ERR-052).
 - [ ] **GC-302-FU1** — LANE-2 (Thing 2): listing.submit enqueue path (ERR-052, gated on PR #23 merging) — route the submit flow through `listingQueue` with a payload matching the processor contract, plus a test proving an enqueued job is picked up and failure lands in DLQ
 - [x] **GC-RS1** — LANE-5 (Minion 3): research brief for the GC-102 credential-storage decision (brief only, no code) — Lead-reviewed 2026-10-25; brief landed on master 2026-10-25 (commit f8ad33c1), PR #7 closed as redundant
 - [x] **GC-S1** — First idle checked-in agent (Lead assigns): RANGER sweep #1 — secrets-pattern scan (locations/types only) + dependency vulnerability summary, reported on the board — completed 2026-10-25 (LANE-4) — audit findings accepted 2026-10-26 (sweep #11); post-merge fix-up ACCEPTED on review 2026-10-26 (sweep #12, PR #15) pending merge; ERR-043 closes at merge
