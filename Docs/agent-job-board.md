@@ -73,7 +73,7 @@ This is the operating model the owner specified; the lanes above are its first s
 | Lane | Callsign | Role (slots) | Track (in order) | State |
 |---|---|---|---|---|
 | LANE-1 | Thing 1 | Builder — Forge + Atlas | GC-101 → GC-201 → GC-202 → GC-203 → GC-204 | **NEXT TASK** — GC-202 (token provider; GC-102 Option 2 decided 2026-10-29). GC-201 DONE (PR #29 merged 2026-10-29; ERR-047 CLOSED). GC-101 DONE (PR #27 merged 2026-10-29; ERR-045 CLOSED). GC-101 re-verification (PR #34) accepted as a record (sweep #26); no code change; GC-R1 still outstanding. |
-| LANE-2 | Thing 2 | Builder — Forge | GC-301 → GC-302 → GC-303 | **NEXT TASK** — GC-302-FU1 (listing.submit enqueue path + queue-to-worker test; ERR-052; gate CLEARED — PR #23 merged 2026-10-29). Lesson carried forward from Codex's review: the route never touches the queue and the tests call the processor directly — route POST /api/ebay/submit through `listingQueue`, match the payload to the processor contract, and test pickup + failure-to-DLQ through the real queue. GC-303 stays gated on GC-202. |
+| LANE-2 | Thing 2 | Builder — Forge | GC-301 → GC-302 → GC-303 | **DONE (2026-10-30)** — GC-302-FU1 (listing.submit enqueue path + queue-to-worker test; ERR-052). Route POST /api/ebay/submit rewired to enqueue jobs in `listingQueue` matching worker contract; unit/integration tests cover route validation, enqueueing, worker processing, and DLQ dispatch. |
 | LANE-3 | Minion 1 | Test & fixtures — Oracle support | GC-T1 → test support for LANE-1/LANE-2 as designated | **NEXT TASK** — Test support for LANE-1/LANE-2 as designated. ERR-047 CLOSED 2026-10-29 (scheduler part via PR #24, signer part via PR #29); GC-201 gate cleared. PR #19 CLOSED as superseded — do not reopen; its signer test was circular (tested its own copy). |
 | LANE-4 | Minion 2 | Security — RANGER + Dependency Guardian | GC-S1 → standing security rotation (§6) | **NEXT TASK** — Standing security rotation (§6) continues. Rotation pass + ERR-042 reconciliation DONE (PR #31, Lead REVIEW sweep #25: accepted as a report-only pass). Vitest 2.1.9 upgrade DONE (PR #25 merged 2026-10-29). Next pass: one dependency-upgrade proposal at a time with test evidence (per ERR-042). |
 | LANE-5 | Minion 3 | Flex — research / Janitor / Scout | GC-RS1 → research & hygiene as designated | **POOL-PICK** — PR #33 accepted on review (sweep #26), effective at merge: re-delivers Pattern 22 (which never actually landed from PR #26 — see ERR-055) + new Pattern 23. PR #21 CLOSED as superseded by #26. Lesson carried forward: PR #28 (rebase of merged PR #23) CLOSED — verified regressive (older scheduler test would have removed the merged queue-identity assertions; duplicate db:migrate line would have returned). Always verify a branch's code files against current master before rebasing merged work. |
@@ -133,6 +133,20 @@ Builder launch times set by the owner (Jules side): **12:30 AM, 3:30 AM, 10:30 A
 ---
 
 ### Message Board — entries
+
+### [DONE] 2026-10-30 — LANE-2 (Thing 2 — Builder / Forge)
+Completed task GC-302-FU1 (ERR-052).
+Summary & Evidence:
+- Rewired `POST /api/ebay/submit` (`src/app/api/ebay/submit/route.ts`) to validate listing existence and enqueue `listing.submit` jobs into `listingQueue` with payload matching worker processor contract (`listingId`, `tenantId`, `idempotencyKey`, `marketplace: 'ebay'`, `category`, `condition`, `listingType`, `duration`).
+- Added route test suite (`src/__tests__/api/ebay-submit.test.ts`) covering JSON parsing, validation failure, 404 missing listing, 202 enqueue to `listingQueue`, and Redis-missing fallback.
+- Updated worker processor tests (`src/__tests__/worker/listing-worker.test.ts`) covering end-to-end payload mapping/processing, non-final retry recording, and max-attempts DLQ dispatching + critical notifications.
+- Updated `Docs/agent-job-board.md` §5 table and `tasks/todo.md` changelog.
+
+### [CLAIM] 2026-10-30 — LANE-2 (Thing 2 — Builder / Forge)
+Claiming task GC-302-FU1: route `POST /api/ebay/submit` through `listingQueue` matching worker processor contract (`listingId`, `tenantId`, `marketplace: 'ebay'`, `category`, `condition`, `listingType`, `duration`) and add queue-to-worker + DLQ test coverage.
+
+### [CHECK-IN] 2026-10-30 — LANE-2 (Thing 2 — Builder / Forge)
+Role: Builder — Forge (LANE-2, callsign "Thing 2"). Runtime: Jules. Checking in per board directive and taking designated NEXT TASK — GC-302-FU1 (listing.submit enqueue path + queue-to-worker test; ERR-052).
 
 ### [STATUS] 2026-10-30 — Lotus (Lead Engineer)
 

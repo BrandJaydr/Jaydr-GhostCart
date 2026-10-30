@@ -1,5 +1,5 @@
 /**
- * Unit tests for GC-302 Listing Submission Worker Processor
+ * Unit & Integration tests for GC-302 Listing Submission Worker Processor & DLQ
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -36,7 +36,7 @@ vi.mock('../../lib/queue/index.js', () => ({
   listingQueue: {},
 }));
 
-describe('GC-302 Listing Submission Worker Processor', () => {
+describe('GC-302 Listing Submission Worker Processor & Queue Contract', () => {
   const mockAddListing = vi.fn();
 
   beforeEach(() => {
@@ -46,18 +46,23 @@ describe('GC-302 Listing Submission Worker Processor', () => {
     } as any);
   });
 
-  describe('processListingSubmitJob', () => {
-    it('successfully processes listing submission for eBay', async () => {
+  describe('processListingSubmitJob (Queue Consumer)', () => {
+    it('processes enqueued route payload end-to-end (DB lookup -> eBay submit -> audit log)', async () => {
+      // Job payload shape created by POST /api/ebay/submit route
+      const enqueuedJobPayload = {
+        listingId: '11111111-1111-1111-1111-111111111111',
+        tenantId: '00000000-0000-0000-0000-000000000001',
+        idempotencyKey: 'submit_11111111-1111-1111-1111-111111111111',
+        marketplace: 'ebay',
+        category: '1234',
+        condition: 'New',
+        listingType: 'FixedPriceItem',
+        duration: 'GTC',
+      };
+
       const mockJob = {
-        id: 'job-123',
-        data: {
-          listingId: 'list-111',
-          tenantId: 'tenant-222',
-          idempotencyKey: 'idemp-333',
-          marketplace: 'ebay',
-          category: '1234',
-          condition: 'New',
-        },
+        id: 'job-submit-999',
+        data: enqueuedJobPayload,
       } as unknown as Job;
 
       // Mock database SELECT for listing draft
@@ -65,7 +70,7 @@ describe('GC-302 Listing Submission Worker Processor', () => {
         rowCount: 1,
         rows: [
           {
-            id: 'list-111',
+            id: enqueuedJobPayload.listingId,
             title: 'Test Ergonomic Mechanical Keyboard',
             description: 'A great mechanical keyboard with custom switches',
             list_price_cents: 12999,
@@ -84,26 +89,42 @@ describe('GC-302 Listing Submission Worker Processor', () => {
       const result = await processListingSubmitJob(mockJob);
 
       expect(result).toEqual({
-        listingId: 'list-111',
+        listingId: enqueuedJobPayload.listingId,
         ebayItemId: 'ebay-item-999',
         state: 'submitted',
       });
 
+      // Verify draft lookup with tenant isolation
       expect(db.query).toHaveBeenCalledWith(
         expect.stringContaining('SELECT id, title, description'),
-        ['list-111', 'tenant-222'],
+        [enqueuedJobPayload.listingId, enqueuedJobPayload.tenantId],
       );
 
+      // Verify mapped eBay listing submission
       expect(mockAddListing).toHaveBeenCalledTimes(1);
-      expect(withTenant).toHaveBeenCalledWith('tenant-222', expect.any(Function));
+      expect(mockAddListing).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Test Ergonomic Mechanical Keyboard',
+          description: 'A great mechanical keyboard with custom switches',
+          price: 129.99,
+          currency: 'USD',
+          category: '1234',
+          condition: 'New',
+          listingType: 'FixedPriceItem',
+          duration: 'GTC',
+        }),
+      );
+
+      // Verify update in withTenant block
+      expect(withTenant).toHaveBeenCalledWith(enqueuedJobPayload.tenantId, expect.any(Function));
     });
 
     it('throws error if marketplace is unsupported', async () => {
       const mockJob = {
         id: 'job-456',
         data: {
-          listingId: 'list-111',
-          tenantId: 'tenant-222',
+          listingId: '11111111-1111-1111-1111-111111111111',
+          tenantId: '00000000-0000-0000-0000-000000000001',
           marketplace: 'amazon',
         },
       } as unknown as Job;
@@ -118,7 +139,7 @@ describe('GC-302 Listing Submission Worker Processor', () => {
         id: 'job-789',
         data: {
           listingId: 'non-existent-listing',
-          tenantId: 'tenant-222',
+          tenantId: '00000000-0000-0000-0000-000000000001',
           marketplace: 'ebay',
         },
       } as unknown as Job;
@@ -137,8 +158,8 @@ describe('GC-302 Listing Submission Worker Processor', () => {
       const mockJob = {
         id: 'job-000',
         data: {
-          listingId: 'list-111',
-          tenantId: 'tenant-222',
+          listingId: '11111111-1111-1111-1111-111111111111',
+          tenantId: '00000000-0000-0000-0000-000000000001',
           marketplace: 'ebay',
         },
       } as unknown as Job;
@@ -148,7 +169,7 @@ describe('GC-302 Listing Submission Worker Processor', () => {
         rowCount: 1,
         rows: [
           {
-            id: 'list-111',
+            id: '11111111-1111-1111-1111-111111111111',
             title: '', // empty title fails validation
             description: 'Short desc',
             list_price_cents: -100, // negative price fails validation
@@ -164,10 +185,43 @@ describe('GC-302 Listing Submission Worker Processor', () => {
     });
   });
 
-  describe('handleListingSubmitFailure', () => {
-    it('dispatches to DLQ and updates listing state when attempts run out', async () => {
+  describe('handleListingSubmitFailure (DLQ & Retry Policy)', () => {
+    it('records job failure for non-final attempts without dispatching to DLQ', async () => {
       const mockJob = {
-        id: 'job-failed-123',
+        id: 'job-failed-attempt-1',
+        attemptsMade: 1,
+        opts: { attempts: 3 },
+        data: {
+          listingId: 'list-111',
+          tenantId: 'tenant-222',
+          idempotencyKey: 'idemp-555',
+          marketplace: 'ebay',
+        },
+      } as unknown as Job;
+
+      const error = new Error('Transient eBay rate limit');
+
+      await handleListingSubmitFailure(mockJob, error);
+
+      // Verify jobs table update (failed status recorded)
+      expect(db.query).toHaveBeenCalledWith(
+        expect.stringContaining('INSERT INTO jobs'),
+        expect.arrayContaining(['tenant-222', 'idemp-555', 1, 'Transient eBay rate limit']),
+      );
+
+      // Verify dead-letter queue was NOT written to on non-final attempt
+      expect(db.query).not.toHaveBeenCalledWith(
+        expect.stringContaining('INSERT INTO dead_letter_queue'),
+        expect.anything(),
+      );
+
+      // Verify notification NOT sent on non-final attempt
+      expect(notify).not.toHaveBeenCalled();
+    });
+
+    it('dispatches to DLQ, updates listing state, and notifies when max attempts run out', async () => {
+      const mockJob = {
+        id: 'job-failed-final',
         attemptsMade: 3,
         opts: { attempts: 3 },
         data: {
@@ -197,15 +251,15 @@ describe('GC-302 Listing Submission Worker Processor', () => {
       // Verify dead_letter_queue insertion
       expect(db.query).toHaveBeenCalledWith(
         expect.stringContaining('INSERT INTO dead_letter_queue'),
-        expect.arrayContaining(['tenant-222', 'job-failed-123', 'eBay API authorization expired', 3]),
+        expect.arrayContaining(['tenant-222', 'job-failed-final', 'eBay API authorization expired', 3]),
       );
 
-      // Verify notification sent
+      // Verify critical notification sent
       expect(notify).toHaveBeenCalledWith(
         expect.objectContaining({
           alertType: 'job.failed_final',
           severity: 'critical',
-          message: expect.stringContaining('Listing submit job job-failed-123 failed after 3 attempts; moved to DLQ'),
+          message: expect.stringContaining('Listing submit job job-failed-final failed after 3 attempts; moved to DLQ'),
         }),
       );
     });
