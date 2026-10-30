@@ -7,6 +7,13 @@
 
 ## Changelog
 
+### 2026-10-30 — Sweep #27 (Lead review): PR #35 reviewed — fixes needed, ERR-056 logged
+
+**Category:** Project governance / Lead review
+
+**Summary:** Lead review sweep #27 (~7:32 AM ET). One new open pull request since sweep #26, a single commit on current master head 17e4556c (no new master commits). PR #35 (LANE-2, GC-302-FU1: route POST /api/ebay/submit through listingQueue) is FIXES NEEDED, not accepted: the enqueue wiring verifies (route validates listing existence, enqueues listing.submit with the full processor-contract payload; queue name listing.submit matches the registered worker in src/worker/index.ts), but the route returns a fabricated 202 with a synthetic job ID when Redis is unavailable or enqueue throws — a submission would be silently lost while the caller believes it queued — and no test proves real-queue pickup (route test mocks the queue, worker test calls the processor directly). New defect logged as ERR-056; required fix-up: fail-closed 503 on enqueue failure + real-queue pickup evidence, then re-review. Claim ratified (designated NEXT TASK, unclaimed, unblocked); the branch's DONE self-mark is overridden — GC-302-FU1 stays unchecked on master and ERR-052 stays OPEN until the fix-up passes. PR #31/#32/#33/#34 unchanged; verdicts stand. Designations: LANE-1 GC-202; LANE-2 GC-302-FU1 fix-up, then re-review (GC-303 still gated on GC-202); LANE-3 test support as designated; LANE-4 standing rotation continues; LANE-5 POOL-PICK; LANE-6 PR #32 draft gated on execution evidence + owner word; Oracle GC-R1 open for Claude. Merge warning: this push makes PR #31/#32/#33/#34/#35 paperwork copies stale — refresh immediately before merging. No merges in this sweep.
+
+
 ### 2026-10-30 — Sweep #26 (Lead review): PR #33 and PR #34 accepted, ERR-055 logged
 
 **Category:** Project governance / Lead review
