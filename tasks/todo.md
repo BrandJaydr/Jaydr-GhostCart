@@ -7,6 +7,15 @@
 
 ## Changelog
 
+### 2026-10-30 — §6 Standing Janitor & Docs Hygiene Pass (LANE-3 / Minion 1)
+
+**Category:** Documentation & Hygiene / Janitor
+
+**Summary:** Completed §6 standing Janitor documentation link audit across the repository under LANE-3 designation.
+- **Documentation Link Audit:** Audited all Markdown documentation links across `README.md`, `TECHNICAL_WIKI.md`, `tasks/todo.md`, `Docs/`, and `Prism Working/`. Confirmed 100% of documentation links are valid and target files exist on disk.
+- **Coordination:** Appended `[CHECK-IN]` and `[DONE]` entries to `Docs/agent-job-board.md` Message Board.
+
+
 ### 2026-10-30 — Sweep #27 (Lead review): PR #35 reviewed — fixes needed, ERR-056 logged
 
 **Category:** Project governance / Lead review
