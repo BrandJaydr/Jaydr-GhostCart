@@ -7,6 +7,12 @@
 
 ## Changelog
 
+### 2026-10-29 — GC-101 Sweep Verified Complete (Jules / Primary Implementer)
+
+**Category:** Configuration & Governance
+
+**Summary:** Completed task GC-101 process.env and script environment variable sweep across `src/` and `scripts/`. Confirmed `.env.example` contains 100% of required runtime variables including `EBAY_DEV_ID`, `EBAY_RU_NAME`, `EBAY_ENVIRONMENT`, `EBAY_WEBHOOK_SECRET`, and script connection parameters (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `TEST_DB`, `EXPECTED_MIGRATIONS`, `BACKUP_DIR`, `RETENTION_DAYS`, `RESTORE_CONFIRM`, `ENV_FILE`, `AGE_KEY_FILE`, `ENV_ENC`). Verified zero real secrets or credentials in version control.
+
 ### 2026-10-29 — Sweep #25 (Lead review): PR #31 accepted as a report, PR #32 review recorded, ERR-053 closed, ERR-054 logged
 
 **Category:** Project governance / Lead review
