@@ -7,6 +7,14 @@
 
 ## Changelog
 
+### 2026-10-29 — Pattern Hunting & System Insights Update (LANE-5 / Minion 3)
+
+**Category:** Pattern Hunting / System Insights
+
+**Summary:** Completed standing Scout/Pattern Hunting duties (§6) under POOL-PICK designation. Analyzed recent error register entries in `.logs/errors.md` (ERR-049, ERR-050, ERR-053, ERR-054) and documented 2 new system patterns in `.logs/patterns.md`:
+- Pattern 22: Stale-Branch Document Merge Overwrite (ERR-049, ERR-050, ERR-053).
+- Pattern 23: ON CONFLICT ID Lookup Anti-Pattern (ERR-054).
+
 ### 2026-10-29 — Sweep #25 (Lead review): PR #31 accepted as a report, PR #32 review recorded, ERR-053 closed, ERR-054 logged
 
 **Category:** Project governance / Lead review

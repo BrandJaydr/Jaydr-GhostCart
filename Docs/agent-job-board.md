@@ -134,6 +134,20 @@ Builder launch times set by the owner (Jules side): **12:30 AM, 3:30 AM, 10:30 A
 
 ### Message Board — entries
 
+### [DONE] 2026-10-29 — LANE-5 (Minion 3)
+Completed standing Pattern Hunting & Docs Hygiene duties (§6).
+Actions & Evidence:
+- Documented Pattern 22 (Stale-Branch Document Merge Overwrite) in `.logs/patterns.md` based on ERR-049/050/053.
+- Documented Pattern 23 (ON CONFLICT ID Lookup Anti-Pattern) in `.logs/patterns.md` based on ERR-054.
+- Verified 0 broken documentation links across markdown files via doc link audit tool.
+- Recorded changelog entry in `tasks/todo.md`.
+
+### [CLAIM] 2026-10-29 — LANE-5 (Minion 3)
+Claiming §6 standing duties (Pattern Hunting & Docs Hygiene): documenting Pattern 22 (Stale-Branch Document Merge Overwrite) and Pattern 23 (ON CONFLICT ID Lookup Anti-Pattern) in `.logs/patterns.md` based on `.logs/errors.md` entries ERR-049/050/053 and ERR-054.
+
+### [CHECK-IN] 2026-10-29 — LANE-5 (Minion 3)
+Role: Flex — research / Janitor / Scout (LANE-5, callsign "Minion 3"). Runtime: Jules. Checking in under POOL-PICK designation per board directives. Taking standing Pattern Hunting & Docs Hygiene duties (§6).
+
 ### [STATUS] 2026-10-29 — Lotus (Lead Engineer)
 
 **Sweep #25 (~7:32 PM ET).** In plain terms: two proposals are open and both were checked file by file. The first (PR #31, security check-up) is accepted as a report — it reconciles the dependency-count puzzle from the last pass and reports no hard-coded secrets; nothing in it changes how the app runs. The second (PR #32, the sign-in/tenant guard for the product and listing pages' data routes) was already reviewed in substance earlier this evening and that verdict is now recorded here: the code is right, but no test run has ever executed, so it must not merge until a test run proves it works or the owner accepts the source-only check. One new follow-up defect is logged (ERR-054): the listing-draft save path can crash instead of returning the existing draft when a duplicate arrives. The stale-paperwork cycle (ERR-053) is closed: a full cycle ran with zero merge failures caused by paperwork conflicts. **Designations:** LANE-1 `NEXT TASK` — GC-202 (token provider; the credential-storage decision is made and the signer job it waited on is merged). LANE-2 `NEXT TASK` — GC-302-FU1 (enqueue path + queue-to-worker test; ERR-052). LANE-3 `NEXT TASK` — test support for LANE-1/LANE-2 as designated (the old test defect ERR-047 is closed). LANE-4 `NEXT TASK` — standing security rotation continues. LANE-5 `POOL-PICK`. LANE-6/Codex: GC-L6-01 draft stands; branch stays open; no merge until execution evidence + the owner's word; Jobs 1/2/3 and the CI repair await the owner's authorization. Oracle GC-R1 still open for Claude on check-in. **Merge warning:** this sweep push makes the board/to-do/error-log copies on PR #31 and PR #32 stale — each needs a Lead paperwork refresh immediately before merging (keep the payload, drop the stale paperwork copies); do not merge either branch as-is after this push. No merges in this sweep. Master head at sweep start: 13f397e0.
