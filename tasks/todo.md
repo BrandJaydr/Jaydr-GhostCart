@@ -7,6 +7,17 @@
 
 ## Changelog
 
+### 2026-10-30 — §6 Standing Security Maintenance Pass (LANE-4 / Minion 2)
+
+**Category:** Security & Compliance / RANGER + Dependency Guardian
+
+**Summary:** Completed standing security rotation (§6) & Dependency Guardian upgrade proposal under LANE-4 designation.
+- **Dependency Guardian Upgrade Proposal:** Upgraded `next-auth` from `4.24.7` to pinned `4.24.11` in `package.json` & `package-lock.json` (single, targeted upgrade proposal per ERR-042 & §6 standing orders).
+- **Audit Breakdown Reconciliation:** Captured `npm audit` (80 total: 53 low, 8 moderate, 15 high, 4 critical) and `npm audit --omit=dev` (67 total: 54 low, 5 moderate, 6 high, 2 critical). Reconciled the 13 dev-only vulnerabilities (2 critical in `tinypool` via `vitest`, 1 high in `js-yaml`, 10 high/moderate in `glob`/`minimatch` via ESLint Next plugins).
+- **RANGER Secrets Scan:** Scanned `src/` and `scripts/`; confirmed zero hardcoded secrets, tokens, or private keys committed in version control.
+- **Auth & Tenancy:** Re-confirmed route-level auth/tenancy posture (ERR-016 remains open, pending Job 1 merge for product/listing routes).
+- **Verification:** Ran `npx tsc --noEmit` (0 errors) and Vitest unit test suite (45/45 unit/adapter tests passing).
+
 ### 2026-10-30 — Sweep #28 (Lead review): PR #36 accepted as a standing-duty record
 
 **Category:** Project governance / Lead review
