@@ -7,6 +7,13 @@
 
 ## Changelog
 
+### 2026-10-30 — Sweep #26 (Lead review): PR #33 and PR #34 accepted, ERR-055 logged
+
+**Category:** Project governance / Lead review
+
+**Summary:** Lead review sweep #26 (~1:32 AM ET). Two new open pull requests since sweep #25, both single commits on current master head 30f45051 (no new master commits). PR #33 (LANE-5, pattern hunting & docs hygiene) is ACCEPTED on review, effective at merge; claim ratified; patterns-log diff is exactly Pattern 22 (stale-branch paperwork overwrite) + Pattern 23 (ON CONFLICT ID lookup anti-pattern, matching ERR-054); board/todo diffs are entries + changelog only; error log identical to master. Correction: PR #26 never actually landed Pattern 22 (master patterns file ends at Pattern 21, untouched since Oct 27) despite the board saying it merged — logged as ERR-055; PR #33 is the first real delivery of Pattern 22. PR #34 (LANE-1, GC-101 re-verification) is ACCEPTED as a verification record, effective at merge; settings template byte-identical to master (no code change); all named variables confirmed present with placeholders; GC-101 already DONE, so nothing newly completes, and GC-R1 stays open. PR #31 and PR #32 unchanged from sweep #25; verdicts stand. Designations: LANE-1 GC-202; LANE-2 GC-302-FU1; LANE-3 test support as designated; LANE-4 standing rotation continues; LANE-5 POOL-PICK; LANE-6 PR #32 draft gated on execution evidence + owner word; Oracle GC-R1 open for Claude. Merge warning: this push makes PR #31/#32/#33/#34 paperwork copies stale — refresh immediately before merging. No merges in this sweep.
+
+
 ### 2026-10-29 — Sweep #25 (Lead review): PR #31 accepted as a report, PR #32 review recorded, ERR-053 closed, ERR-054 logged
 
 **Category:** Project governance / Lead review
