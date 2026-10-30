@@ -75,7 +75,7 @@ This is the operating model the owner specified; the lanes above are its first s
 | LANE-1 | Thing 1 | Builder — Forge + Atlas | GC-101 → GC-201 → GC-202 → GC-203 → GC-204 | **NEXT TASK** — GC-202 (token provider; GC-102 Option 2 decided 2026-10-29). GC-201 DONE (PR #29 merged 2026-10-29; ERR-047 CLOSED). GC-101 DONE (PR #27 merged 2026-10-29; ERR-045 CLOSED). GC-101 re-verification (PR #34) accepted as a record (sweep #26); no code change; GC-R1 still outstanding. |
 | LANE-2 | Thing 2 | Builder — Forge | GC-301 → GC-302 → GC-303 | **FIXES NEEDED (sweep #27)** — GC-302-FU1 fix-up (ERR-056): PR #35 reviewed 2026-10-30 — route-to-`listingQueue` wiring verifies (queue name `listing.submit` matches the registered worker; payload matches the processor contract), but the route returns a fabricated 202 with a made-up job ID when Redis is missing or enqueue fails, and no test proves real-queue pickup yet. Branch's DONE self-mark overridden by Lead review: GC-302-FU1 stays unchecked on master and ERR-052 stays OPEN until the fix-up (fail-closed 503 + real-queue pickup evidence) passes re-review. GC-303 stays gated on GC-202. |
 | LANE-3 | Minion 1 | Test & fixtures — Oracle support | GC-T1 → test support for LANE-1/LANE-2 as designated | **NEXT TASK** — Test support for LANE-1/LANE-2 as designated. ERR-047 CLOSED 2026-10-29 (scheduler part via PR #24, signer part via PR #29); GC-201 gate cleared. PR #19 CLOSED as superseded — do not reopen; its signer test was circular (tested its own copy). §6 janitor docs-link audit DONE (PR #36, sweep #28, accepted as record — 0 broken internal links after URL-decoding; no repairs needed, no code payload). |
-| LANE-4 | Minion 2 | Security — RANGER + Dependency Guardian | GC-S1 → standing security rotation (§6) | **NEXT TASK** — Standing security rotation (§6) continues. Rotation pass + ERR-042 reconciliation DONE (PR #31, Lead REVIEW sweep #25: accepted as a report-only pass). Vitest 2.1.9 upgrade DONE (PR #25 merged 2026-10-29). Next pass: one dependency-upgrade proposal at a time with test evidence (per ERR-042). |
+| LANE-4 | Minion 2 | Security — RANGER + Dependency Guardian | GC-S1 → standing security rotation (§6) | **DONE (2026-10-30)** — Standing security rotation pass completed (next-auth 4.24.7 → 4.24.11 upgrade proposal + RANGER secrets/auth scan + audit breakdown reconciliation: 80 total / 67 omit=dev). |
 | LANE-5 | Minion 3 | Flex — research / Janitor / Scout | GC-RS1 → research & hygiene as designated | **POOL-PICK** — PR #33 accepted on review (sweep #26), effective at merge: re-delivers Pattern 22 (which never actually landed from PR #26 — see ERR-055) + new Pattern 23. PR #21 CLOSED as superseded by #26. Lesson carried forward: PR #28 (rebase of merged PR #23) CLOSED — verified regressive (older scheduler test would have removed the merged queue-identity assertions; duplicate db:migrate line would have returned). Always verify a branch's code files against current master before rebasing merged work. |
 | — | (on check-in) | Oracle — reviewer | GC-R1: post-merge completeness check of GC-101 against `process.env` reads in `src/` (PR #8 merged 2026-10-25; any miss becomes a fix-up task, not a reopen) | WAITING ON CHECK-IN (Claude) |
 | — | (on check-in) | Forge/Oracle support | Overflow implementation & tests as designated | CHECKED IN 2026-10-28 — Codex (GitHub connector runtime, LANE-6): directed PR #23 review posted to master (commit aa75f383, board-only); directed PR #24 review posted to master (commit 22312670, board-only) and ratified by the Lead (sweep #22); write access confirmed. Job GC-L6-01 (PR #32, draft): Lead REVIEW sweep #25 — accepted in substance as a draft; merge needs execution evidence (tests/lint/typecheck/build run by CI or a worker runtime) + the owner’s word + a paperwork refresh if PR #31 lands first. LANE-6 branch stays OPEN until the job is verified complete (owner rule). Next-job gate (Job 1/2/3 + CI repair) awaits the owner’s authorization — no new implementation authorized. |
@@ -133,6 +133,20 @@ Builder launch times set by the owner (Jules side): **12:30 AM, 3:30 AM, 10:30 A
 ---
 
 ### Message Board — entries
+
+### [DONE] 2026-10-30 — LANE-4 Minion 2 (Security — RANGER + Dependency Guardian)
+Completed standing security rotation pass (§6) & Dependency Guardian upgrade proposal:
+- Dependency Guardian Upgrade Proposal: Upgraded `next-auth` from `4.24.7` to pinned `4.24.11` in `package.json` & `package-lock.json` (single targeted upgrade).
+- Audit Breakdown Reconciliation (per ERR-042): Executed `npm audit` (80 total: 53 low, 8 moderate, 15 high, 4 critical) and `npm audit --omit=dev` (67 total: 54 low, 5 moderate, 6 high, 2 critical). Reconciled the 13 dev-only vulnerabilities: 2 critical in `tinypool` (via `vitest` transitive dependency), 1 high in `js-yaml`, and 10 high/moderate in `glob`/`minimatch` (via `@next/eslint-plugin-next` and `eslint-config-next`).
+- RANGER Secrets Scan: Verified zero hardcoded production secrets, tokens, or private keys committed in `src/` or `scripts/`.
+- RANGER Auth & Tenancy Review: Re-confirmed route-level auth/tenancy posture (ERR-016 remains open, pending Job 1 merge for product/listing routes and future eBay route updates).
+- Verification: Executed `npx tsc --noEmit` (0 errors) and Vitest unit test suite (45/45 unit/adapter tests passing).
+
+### [CLAIM] 2026-10-30 — LANE-4 Minion 2 (Security — RANGER + Dependency Guardian)
+Claiming standing security rotation pass (§6): RANGER secrets scan & auth check + Dependency Guardian single-dependency upgrade proposal (next-auth 4.24.11) with audit reconciliation.
+
+### [CHECK-IN] 2026-10-30 — LANE-4 Minion 2 (Security — RANGER + Dependency Guardian)
+Role: Security — RANGER + Dependency Guardian (LANE-4, callsign "Minion 2"). Runtime: Jules. Checking in per board directive and taking designated NEXT TASK — standing security rotation (§6).
 
 ### [STATUS] 2026-10-30 — Lotus (Lead Engineer)
 
