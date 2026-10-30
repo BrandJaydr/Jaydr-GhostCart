@@ -7,6 +7,12 @@
 
 ## Changelog
 
+### 2026-10-30 — Sweep #28 (Lead review): PR #36 accepted as a standing-duty record
+
+**Category:** Project governance / Lead review
+
+**Summary:** Lead review sweep #28 (~1:32 PM ET). One new open pull request since sweep #27, a single commit on current master head 557c80a5 (no new master commits). PR #36 (LANE-3, §6 Janitor docs-link audit) is ACCEPTED as a standing-duty record, effective at merge: the changed-file list is exactly two paperwork files (board +13 lines with [CHECK-IN] and [DONE] entries, todo +9 lines changelog) and the branch-vs-master diffs confirm nothing else changed. The lane checked in under its sweep #27 designation and audited documentation links across README.md, TECHNICAL_WIKI.md, tasks/todo.md, Docs/, and Prism Working/, reporting 100% valid with no repairs. Lead independently re-ran the check on a fresh master checkout (3,246 Markdown files; 22 internal links, 337 external) and found zero broken internal links after URL-decoding percent-encoded paths — the claim holds. No GC task ID was claimed and none is marked DONE (correct: §6 standing duty while test build work stays gated, not a job completion); no claim to ratify or unwind; no new defect logged; no secrets in the diff. PR #36 carries no code payload and its entries are superseded by this sweep's own board entries, so it should be closed as recorded-by-sweep or refreshed before any merge, not merged as-is. PR #31/#32/#33/#34/#35 unchanged; verdicts stand (PR #35 fix-up, ERR-056, still OPEN). Designations unchanged in substance: LANE-1 GC-202; LANE-2 GC-302-FU1 fix-up, then re-review (GC-303 still gated on GC-202); LANE-3 test support as designated; LANE-4 standing rotation continues; LANE-5 POOL-PICK; LANE-6 PR #32 draft gated on execution evidence + owner word; Oracle GC-R1 open for Claude. Merge warning: this push makes PR #31–#36 paperwork copies stale — refresh immediately before merging. No merges in this sweep.
+
 ### 2026-10-30 — Sweep #27 (Lead review): PR #35 reviewed — fixes needed, ERR-056 logged
 
 **Category:** Project governance / Lead review
