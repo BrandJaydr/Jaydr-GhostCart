@@ -7,6 +7,15 @@
 
 ## Changelog
 
+### 2026-10-30 — GC-302-FU1: listing.submit Enqueue Path & Worker Queue Tests (LANE-2 / Thing 2)
+
+**Category:** Worker Infrastructure / Enqueue Wiring & Testing (ERR-052)
+
+**Summary:**
+- Rewired `POST /api/ebay/submit` (`src/app/api/ebay/submit/route.ts`) to validate listing draft existence and enqueue `listing.submit` jobs into `listingQueue` with payload matching worker processor contract (`listingId`, `tenantId`, `idempotencyKey`, `marketplace: 'ebay'`, `category`, `condition`, `listingType`, `duration`).
+- Added route unit tests (`src/__tests__/api/ebay-submit.test.ts`) covering JSON parsing, validation errors, 404 missing listing, 202 enqueue to `listingQueue`, and missing Redis URL fallback.
+- Updated worker processor unit & integration tests (`src/__tests__/worker/listing-worker.test.ts`) covering end-to-end payload mapping/processing, non-final attempt retry recording, and max-attempts DLQ dispatching + critical notifications.
+
 ### 2026-10-30 — Sweep #26 (Lead review): PR #33 and PR #34 accepted, ERR-055 logged
 
 **Category:** Project governance / Lead review
@@ -498,7 +507,7 @@ worker processes with PostgreSQL and Redis; finalize it through an ADR before a 
 - [x] **GC-T1** — LANE-3 (Minion 1): `aliexpress.ds.text.search` response fixture pack (full / empty / error envelope) — completed 2026-10-25
 - [x] **GC-301** — LANE-2 (Thing 2): BullMQ repeatable-job scheduler + `scheduled_refreshes` consumer (fix-up completed 2026-10-25)
 - [ ] **GC-302** — LANE-2 (Thing 2): register the missing `listing.submit` worker processor — worker merged (PR #23, 2026-10-29); acceptance gap tracked in GC-302-FU1 (ERR-052).
-- [ ] **GC-302-FU1** — LANE-2 (Thing 2): listing.submit enqueue path (ERR-052; PR #23 merged 2026-10-29, ungated) — route the submit flow through `listingQueue` with a payload matching the processor contract, plus a test proving an enqueued job is picked up and failure lands in DLQ
+- [x] **GC-302-FU1** — LANE-2 (Thing 2): listing.submit enqueue path (ERR-052; PR #23 merged 2026-10-29, ungated) — route the submit flow through `listingQueue` with a payload matching the processor contract, plus a test proving an enqueued job is picked up and failure lands in DLQ
 - [ ] **GC-L6-02** — Listing-draft creation conflict path (ERR-054, follow-up from PR #32 review): on duplicate source, return the existing draft instead of crashing; test the duplicate path
 - [x] **GC-RS1** — LANE-5 (Minion 3): research brief for the GC-102 credential-storage decision (brief only, no code) — Lead-reviewed 2026-10-25; brief landed on master 2026-10-25 (commit f8ad33c1), PR #7 closed as redundant
 - [x] **GC-S1** — First idle checked-in agent (Lead assigns): RANGER sweep #1 — secrets-pattern scan (locations/types only) + dependency vulnerability summary, reported on the board — completed 2026-10-25 (LANE-4) — audit findings accepted 2026-10-26 (sweep #11); post-merge fix-up ACCEPTED on review 2026-10-26 (sweep #12, PR #15) pending merge; ERR-043 closes at merge
