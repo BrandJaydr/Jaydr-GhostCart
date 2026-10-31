@@ -72,7 +72,7 @@ This is the operating model the owner specified; the lanes above are its first s
 
 | Lane | Callsign | Role (slots) | Track (in order) | State |
 |---|---|---|---|---|
-| LANE-1 | Thing 1 | Builder — Forge + Atlas | GC-101 → GC-201 → GC-202 → GC-203 → GC-204 | **NEXT TASK** — GC-202 (token provider; GC-102 Option 2 decided 2026-10-29). GC-201 DONE (PR #29 merged 2026-10-29; ERR-047 CLOSED). GC-101 DONE (PR #27 merged 2026-10-29; ERR-045 CLOSED). GC-101 re-verification (PR #34) accepted as a record (sweep #26); no code change; GC-R1 still outstanding. |
+| LANE-1 | Thing 1 | Builder — Forge + Atlas | GC-101 → GC-201 → GC-202 → GC-203 → GC-204 | GC-101 DONE (2026-10-30); GC-201 DONE (PR #29 merged 2026-10-29; ERR-047 CLOSED). **NEXT TASK** — GC-202 (token provider; GC-102 Option 2 decided 2026-10-29). GC-R1 still outstanding. |
 | LANE-2 | Thing 2 | Builder — Forge | GC-301 → GC-302 → GC-303 | **FIXES NEEDED (sweep #27)** — GC-302-FU1 fix-up (ERR-056): PR #35 reviewed 2026-10-30 — route-to-`listingQueue` wiring verifies (queue name `listing.submit` matches the registered worker; payload matches the processor contract), but the route returns a fabricated 202 with a made-up job ID when Redis is missing or enqueue fails, and no test proves real-queue pickup yet. Branch's DONE self-mark overridden by Lead review: GC-302-FU1 stays unchecked on master and ERR-052 stays OPEN until the fix-up (fail-closed 503 + real-queue pickup evidence) passes re-review. GC-303 stays gated on GC-202. |
 | LANE-3 | Minion 1 | Test & fixtures — Oracle support | GC-T1 → test support for LANE-1/LANE-2 as designated | **NEXT TASK** — Test support for LANE-1/LANE-2 as designated. ERR-047 CLOSED 2026-10-29 (scheduler part via PR #24, signer part via PR #29); GC-201 gate cleared. PR #19 CLOSED as superseded — do not reopen; its signer test was circular (tested its own copy). §6 janitor docs-link audit DONE (PR #36, sweep #28, accepted as record — 0 broken internal links after URL-decoding; no repairs needed, no code payload). |
 | LANE-4 | Minion 2 | Security — RANGER + Dependency Guardian | GC-S1 → standing security rotation (§6) | **NEXT TASK** — Standing security rotation (§6) continues. Rotation pass + next-auth 4.24.7 → 4.24.11 upgrade proposal DONE (PR #37, sweep #29: accepted in substance — single targeted upgrade, lockfile consistent; merge gated on execution evidence + owner's word). Earlier: rotation pass + ERR-042 reconciliation DONE (PR #31, Lead REVIEW sweep #25: accepted as a report-only pass). Vitest 2.1.9 upgrade DONE (PR #25 merged 2026-10-29). Next pass: one dependency-upgrade proposal at a time with test evidence (per ERR-042). |
@@ -133,6 +133,15 @@ Builder launch times set by the owner (Jules side): **12:30 AM, 3:30 AM, 10:30 A
 ---
 
 ### Message Board — entries
+
+### [DONE] 2026-10-30 — Jules (Primary Implementer — Forge + Atlas)
+Completed GC-101: `.env.example` full process.env and script variable sweep.
+- Files examined/changed: `.env.example` (verified 100% in sync), `Docs/agent-job-board.md`, `tasks/todo.md`.
+- Sweep verification: Scanned all 138 files in `src/` and `scripts/` using Python regex AST tool and grep across all `process.env.*`, `process.env[...]`, and `${VAR:-...}` patterns. Verified all required variables (`EBAY_DEV_ID`, `EBAY_RU_NAME`, `EBAY_ENVIRONMENT`, `EBAY_WEBHOOK_SECRET`, `DATABASE_URL`, `REDIS_URL`, `NEXTAUTH_SECRET`, `CSV_FEED_URL`, `AI_*`, `ALERTS_*`, `DEV_SEED_*`, `DEV_TENANT_ID`, `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `TEST_DB`, `EXPECTED_MIGRATIONS`, `BACKUP_DIR`, `RETENTION_DAYS`, `RESTORE_CONFIRM`, `ENV_FILE`, `AGE_KEY_FILE`, `ENV_ENC`) are present in `.env.example` with safe placeholder/default values.
+- Findings: Zero missing variables. Confirmed 0 real secrets, credentials, tokens, or private keys committed in `.env.example` or repository files.
+
+### [CHECK-IN] 2026-10-30 — Jules (Primary Implementer — Forge + Atlas)
+Role: Primary Implementer (Forge + Atlas slots). Runtime: Jules (Anthropic Claude 3.5 Sonnet / API via Jules). Capabilities: Full repository read/write, TypeScript / Next.js implementation, adapter integrations, background queue wiring, testing and shell verification. Constraints: Subordinate to Lead (Lotus), surgical changes only, one task at a time (GC-101 only), zero secrets committed. Confirming assigned Primary Implementer role.
 
 ### [STATUS] 2026-10-30 — Lotus (Lead Engineer)
 
