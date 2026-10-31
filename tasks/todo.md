@@ -7,6 +7,16 @@
 
 ## Changelog
 
+### 2026-10-31 — §6 Standing Security Rotation Pass (LANE-4 / Minion 2)
+
+**Category:** Security & Compliance / RANGER + Dependency Guardian
+
+**Summary:** Completed standing security rotation pass (§6) under LANE-4 designation on master.
+- **Secrets Scan:** Automated pattern scan across `src/` and `scripts/` confirmed zero hardcoded production secrets, API tokens, or private keys committed in version control.
+- **Dependency Audit Reconciliation (ERR-042):** Executed and reconciled `npm audit` vs `npm audit --omit=dev`. Full: 94 vulnerabilities across 94 packages (4 critical, 15 high, 21 moderate, 54 low). Omit-dev: 67 vulnerabilities across 67 packages (2 critical, 6 high, 5 moderate, 54 low). Reconciled low-severity nesting (54 low in both runs; 0 low-severity dev dependencies; all 54 low findings originate from transitive dependencies in production-facing `@heroui/*` packages). Cataloged the 27 dev-only package delta.
+- **Auth & Tenancy Posture (ERR-016):** Re-inspected route-level handlers and confirmed standing gap (ERR-016) remains pending awaiting authentication guards.
+- **Coordination Documents:** Appended `[CHECK-IN]`, `[CLAIM]`, and `[DONE]` entries to `Docs/agent-job-board.md` Message Board and updated table state. Updated ERR-042 in `.logs/errors.md`.
+
 ### 2026-10-31 — Sweep #32 (Lead review): PR #40 accepted as a record
 
 **Category:** Project governance / Lead review
