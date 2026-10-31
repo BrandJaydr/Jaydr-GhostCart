@@ -7,6 +7,13 @@
 
 ## Changelog
 
+### 2026-10-31 — Sweep #30 (Lead review): PR #38 accepted as a record, PR #39 recorded as a duplicate verification
+
+**Category:** Project governance / Lead review
+
+**Summary:** Lead review sweep #30 (~1:32 AM ET). Two new open pull requests since sweep #29 (master head unchanged at 5cfba198, no new master commits). PR #38 (LANE-5, §6 standing docs hygiene + pattern review, base f783ebd2 stale) is ACCEPTED AS A RECORD: branch-vs-master diffs confined to board + todo; patterns log byte-identical to master (Patterns 22/23 reviewed and confirmed, no new text); 3,246-file link audit with 0 broken internal links, consistent with PR #33/PR #36; claim stands under sweep #28 POOL-PICK. No code payload — close-as-recorded or refresh before any merge (merging as-is would regress the board past sweep #29). PR #39 (LANE-1, GC-101 re-verification, base = current master) is RECORDED AS A DUPLICATE VERIFICATION ONLY: `.env.example` byte-identical to master (no config change); GC-101 already DONE (PR #27 merged) and already re-verified (PR #34, sweep #26); no [CLAIM] posted and LANE-1's designated task is GC-202, so no new completion is ratified; the branch's LANE-1 row rewrite (drops the PR #34 record, restates GC-101 DONE as 2026-10-30) is REJECTED and must not be merged as-is. No new ERR, no secrets in either diff. PR #31–#37 unchanged; LANE-2 GC-302-FU1 fix-up (ERR-056) still outstanding; LANE-6 WS1/WS2 authorized Oct 30 with no proposal yet; no merges. Designations unchanged in substance: LANE-1 NEXT TASK GC-202, LANE-2 FIXES NEEDED GC-302-FU1, LANE-3 NEXT TASK test support, LANE-4 NEXT TASK standing rotation, LANE-5 POOL-PICK, LANE-6 WS1 then WS2, Oracle GC-R1 open.
+
+
 ### 2026-10-30 — Sweep #29 (Lead review): PR #37 accepted in substance (LANE-4 security rotation)
 
 **Category:** Project governance / Lead review
