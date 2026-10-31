@@ -7,6 +7,15 @@
 
 ## Changelog
 
+### 2026-10-30 — §6 Standing Documentation Hygiene & Pattern Review Pass (LANE-5 / Minion 3)
+
+**Category:** Docs Hygiene & Pattern Review / Flex (LANE-5)
+
+**Summary:** Executed §6 standing Janitor / Scout / Docs Hygiene duties under sweep #28 POOL-PICK designation.
+- **Documentation Link Audit:** Scanned all 3,246 Markdown files across the repository; verified 22 internal links and 337 external links. Confirmed zero broken internal links across the repo.
+- **Pattern Hunting Review:** Reviewed recent error register additions (ERR-055, ERR-056) and verified patterns log. Pattern 22 (Stale-Branch Document Merge Overwrite) and Pattern 23 (ON CONFLICT ID Lookup Anti-Pattern) remain accepted on review (PR #33) and documented in `.logs/patterns.md`.
+- **Coordination:** Appended `[CHECK-IN]` and `[DONE]` entries to `Docs/agent-job-board.md` Message Board. Stopping per §5 table directive — awaiting Lead designation at next 6-hour review.
+
 ### 2026-10-30 — Sweep #28 (Lead review): PR #36 accepted as a standing-duty record
 
 **Category:** Project governance / Lead review
