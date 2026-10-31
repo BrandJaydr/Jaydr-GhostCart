@@ -7,6 +7,12 @@
 
 ## Changelog
 
+### 2026-10-30 — GC-101 Full process.env Sweep & .env.example Sync Verification (Jules / Primary Implementer)
+
+**Category:** Configuration & Governance
+
+**Summary:** Executed an exhaustive static and script audit across all files in `src/` and `scripts/` verifying every runtime variable accessed via `process.env` and `${VAR:-default}`. Confirmed `.env.example` contains 100% of required runtime variables with safe placeholders and defaults (including `EBAY_DEV_ID`, `EBAY_RU_NAME`, `EBAY_ENVIRONMENT`, `EBAY_WEBHOOK_SECRET`, DB connection scripts and backup/restore configuration). Verified zero secrets, tokens, or private keys committed in version control.
+
 ### 2026-10-30 — Sweep #29 (Lead review): PR #37 accepted in substance (LANE-4 security rotation)
 
 **Category:** Project governance / Lead review
