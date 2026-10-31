@@ -7,6 +7,13 @@
 
 ## Changelog
 
+### 2026-10-31 — Sweep #32 (Lead review): PR #40 accepted as a record
+
+**Category:** Project governance / Lead review
+
+LANE-3 (Minion 1) §6 standing test/fixture integrity & docs hygiene pass (PR #40, head 7ea7fbc, base = current master): fixture pack and signer tests verified present (4 + 6 = 10 tests); link audit independently reproduced (3,246 Markdown files, 22 internal links, 0 broken after URL-decoding, 337 external); no hard-coded credentials found in the test tree; no GC task claimed or completed; test build work stays gated on GC-202 and the GC-302-FU1 fix-up. Accepted as a record; no new error logged. Designations unchanged in substance (LANE-1 GC-202; LANE-2 GC-302-FU1 fix-up, ERR-056 OPEN; LANE-3 test support; LANE-4 security rotation; LANE-5 POOL-PICK; LANE-6 WS1 then WS2 authorized, WS3 held; Oracle GC-R1 open).
+
+
 ### 2026-10-31 — Sweep #30 (Lead review): PR #38 accepted as a record, PR #39 recorded as a duplicate verification
 
 **Category:** Project governance / Lead review
