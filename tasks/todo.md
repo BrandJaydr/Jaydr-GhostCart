@@ -7,6 +7,13 @@
 
 ## Changelog
 
+### 2026-10-30 — Sweep #29 (Lead review): PR #37 accepted in substance (LANE-4 security rotation)
+
+**Category:** Project governance / Lead review
+
+**Summary:** Lead review sweep #29 (~7:32 PM ET). One new open pull request since sweep #28, cut from current master head f783ebd2 (no new master commits). PR #37 (LANE-4, §6 standing security rotation) is ACCEPTED IN SUBSTANCE as a Dependency Guardian proposal: a single targeted upgrade, next-auth 4.24.7 → 4.24.11, with matching lockfile (cookie 0.5.0 → 0.7.2 arrives with 4.24.11 itself), audit reconciliation (80 total / 67 omit-dev, delta 13, matching PR #31), and a zero-hardcoded-secrets scan. Merge is gated on execution evidence (zero CI check runs on the PR; builder-reported tsc 0 errors + 45/45 Vitest not independently executed by the Lead) + the owner's word. Claim ratified (rotation was the lane's designated next task). One observation, not an ERR: low-severity audit counts do not nest (54 omit-dev vs 53 total) — next pass to re-capture cleanly. Also recorded: owner authorization Oct 30 — Workstream 1 (Job 3, CI repair) then Workstream 2 (GC-L6-01 close-out) in sequence for LANE-6; WS3 (ERR-054) held; no merges. No new ERR. PR #31–#36 unchanged; LANE-2 GC-302-FU1 fix-up (ERR-056) still outstanding.
+
+
 ### 2026-10-30 — Sweep #28 (Lead review): PR #36 accepted as a standing-duty record
 
 **Category:** Project governance / Lead review
