@@ -7,6 +7,17 @@
 
 ## Changelog
 
+### 2026-10-31 — §6 Standing Test/Fixture Integrity & Docs Hygiene Pass (LANE-3 / Minion 1)
+
+**Category:** Test & Fixtures / Oracle Support
+
+**Summary:** Completed standing duties (§6) under LANE-3 designation (Sweep #32).
+- **Test & Fixture Verification:** Ran Vitest against AliExpress fixture suite and signer module (`src/__tests__/fixtures/aliexpress-fixtures.test.ts` and `src/__tests__/adapters/aliexpress-sign.test.ts`). 10/10 tests passed (4 fixture tests, 6 signer tests).
+- **Typecheck:** Confirmed `npx tsc --noEmit` exits 0 with 0 errors.
+- **Secrets Scan:** Scanned `src/__tests__/` tree for secrets/private keys; 0 credentials found.
+- **Documentation Link Audit:** Audited all 3,246 Markdown files across repository (22 internal links, 337 external links); 0 broken internal links after URL decoding.
+- **Coordination:** Appended `[CHECK-IN]` and `[DONE]` entries to `Docs/agent-job-board.md`. No GC task claimed as active test build work remains gated on LANE-1 GC-202 and LANE-2 GC-302-FU1.
+
 ### 2026-10-31 — Sweep #32 (Lead review): PR #40 accepted as a record
 
 **Category:** Project governance / Lead review
