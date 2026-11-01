@@ -7,6 +7,15 @@
 
 ## Changelog
 
+### 2026-10-31 — GC-101 process.env Sync Verification (Jules / Primary Implementer)
+
+**Category:** Configuration & Governance
+
+**Summary:** Completed designated GC-101 full process.env sweep across `src/` and `scripts/`.
+- Verified `.env.example` contains all runtime variables read across the application (including `EBAY_DEV_ID`, `EBAY_RU_NAME`, `EBAY_ENVIRONMENT`, `EBAY_WEBHOOK_SECRET`, `DATABASE_URL`, `REDIS_URL`, `NEXTAUTH_SECRET`, `DEV_SEED_*`, `DEV_TENANT_ID`, `CSV_FEED_URL`, `AI_*`, `ALERTS_*`, and all 15 script DB/backup/encryption variables).
+- Confirmed zero missing variables and zero invented variables.
+- Verified all values in `.env.example` are safe placeholders or defaults; confirmed zero real secrets, tokens, or credentials committed in version control.
+
 ### 2026-10-31 — Sweep #32 (Lead review): PR #40 accepted as a record
 
 **Category:** Project governance / Lead review
