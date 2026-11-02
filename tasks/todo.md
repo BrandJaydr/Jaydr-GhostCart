@@ -7,6 +7,16 @@
 
 ## Changelog
 
+### 2026-10-31 — §6 Standing Scout / Janitor Pass (LANE-5 / Minion 3)
+
+**Category:** Documentation Hygiene & Pattern Review / Scout & Janitor
+
+LANE-5 (Minion 3) completed a §6 standing documentation hygiene and pattern review pass under POOL-PICK designation:
+- **Link Audit:** Scanned 3,246 Markdown files across the repository; 22 internal links and 337 external links validated; 0 broken internal links after percent-encoding resolution.
+- **Pattern & Error Review:** Evaluated `.logs/errors.md` and `.logs/patterns.md`; verified pattern definitions and system insights integrity.
+- **Secrets Posture:** Confirmed 0 hardcoded credentials or tokens committed in `src/` or `scripts/`.
+- No GC task claimed or completed; no code payload. Coordination entries logged on `Docs/agent-job-board.md`. Stopped per board directive awaiting Lead designation.
+
 ### 2026-10-31 — Sweep #32 (Lead review): PR #40 accepted as a record
 
 **Category:** Project governance / Lead review
