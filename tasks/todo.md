@@ -7,6 +7,16 @@
 
 ## Changelog
 
+### 2026-10-31 — §6 Standing Test/Fixture Integrity & Docs Hygiene Pass (LANE-3 / Minion 1)
+
+**Category:** Test & Fixtures / Oracle Support
+
+**Summary:** Completed §6 standing test/fixture integrity verification and documentation link audit under LANE-3 designation on master.
+- **Fixture Pack & Tests:** Verified AliExpress fixture pack (`src/__tests__/fixtures/aliexpress/` — full, empty, error envelopes, index, and README) present and valid. Verified `src/__tests__/fixtures/aliexpress-fixtures.test.ts` (4 tests) and `src/__tests__/adapters/aliexpress-sign.test.ts` (6 tests) contain 10/10 tests.
+- **Secrets Scan:** Confirmed 0 hardcoded private keys or production secrets in `src/__tests__/`.
+- **Docs Link Audit:** Scanned 3,246 Markdown files across repository; verified 22 internal links with 0 broken after URL-decoding percent-encoded paths (and 337 external links).
+- **Task Gating:** No GC task claimed or marked completed. Test build work remains gated on LANE-1 GC-202 and LANE-2 GC-302-FU1. Stopping per lane directives; awaiting Lead designation at next 6-hour review.
+
 ### 2026-10-31 — Sweep #32 (Lead review): PR #40 accepted as a record
 
 **Category:** Project governance / Lead review
