@@ -7,6 +7,12 @@
 
 ## Changelog
 
+### 2026-10-31 — GC-101 Verification & Env Sync (Jules / Primary Implementer)
+
+**Category:** Configuration & Governance
+
+**Summary:** Completed process.env sweep of `src/` and environment variable audit of `scripts/` for GC-101. Verified `.env.example` contains all 39 environment variables read across application runtime and operations tooling (including `EBAY_DEV_ID`, `EBAY_RU_NAME`, `EBAY_ENVIRONMENT`, `EBAY_WEBHOOK_SECRET`, `CSV_FEED_URL`, `DATABASE_URL`, `REDIS_URL`, `NEXTAUTH_SECRET`, and script DB/age configs). Verified zero missing variables, zero invented variables, and zero real credentials or secrets committed.
+
 ### 2026-10-31 — Sweep #32 (Lead review): PR #40 accepted as a record
 
 **Category:** Project governance / Lead review
