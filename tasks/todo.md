@@ -7,6 +7,17 @@
 
 ## Changelog
 
+### 2026-10-31 — §6 Standing Oracle Test/Fixture Integrity & Docs Hygiene Pass (LANE-3 / Minion 1)
+
+**Category:** Quality Assurance & Testing / Oracle Support
+
+**Summary:** Executed §6 standing Oracle test/fixture integrity scan and documentation hygiene audit under LANE-3 designation on master while active test build work remains gated pending upstream deliverables (GC-202 token provider and GC-302-FU1 listing submit fix-up).
+- **Fixture Pack & Signer Suites:** Re-verified AliExpress fixture pack (`src/__tests__/fixtures/aliexpress/` — full, empty, error, index.ts, README.md). Confirmed 10/10 Vitest tests pass across `src/__tests__/fixtures/aliexpress-fixtures.test.ts` (4 tests) and `src/__tests__/adapters/aliexpress-sign.test.ts` (6 tests with independent HMAC-SHA256 known-answer vectors).
+- **TypeScript Typecheck:** Verified clean compilation across the repository (`npx --no-install tsc --noEmit` exits 0).
+- **Secrets Scan:** Scanned `src/__tests__/` tree using regex; confirmed 0 committed credentials, tokens, or private keys.
+- **Documentation Hygiene:** Audited all 3,246 Markdown files across the repository; verified 22 internal links with 0 broken links after decoding percent-encoded paths (`Prism%20Working/`), and 337 external links.
+- **Coordination:** Appended `[CHECK-IN]` and `[DONE]` entries to `Docs/agent-job-board.md` Message Board. No GC task claimed or completed. All task checkboxes left unchanged. Awaiting Lead designation at next 6-hour review.
+
 ### 2026-10-31 — Sweep #32 (Lead review): PR #40 accepted as a record
 
 **Category:** Project governance / Lead review
