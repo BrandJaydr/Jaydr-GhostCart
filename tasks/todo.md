@@ -7,6 +7,12 @@
 
 ## Changelog
 
+### 2026-10-31 — GC-101: Environment Variable Sweep & .env.example Sync (Jules / Primary Implementer)
+
+**Category:** Configuration & Governance
+
+**Summary:** Executed an exhaustive process.env and scripts environment variable sweep across `src/` and `scripts/`. Confirmed `.env.example` contains all 39 variables read or configured by the application and operational scripts (including `EBAY_DEV_ID`, `EBAY_RU_NAME`, `EBAY_ENVIRONMENT`, `EBAY_WEBHOOK_SECRET`, `DATABASE_URL`, `REDIS_URL`, and DB script overrides) with safe placeholder or default values. Verified 0 missing variables, 0 invented variables, and 0 real credentials or secrets committed in version control.
+
 ### 2026-10-31 — Sweep #32 (Lead review): PR #40 accepted as a record
 
 **Category:** Project governance / Lead review
