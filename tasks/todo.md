@@ -7,6 +7,12 @@
 
 ## Changelog
 
+### 2026-10-31 — GC-101 Verification Sweep (LANE-1 Jules / Primary Implementer)
+
+**Category:** Configuration & Governance
+
+**Summary:** Executed full environment variable sweep of `src/` and `scripts/`. Confirmed `.env.example` contains all 39 variables read across the application runtime and operations scripts, including `EBAY_DEV_ID`, `EBAY_RU_NAME`, `EBAY_ENVIRONMENT`, `EBAY_WEBHOOK_SECRET`, all 9 script variables (`DB_PASSWORD`, `TEST_DB`, `EXPECTED_MIGRATIONS`, `BACKUP_DIR`, `RETENTION_DAYS`, `RESTORE_CONFIRM`, `ENV_FILE`, `AGE_KEY_FILE`, `ENV_ENC`), alerts, and auth settings. Verified zero real secrets/credentials in version control. Ready for Oracle GC-R1 second-eyes review.
+
 ### 2026-10-31 — Sweep #32 (Lead review): PR #40 accepted as a record
 
 **Category:** Project governance / Lead review
