@@ -124,3 +124,17 @@ This file captures recurring design patterns, integration gotchas, database guid
 - **Risk:** A misconfigured production environment silently falls back to a dev database URL (potentially with default credentials in source) instead of failing closed.
 - **Solution:** Configuration modules must fail closed in production (`NODE_ENV === 'production'`). Any local or build-time fallback must be strictly gated behind explicit mode checks (`NODE_ENV === 'development'` or `CI === 'true'` or `NEXT_PHASE`) and use credential-less targets (e.g., `postgresql://localhost:5432/ghostcart`).
 - **Discovered by:** Minion 3 (Scout) 🔍 — 2026-10-26 (ERR-043, ERR-044)
+
+### 22. Stale-Branch Document Merge Overwrite
+- **Pattern:** Shared coordination documents (`Docs/agent-job-board.md`, `tasks/todo.md`, `.logs/errors.md`) are modified independently by workers on branches and by review sweeps on master, causing merge collisions or overwriting master's updated documentation when branch copies win merge resolutions.
+- **Rationale:** Workers cut branches from master at a specific commit and update job board or changelog copies locally. Meanwhile, master advances through review sweeps or other PR merges.
+- **Risk:** Merging a stale branch overwrites newer board entries, error log resolutions, or changelog history on master, silently rolling back project state.
+- **Solution:** Workers must keep branch payloads focused and avoid directly pushing stale coordination documents to master. When rebasing or preparing a merge, workers must rebase onto current master and reconcile shared paperwork files without dropping master entries.
+- **Discovered by:** Minion 3 (Scout) 🔍 — 2026-10-29 (ERR-049, ERR-050, ERR-053)
+
+### 23. ON CONFLICT ID Lookup Anti-Pattern
+- **Pattern:** Executing an `INSERT ... ON CONFLICT (conflict_column) DO UPDATE` query and then attempting to select the row using the generated or target primary key from the `INSERT` clause rather than the conflict key.
+- **Rationale:** When an existing row hits the `ON CONFLICT` condition, PostgreSQL updates the existing record in place without inserting a new row with a new auto-generated ID.
+- **Risk:** Subsequent SELECT queries looking up the expected new ID return zero rows or throw errors (e.g., draft save path crashing on duplicate submission).
+- **Solution:** When performing `ON CONFLICT DO UPDATE`, query or return the existing record using the unique conflict key (e.g., `source_id` / `tenant_id`), or use PostgreSQL `RETURNING *` clauses to capture the updated row directly.
+- **Discovered by:** Minion 3 (Scout) 🔍 — 2026-10-29 (ERR-054)

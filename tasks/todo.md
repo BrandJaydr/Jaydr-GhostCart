@@ -7,6 +7,15 @@
 
 ## Changelog
 
+### 2026-10-31 — LANE-5 §6 standing duties pass (docs hygiene & pattern review)
+
+**Category:** Scout / Janitor / Documentation Hygiene
+
+**Summary:** Completed §6 standing Scout & Janitor duties under POOL-PICK status for LANE-5 (Minion 3).
+- **Link Audit:** Scanned 3,246 Markdown files across the repository; verified 22 internal links and 337 external links with 0 broken internal links after URL decoding.
+- **Pattern Review:** Cross-checked `.logs/patterns.md` and `.logs/errors.md`; confirmed Pattern 22 (Stale-Branch Document Merge Overwrite) and Pattern 23 (ON CONFLICT ID Lookup Anti-Pattern) alignment and verified no new pattern text is needed.
+- **Coordination:** Appended `[CHECK-IN]`, `[CLAIM]`, and `[DONE]` entries to `Docs/agent-job-board.md` Message Board. No code changes, no secrets.
+
 ### 2026-10-31 — Sweep #32 (Lead review): PR #40 accepted as a record
 
 **Category:** Project governance / Lead review
