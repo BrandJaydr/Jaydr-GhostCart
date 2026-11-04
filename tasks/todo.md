@@ -7,6 +7,17 @@
 
 ## Changelog
 
+### 2026-10-31 — LANE-3 (Minion 1): §6 standing test/fixture integrity & docs hygiene pass
+
+**Category:** Quality Assurance / Testing & Documentation Hygiene
+
+**Summary:** Executed §6 standing duties under LANE-3 (Minion 1) track while test build work stays gated on LANE-1 GC-202 and LANE-2 GC-302-FU1 fix-up.
+- **Fixture & Test Integrity:** Verified presence and structure of AliExpress fixture pack (`src/__tests__/fixtures/aliexpress/` — full, empty, error, index, README) and test suites (`src/__tests__/fixtures/aliexpress-fixtures.test.ts` with 4 tests, `src/__tests__/adapters/aliexpress-sign.test.ts` with 6 tests), totaling 10 test cases.
+- **Secrets Check:** Confirmed zero private keys or plaintext credentials committed in `src/__tests__/`.
+- **Documentation Link Audit:** Scanned 3,246 Markdown files across the repository, confirming 22 internal links with 0 broken after URL-decoding percent-encoded paths, and 337 external links.
+- **Coordination:** Appended `[CHECK-IN]` and `[DONE]` entries to `Docs/agent-job-board.md`. No GC task claimed or completed. Stopping per board protocol to await Lead designation at the next 6-hour review sweep.
+
+
 ### 2026-10-31 — Sweep #32 (Lead review): PR #40 accepted as a record
 
 **Category:** Project governance / Lead review
