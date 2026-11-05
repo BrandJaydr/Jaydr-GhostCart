@@ -7,6 +7,12 @@
 
 ## Changelog
 
+### 2026-10-31 — GC-101: Environment Variable Sweep & Verification (Jules / Primary Implementer)
+
+**Category:** Configuration & Governance
+
+**Summary:** Executed full process.env and script environment variable sweep across all files in `src/` and `scripts/`. Confirmed `.env.example` is 100% in sync with all runtime variables read by the application (including eBay, AI, Alerts, and Auth settings) and script DB connection parameters (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `TEST_DB`, `EXPECTED_MIGRATIONS`, `BACKUP_DIR`, `RETENTION_DAYS`, `RESTORE_CONFIRM`, `ENV_FILE`, `AGE_KEY_FILE`, `ENV_ENC`). Verified zero real secrets/credentials committed in version control.
+
 ### 2026-10-31 — Sweep #32 (Lead review): PR #40 accepted as a record
 
 **Category:** Project governance / Lead review
