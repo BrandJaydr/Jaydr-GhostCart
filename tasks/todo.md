@@ -7,6 +7,20 @@
 
 ## Changelog
 
+### 2026-10-31 — §6 Standing Security Maintenance Pass (LANE-4 / Minion 2)
+
+**Category:** Security & Compliance / RANGER + Dependency Guardian
+
+**Summary:** Completed standing security rotation (§6) under LANE-4 designation on master.
+- **Secrets Scan:** Scanned `src/`, `scripts/`, `Docs/`, and repository config files using regex pattern matcher; confirmed zero hardcoded production secrets, API keys, or private tokens committed in version control.
+- **Dependency Audit & Reconciliation:** Resolved nesting question from Lead Sweep #29. Ran exact audit commands:
+  - `npm audit`: 84 total vulnerabilities (54 low, 11 moderate, 15 high, 4 critical).
+  - `npm audit --omit=dev`: 67 vulnerabilities (54 low, 5 moderate, 6 high, 2 critical).
+  - Delta: 17 dev-only vulnerabilities (6 moderate, 9 high, 2 critical). Confirmed low-severity vulnerabilities nest identically (54 == 54), which are all transitive in `@heroui/*` (`deepmerge` and `cookie`).
+- **Auth & Tenancy:** Re-verified API route auth and tenant isolation posture against ERR-016 and ERR-043 (fail-closed throw preserved on master in `src/lib/db/index.ts`).
+- **Execution Evidence:** Verified `npx --no-install tsc --noEmit` exits clean (0 errors) and Vitest passes 88 tests across 13 suites for unit/integration logic.
+- **Coordination:** Appended `[CHECK-IN]`, `[CLAIM]`, and `[DONE]` entries to `Docs/agent-job-board.md` Message Board and updated table state. Updated ERR-042 in `.logs/errors.md`.
+
 ### 2026-10-31 — Sweep #32 (Lead review): PR #40 accepted as a record
 
 **Category:** Project governance / Lead review
