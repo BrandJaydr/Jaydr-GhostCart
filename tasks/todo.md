@@ -7,6 +7,16 @@
 
 ## Changelog
 
+### 2026-10-31 — §6 Standing Documentation Hygiene & Pattern Review Pass (LANE-5 / Minion 3)
+
+**Category:** Documentation & Governance / Scout & Janitor
+
+**Summary:** Executed §6 standing duties under sweep #32 POOL-PICK designation.
+- **Link Audit:** Scanned 3,246 Markdown files across the repository; verified 22 internal links with 0 broken after URL-decoding percent-encoded paths (337 external links counted).
+- **Pattern Review:** Re-evaluated `.logs/errors.md` and confirmed all 23 architectural patterns in `.logs/patterns.md` are aligned; no new pattern text required.
+- **Secrets Scan:** Confirmed 0 hardcoded credentials or private keys in repository source.
+- **Coordination:** Appended `[CHECK-IN]`, `[CLAIM]`, and `[DONE]` entries to `Docs/agent-job-board.md` Message Board. No code payload, no GC task claimed/completed.
+
 ### 2026-10-31 — Sweep #32 (Lead review): PR #40 accepted as a record
 
 **Category:** Project governance / Lead review
