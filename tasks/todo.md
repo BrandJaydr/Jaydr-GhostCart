@@ -7,6 +7,12 @@
 
 ## Changelog
 
+### 2026-10-31 — GC-101: .env.example process.env and scripts sync sweep (LANE-1 Jules)
+
+**Category:** Configuration & Governance
+
+**Summary:** Executed full process.env and scripts environment variable sweep across `src/` and `scripts/`. Confirmed `.env.example` contains all runtime and script variables (38 total variables, including `EBAY_DEV_ID`, `EBAY_RU_NAME`, `EBAY_ENVIRONMENT`, `EBAY_WEBHOOK_SECRET`, DB script connection parameters, and queue/AI/alert variables). Verified zero variables missing, none removed that are still read, none invented, and zero secrets/credentials committed in version control.
+
 ### 2026-10-31 — Sweep #32 (Lead review): PR #40 accepted as a record
 
 **Category:** Project governance / Lead review
