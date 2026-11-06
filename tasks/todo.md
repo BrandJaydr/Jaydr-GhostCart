@@ -7,6 +7,17 @@
 
 ## Changelog
 
+### 2026-11-06 — §6 Standing Security Maintenance Pass (LANE-4 / Minion 2)
+
+**Category:** Security & Compliance / RANGER + Dependency Guardian
+
+**Summary:** Executed §6 standing security rotation pass under LANE-4 designation.
+- **Secrets Scan:** Scanned `src/`, `scripts/`, and configs for hardcoded credentials, tokens, or private keys; confirmed zero hardcoded secrets committed (only standard env var references like `$DB_PASSWORD`).
+- **Fail-Closed DB Configuration:** Confirmed `src/lib/db/index.ts` enforces fail-closed behavior outside explicit dev/build modes when `DATABASE_URL` is unset.
+- **Dependency Audit Reconciliation:** Re-ran `npm audit` and `npm audit --omit=dev`: confirmed exact counts of 84 vulnerabilities (54 low, 11 moderate, 15 high, 4 critical) and 67 omit-dev (54 low, 5 moderate, 6 high, 2 critical). Confirmed delta is exactly 17 dev-only vulnerabilities. Low severity vulnerabilities nest exactly (54 == 54) originating transitively from `deepmerge` via `@heroui/theme` (53) and `cookie` via `next-auth` (1; corrected attribution). The 11 moderate vulnerabilities (5 prod, 6 dev-only) reconcile the moderate watch count.
+- **Code Health & Test Run:** Verified `tsc --noEmit` exits clean with 0 errors, `npm run lint` passes with 0 warnings, and `npm run build` succeeds. Test suite executes with 111 passed, 3 skipped, and 26 infrastructure-dependent integration tests requiring live Postgres/Redis.
+- **Coordination:** Logged audit details in `.logs/errors.md` (ERR-042) and posted `[DONE]` entry to `Docs/agent-job-board.md` Message Board. Standing security duty remains designated in §5 table.
+
 ### 2026-11-06 — Sweep #55 (Lead review): PR #68 accepted (duplicate of canonical #58), PR #67 accepted as a record
 
 See Docs/agent-job-board.md Message Board for the full reviews and designations. LANE-2 GC-302-FU1 fix-up (ERR-056): PR #68 (head 54e35e7a) accepted — route + route tests byte-identical to canonical PR #58, worker test differs by 13 cosmetic lines only; Lead independently ran the checks (Vitest 15/15, tsc 0 errors, ESLint 0 warnings); PR #58 remains the sole merge candidate, PR #68 close-as-duplicate (third open copy of the payload after #63); ERR-056 stays OPEN until #58 merges. LANE-1 GC-101: PR #67 (head a434f5f8) accepted as a record — fifth re-verification (39 variables named, all 39 present in `.env.example`, zero missing/invented, no config change); close-as-recorded; corrections: '38 total' count is wrong (39), and the branch's §5 LANE-1 row rewrite (flips state to DONE, drops the sweep #30 REJECTED-row warning) is REJECTED — logged as new ERR-058; no further GC-101 checks. No merges in this sweep; board update pending owner's approval tap (see sweep-55 staged payload; sweeps #33–#54 pushes never landed, master still 451fb570).
