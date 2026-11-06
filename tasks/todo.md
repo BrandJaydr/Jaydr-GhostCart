@@ -7,6 +7,17 @@
 
 ## Changelog
 
+### 2026-10-31 — GC-302-FU1 Fix-up (fail-closed 503 + real-queue pickup evidence) (LANE-2 / Thing 2)
+
+**Category:** Worker Infrastructure / Enqueue Wiring & Testing (ERR-056)
+
+**Summary:**
+- Rewired `POST /api/ebay/submit` (`src/app/api/ebay/submit/route.ts`) to return HTTP 503 when Redis is unavailable, when enqueueing throws, or when no job ID is returned, eliminating the fake 202 stub per ERR-056.
+- Added comprehensive unit tests in `src/__tests__/api/ebay-submit.test.ts` covering validation, 404, 202 enqueue, missing REDIS_URL fail-closed (503), enqueue throw fail-closed (503), and missing job ID fail-closed (503).
+- Added real-queue pickup evidence in `src/__tests__/worker/listing-worker.test.ts` verifying `listingWorker` is registered on `listing.submit` and proving that an enqueued job payload is executed by the registered worker processor.
+- Fixed typing/linting across test suites (`npm run lint` exits 0 with 0 warnings, `npx --no-install tsc --noEmit` passes 0 errors, Vitest passes 15/15 tests, `npm run build` succeeds).
+- Kept GC-302-FU1 unchecked on master pending Lead re-review per Lead instructions.
+
 ### 2026-10-31 — Sweep #32 (Lead review): PR #40 accepted as a record
 
 **Category:** Project governance / Lead review

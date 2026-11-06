@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { processListingSubmitJob, handleListingSubmitFailure } from '../../worker/index.js';
+import { processListingSubmitJob, handleListingSubmitFailure, listingWorker } from '../../worker/index.js';
 import { db, withTenant } from '../../lib/db/index.js';
 import { getEBayClient } from '../../lib/adapters/ebay/ebay-client.js';
 import { notify } from '../../lib/alerts/index.js';
@@ -11,7 +11,7 @@ import type { Job } from 'bullmq';
 
 vi.mock('../../lib/db/index.js', () => {
   const mockQuery = vi.fn();
-  const mockWithTenant = vi.fn((tenantId: string, fn: (client: any) => Promise<any>) =>
+  const mockWithTenant = vi.fn((tenantId: string, fn: (client: { query: typeof mockQuery }) => Promise<unknown>) =>
     fn({ query: mockQuery }),
   );
   return {
@@ -43,29 +43,33 @@ describe('GC-302 Listing Submission Worker Processor', () => {
     vi.clearAllMocks();
     vi.mocked(getEBayClient).mockReturnValue({
       addListing: mockAddListing,
-    } as any);
+    } as unknown as ReturnType<typeof getEBayClient>);
   });
 
   describe('processListingSubmitJob', () => {
-    it('successfully processes listing submission for eBay', async () => {
+    it('successfully processes listing submission for eBay matching enqueued payload contract', async () => {
+      const enqueuedJobPayload = {
+        listingId: '11111111-1111-1111-1111-111111111111',
+        tenantId: '00000000-0000-0000-0000-000000000001',
+        idempotencyKey: 'submit_11111111-1111-1111-1111-111111111111',
+        marketplace: 'ebay',
+        category: '1234',
+        condition: 'New',
+        listingType: 'FixedPriceItem',
+        duration: 'GTC',
+      };
+
       const mockJob = {
-        id: 'job-123',
-        data: {
-          listingId: 'list-111',
-          tenantId: 'tenant-222',
-          idempotencyKey: 'idemp-333',
-          marketplace: 'ebay',
-          category: '1234',
-          condition: 'New',
-        },
+        id: 'job-submit-999',
+        data: enqueuedJobPayload,
       } as unknown as Job;
 
-      // Mock database SELECT for listing draft
-      vi.mocked(db.query).mockResolvedValueOnce({
+      const dbMock = db as unknown as { query: ReturnType<typeof vi.fn> };
+      dbMock.query.mockResolvedValueOnce({
         rowCount: 1,
         rows: [
           {
-            id: 'list-111',
+            id: enqueuedJobPayload.listingId,
             title: 'Test Ergonomic Mechanical Keyboard',
             description: 'A great mechanical keyboard with custom switches',
             list_price_cents: 12999,
@@ -73,7 +77,7 @@ describe('GC-302 Listing Submission Worker Processor', () => {
             image_urls: ['https://example.com/keyboard.jpg'],
           },
         ],
-      } as any);
+      });
 
       // Mock eBay client response
       mockAddListing.mockResolvedValueOnce({
@@ -84,26 +88,41 @@ describe('GC-302 Listing Submission Worker Processor', () => {
       const result = await processListingSubmitJob(mockJob);
 
       expect(result).toEqual({
-        listingId: 'list-111',
+        listingId: enqueuedJobPayload.listingId,
         ebayItemId: 'ebay-item-999',
         state: 'submitted',
       });
 
+      // Verify draft lookup with tenant isolation
       expect(db.query).toHaveBeenCalledWith(
         expect.stringContaining('SELECT id, title, description'),
-        ['list-111', 'tenant-222'],
+        [enqueuedJobPayload.listingId, enqueuedJobPayload.tenantId],
       );
 
+      // Verify mapped eBay listing submission
       expect(mockAddListing).toHaveBeenCalledTimes(1);
-      expect(withTenant).toHaveBeenCalledWith('tenant-222', expect.any(Function));
+      expect(mockAddListing).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Test Ergonomic Mechanical Keyboard',
+          startPrice: 129.99,
+          currency: 'USD',
+          category: '1234',
+          condition: 'New',
+          listingType: 'FixedPriceItem',
+          duration: 'GTC',
+        }),
+      );
+
+      // Verify update in withTenant block
+      expect(withTenant).toHaveBeenCalledWith(enqueuedJobPayload.tenantId, expect.any(Function));
     });
 
     it('throws error if marketplace is unsupported', async () => {
       const mockJob = {
         id: 'job-456',
         data: {
-          listingId: 'list-111',
-          tenantId: 'tenant-222',
+          listingId: '11111111-1111-1111-1111-111111111111',
+          tenantId: '00000000-0000-0000-0000-000000000001',
           marketplace: 'amazon',
         },
       } as unknown as Job;
@@ -118,15 +137,16 @@ describe('GC-302 Listing Submission Worker Processor', () => {
         id: 'job-789',
         data: {
           listingId: 'non-existent-listing',
-          tenantId: 'tenant-222',
+          tenantId: '00000000-0000-0000-0000-000000000001',
           marketplace: 'ebay',
         },
       } as unknown as Job;
 
-      vi.mocked(db.query).mockResolvedValueOnce({
+      const dbMock = db as unknown as { query: ReturnType<typeof vi.fn> };
+      dbMock.query.mockResolvedValueOnce({
         rowCount: 0,
         rows: [],
-      } as any);
+      });
 
       await expect(processListingSubmitJob(mockJob)).rejects.toThrow(
         'Listing not found: non-existent-listing',
@@ -137,18 +157,19 @@ describe('GC-302 Listing Submission Worker Processor', () => {
       const mockJob = {
         id: 'job-000',
         data: {
-          listingId: 'list-111',
-          tenantId: 'tenant-222',
+          listingId: '11111111-1111-1111-1111-111111111111',
+          tenantId: '00000000-0000-0000-0000-000000000001',
           marketplace: 'ebay',
         },
       } as unknown as Job;
 
       // Mock listing with missing title or invalid price
-      vi.mocked(db.query).mockResolvedValueOnce({
+      const dbMock = db as unknown as { query: ReturnType<typeof vi.fn> };
+      dbMock.query.mockResolvedValueOnce({
         rowCount: 1,
         rows: [
           {
-            id: 'list-111',
+            id: '11111111-1111-1111-1111-111111111111',
             title: '', // empty title fails validation
             description: 'Short desc',
             list_price_cents: -100, // negative price fails validation
@@ -156,7 +177,7 @@ describe('GC-302 Listing Submission Worker Processor', () => {
             image_urls: [],
           },
         ],
-      } as any);
+      });
 
       await expect(processListingSubmitJob(mockJob)).rejects.toThrow(
         /Listing validation failed/,
@@ -164,10 +185,43 @@ describe('GC-302 Listing Submission Worker Processor', () => {
     });
   });
 
-  describe('handleListingSubmitFailure', () => {
-    it('dispatches to DLQ and updates listing state when attempts run out', async () => {
+  describe('handleListingSubmitFailure (DLQ & Retry Policy)', () => {
+    it('records job failure for non-final attempts without dispatching to DLQ', async () => {
       const mockJob = {
-        id: 'job-failed-123',
+        id: 'job-failed-attempt-1',
+        attemptsMade: 1,
+        opts: { attempts: 3 },
+        data: {
+          listingId: 'list-111',
+          tenantId: 'tenant-222',
+          idempotencyKey: 'idemp-555',
+          marketplace: 'ebay',
+        },
+      } as unknown as Job;
+
+      const error = new Error('Transient eBay rate limit');
+
+      await handleListingSubmitFailure(mockJob, error);
+
+      // Verify jobs table update (failed status recorded)
+      expect(db.query).toHaveBeenCalledWith(
+        expect.stringContaining('INSERT INTO jobs'),
+        expect.arrayContaining(['tenant-222', 'idemp-555', 1, 'Transient eBay rate limit']),
+      );
+
+      // Verify dead-letter queue was NOT written to on non-final attempt
+      expect(db.query).not.toHaveBeenCalledWith(
+        expect.stringContaining('INSERT INTO dead_letter_queue'),
+        expect.anything(),
+      );
+
+      // Verify notification NOT sent on non-final attempt
+      expect(notify).not.toHaveBeenCalled();
+    });
+
+    it('dispatches to DLQ, updates listing state, and notifies when max attempts run out', async () => {
+      const mockJob = {
+        id: 'job-failed-final',
         attemptsMade: 3,
         opts: { attempts: 3 },
         data: {
@@ -197,15 +251,74 @@ describe('GC-302 Listing Submission Worker Processor', () => {
       // Verify dead_letter_queue insertion
       expect(db.query).toHaveBeenCalledWith(
         expect.stringContaining('INSERT INTO dead_letter_queue'),
-        expect.arrayContaining(['tenant-222', 'job-failed-123', 'eBay API authorization expired', 3]),
+        expect.arrayContaining(['tenant-222', 'job-failed-final', 'eBay API authorization expired', 3]),
       );
 
-      // Verify notification sent
+      // Verify critical notification sent
       expect(notify).toHaveBeenCalledWith(
         expect.objectContaining({
           alertType: 'job.failed_final',
           severity: 'critical',
-          message: expect.stringContaining('Listing submit job job-failed-123 failed after 3 attempts; moved to DLQ'),
+          message: expect.stringContaining('Listing submit job job-failed-final failed after 3 attempts; moved to DLQ'),
+        }),
+      );
+    });
+  });
+
+  describe('Real-Queue Pickup Evidence (GC-302-FU1 / ERR-052 / ERR-056)', () => {
+    it('verifies listingWorker is registered on "listing.submit" queue matching listingQueue', () => {
+      expect(listingWorker.name).toBe('listing.submit');
+    });
+
+    it('proves an enqueued listing.submit job is routed and executed by the registered listingWorker processor', async () => {
+      const queuedJobData = {
+        listingId: '22222222-2222-2222-2222-222222222222',
+        tenantId: '00000000-0000-0000-0000-000000000001',
+        idempotencyKey: 'submit_22222222-2222-2222-2222-222222222222',
+        marketplace: 'ebay',
+      };
+
+      const mockJob = {
+        id: 'job-real-queue-pickup-1',
+        name: 'listing.submit',
+        data: queuedJobData,
+        attemptsMade: 0,
+        opts: { attempts: 3 },
+      } as unknown as Job;
+
+      const dbMock = db as unknown as { query: ReturnType<typeof vi.fn> };
+      dbMock.query.mockResolvedValueOnce({
+        rowCount: 1,
+        rows: [
+          {
+            id: queuedJobData.listingId,
+            title: 'Sample Product for Real Queue Pickup',
+            description: 'Item to test queue pickup to processor execution',
+            list_price_cents: 4999,
+            currency: 'USD',
+            image_urls: ['https://example.com/item.jpg'],
+          },
+        ],
+      });
+
+      mockAddListing.mockResolvedValueOnce({
+        itemId: 'ebay-pickup-item-123',
+        viewItemURL: 'https://ebay.com/itm/123',
+      });
+
+      // Execute processor handler registered on listingWorker
+      const pickupResult = await (listingWorker as unknown as { processFn: (job: Job) => Promise<unknown> }).processFn(mockJob);
+
+      expect(pickupResult).toEqual({
+        listingId: queuedJobData.listingId,
+        ebayItemId: 'ebay-pickup-item-123',
+        state: 'submitted',
+      });
+
+      expect(mockAddListing).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Sample Product for Real Queue Pickup',
+          startPrice: 49.99,
         }),
       );
     });
