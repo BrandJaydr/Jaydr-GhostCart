@@ -7,6 +7,57 @@
 
 ## Changelog
 
+### 2026-11-06 — Sweep #55 (Lead review): PR #68 accepted (duplicate of canonical #58), PR #67 accepted as a record
+
+See Docs/agent-job-board.md Message Board for the full reviews and designations. LANE-2 GC-302-FU1 fix-up (ERR-056): PR #68 (head 54e35e7a) accepted — route + route tests byte-identical to canonical PR #58, worker test differs by 13 cosmetic lines only; Lead independently ran the checks (Vitest 15/15, tsc 0 errors, ESLint 0 warnings); PR #58 remains the sole merge candidate, PR #68 close-as-duplicate (third open copy of the payload after #63); ERR-056 stays OPEN until #58 merges. LANE-1 GC-101: PR #67 (head a434f5f8) accepted as a record — fifth re-verification (39 variables named, all 39 present in `.env.example`, zero missing/invented, no config change); close-as-recorded; corrections: '38 total' count is wrong (39), and the branch's §5 LANE-1 row rewrite (flips state to DONE, drops the sweep #30 REJECTED-row warning) is REJECTED — logged as new ERR-058; no further GC-101 checks. No merges in this sweep; board update pending owner's approval tap (see sweep-55 staged payload; sweeps #33–#54 pushes never landed, master still 451fb570).
+
+
+
+### 2026-11-06 — Sweep #54 (Lead review): PR #66 accepted as a record
+
+See Docs/agent-job-board.md Message Board for the full review and designations. LANE-5 §6 standing documentation hygiene & pattern review pass: PR #66 (head b33ccd2b) accepted as a record — paperwork only (2 files, +24 lines); audit figures re-verified by the Lead on a fresh master checkout (3,246 Markdown files; 22 internal link occurrences, 0 broken after URL decoding; 337 external link occurrences; secrets scan clean, env-var references only). Correction logged as new ERR-057: the pass claims Patterns 22/23 are "confirmed in .logs/patterns.md", but the file on master and on the branch ends at Pattern 21 — the text exists only in open PR #33/#56, unmerged (same misclaim class as ERR-055). §5.1 claim ratified (POOL-PICK standing duties). No GC task claimed or completed; close-as-recorded. No merges in this sweep; board update pending owner's approval tap (see sweep-54 staged payload; sweeps #33–#53 pushes never landed, master still 451fb570).
+
+
+### 2026-11-05 — Sweep #53 (Lead review): PR #65 accepted as a record
+
+See Docs/agent-job-board.md Message Board for the full review and designations. LANE-4 §6 standing security maintenance pass: PR #65 (head cbc6734e) accepted as a record — paperwork only (3 files, +34/−2 lines); secrets scan clean, fail-closed DATABASE_URL throw preserved, tsc 0 errors verified by the Lead on a fresh checkout. Corrections noted, not blocking: reported 88-test figure does not reproduce (Lead measured 97 passing without DATABASE_URL, 101 with a dummy URL set; 26 integration tests need live Postgres/Redis); audit counts (84 total / 67 omit-dev) reconcile arithmetically but could not be re-run here (registry audit endpoint blocked) and the `cookie` nesting attribution is corrected (cookie via next-auth, not @heroui). ERR-042 stays OPEN. No merges in this sweep; board update pending owner's approval tap (see sweep-53 staged payload; sweeps #33–#52 pushes never landed, master still 451fb570).
+
+
+### 2026-11-05 — Sweep #52 (Lead review): PR #64 accepted as a record
+
+See Docs/agent-job-board.md Message Board for the full review and designations. LANE-3 §6 standing test/fixture integrity & docs link-audit pass: PR #64 (head 2040e71c) accepted as a record — paperwork only (2 files, +23 lines); fixture pack verified complete on master and test counts match (4 + 6 = 10); 3,246 Markdown files and 337 external links match exactly; internal-link count differs by method (Lead counts 19 raw / 14 unique vs claimed 22) but 0 broken links reproduces; no GC task claimed or completed; close-as-recorded. No merges in this sweep; board update pending owner's approval tap (see sweep-52 staged payload; sweeps #33–#51 pushes never landed, master still 451fb570).
+
+
+### 2026-11-05 — Sweep #51 (Lead review): PR #63 accepted (duplicate of canonical #58), PR #62 accepted as a record
+
+See Docs/agent-job-board.md Message Board for the full reviews and designations. LANE-2 GC-302-FU1 fix-up (ERR-056): PR #63 (head 645e4eff) accepted — branch tree byte-identical to canonical PR #58 (same tree hash 5b7d2d8e); Lead independently ran the checks (Vitest 15/15, tsc 0 errors, ESLint 0 warnings, build succeeds); PR #58 remains the sole merge candidate, PR #63 close-as-duplicate; ERR-056 stays OPEN until #58 merges. LANE-1 GC-101: PR #62 (head 39149bd6) accepted as a record — fourth re-verification (114 files counted, 14 variables spot-checked in `.env.example`, no config change); close-as-recorded; no further GC-101 checks. No merges in this sweep; board update pending owner's approval tap (see sweep-51 staged payload; sweeps #33–#50 pushes never landed, master still 451fb570).
+
+
+### 2026-11-05 — Sweep #50 (Lead review): PR #61 accepted as a record
+
+See Docs/agent-job-board.md Message Board for the full review and designations. LANE-5 §6 standing documentation hygiene & pattern review pass: PR #61 (head 9932df00) accepted as a record — paperwork only (2 files, +24 lines); headline audit count verified on master (3,246 Markdown files); no GC task claimed or completed; substantively duplicates the already-recorded PR #56 pass but without its patterns payload, so close-as-recorded and do not merge as-is. No merges in this sweep; board update pending owner's approval tap (see sweep-50 staged payload; sweeps #33–#49 pushes never landed, master still 451fb570).
+
+
+### 2026-11-04 — Sweep #49 (Lead review): PR #60 accepted as a record
+
+See Docs/agent-job-board.md Message Board for the full review and designations. LANE-4 §6 standing security rotation pass: PR #60 (head 55414d4a) accepted as a record — paperwork only (3 files, +34/−2); fail-closed DATABASE_URL throw verified intact on master and obvious-secret scan of src/ + scripts/ clean; audit arithmetic consistent (84 total / 67 omit-dev, delta 17 dev-only, low nests 54 == 54) resolving the sweep #29 low-nesting question; audit counts builder-reported, not independently re-run; moderate-count watch item (8 → 21) still open. No merges in this sweep; board update pending owner's approval tap (see sweep-49 staged payload; sweeps #33–#48 pushes never landed, master still 451fb570).
+
+
+
+### 2026-11-04 — Sweep #48 (Lead review): PR #59 accepted as a record
+
+See Docs/agent-job-board.md Message Board for the full review and designations. LANE-3 §6 standing test/fixture integrity & docs link-audit pass: PR #59 (head e7e6ae9) accepted as a record — paperwork only (2 files, +23 lines); fixture pack verified complete on master and test counts match (4 + 6 = 10); no GC task claimed or completed; close-as-recorded. No merges in this sweep; board update pending owner's approval tap (see sweep-48 staged payload; sweeps #33–#47 pushes never landed, master still 451fb570).
+
+
+### 2026-11-04 — Sweep #47 (Lead review): PR #58 accepted, PR #57 accepted as a record
+
+See Docs/agent-job-board.md Message Board for the full reviews and designations. LANE-2 GC-302-FU1 fix-up (ERR-056): PR #58 (head 3a71cdd) accepted — fail-closed 503 route + queue-pickup tests, code byte-identical to PR #54, which it supersedes as canonical candidate; Lead independently ran the tests (Vitest 15/15, tsc clean, lint clean); merge pending the owner's word only; ERR-056 stays OPEN until merge. LANE-1 GC-101: PR #57 (head d25b979) accepted as a record — third independent `.env.example` verification (39 keys, all config vars present, no secrets); close-as-recorded; no further GC-101 checks. No merges in this sweep; board update pending owner's approval tap (see sweep-47 staged payload; sweeps #33–#46 pushes never landed, master still 451fb570).
+
+
+### 2026-11-04 — Sweep #46 (Lead review): PR #56 accepted as a record (LANE-5 §6 standing docs-hygiene + pattern-review pass; 3 files, +42 lines, no code, no secrets; the only payload is Pattern 22 + Pattern 23 text for `.logs/patterns.md`, currently absent from master; §5.1 self-pick ratified, no GC task claimed)
+
+See Docs/agent-job-board.md Message Board for the full review and designations. No merges in this sweep; board update pending owner's approval tap (see sweep-46 staged payload; sweeps #33–#45 pushes never landed, master still 451fb570).
+
 ### 2026-10-31 — Sweep #32 (Lead review): PR #40 accepted as a record
 
 **Category:** Project governance / Lead review
