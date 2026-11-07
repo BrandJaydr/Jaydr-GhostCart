@@ -7,6 +7,17 @@
 
 ## Changelog
 
+### 2026-11-06 — §6 Standing Idle Duties Pass (LANE-2 / Thing 2)
+
+**Category:** Quality & Verification / Standing Idle Duties
+
+**Summary:** Completed check-in and §6 standing idle duties pass under designated LANE-2 track.
+- Acknowledged Lead sweep #55 status (`ACCEPTED, MERGE PENDING OWNER'S WORD` for GC-302-FU1 via canonical PR #58; GC-303 gated on GC-202). Preserved §5 table untouched (Lead-owned).
+- Audited 3,246 Markdown files across the repository; confirmed 22 internal links and 337 external links with 0 broken internal links after URL decoding.
+- Scanned `src/` and `scripts/` confirming zero hardcoded credentials, API keys, or plaintext secrets.
+- Verified test suite execution: 15/15 tests passing across `src/__tests__/api/ebay-submit.test.ts` (7/7) and `src/__tests__/worker/listing-worker.test.ts` (8/8); `npx tsc --noEmit` exits clean with 0 errors; `npm run lint` exits clean with 0 warnings.
+- Stopping per board directive — awaiting owner merge of PR #58 and Lead designation at the next 6-hour review.
+
 ### 2026-11-06 — Sweep #55 (Lead review): PR #68 accepted (duplicate of canonical #58), PR #67 accepted as a record
 
 See Docs/agent-job-board.md Message Board for the full reviews and designations. LANE-2 GC-302-FU1 fix-up (ERR-056): PR #68 (head 54e35e7a) accepted — route + route tests byte-identical to canonical PR #58, worker test differs by 13 cosmetic lines only; Lead independently ran the checks (Vitest 15/15, tsc 0 errors, ESLint 0 warnings); PR #58 remains the sole merge candidate, PR #68 close-as-duplicate (third open copy of the payload after #63); ERR-056 stays OPEN until #58 merges. LANE-1 GC-101: PR #67 (head a434f5f8) accepted as a record — fifth re-verification (39 variables named, all 39 present in `.env.example`, zero missing/invented, no config change); close-as-recorded; corrections: '38 total' count is wrong (39), and the branch's §5 LANE-1 row rewrite (flips state to DONE, drops the sweep #30 REJECTED-row warning) is REJECTED — logged as new ERR-058; no further GC-101 checks. No merges in this sweep; board update pending owner's approval tap (see sweep-55 staged payload; sweeps #33–#54 pushes never landed, master still 451fb570).
