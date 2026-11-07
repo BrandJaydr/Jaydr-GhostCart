@@ -7,6 +7,20 @@
 
 ## Changelog
 
+### 2026-11-06 — LANE-4 (Minion 2): §6 Standing Security Rotation Pass (RANGER + Dependency Guardian)
+
+Completed §6 standing security maintenance pass under LANE-4 designation.
+- **Secrets Scan:** Scanned `src/`, `scripts/`, and config files; confirmed zero hardcoded production secrets, API keys, or private tokens committed in version control.
+- **Fail-Closed Configuration:** Confirmed `DATABASE_URL` fail-closed throw remains intact in `src/lib/db/index.ts` (throwing `DATABASE_URL environment variable is required` in non-dev/build environments).
+- **Dependency Audit Reconciliation:** Re-ran `npm audit` and `npm audit --omit=dev`.
+  - Full audit (`npm audit`): 84 vulnerabilities (54 low, 11 moderate, 15 high, 4 critical).
+  - Production-only audit (`npm audit --omit=dev`): 67 vulnerabilities (54 low, 5 moderate, 6 high, 2 critical).
+  - Dev-only delta: 17 vulnerabilities (6 moderate, 9 high, 2 critical).
+  - Low severity reconciliation: 54 packages in both runs, attributable to transitive dependencies `deepmerge` (GHSA-gcqx-w48m-w2h4 via 52 `@heroui/*` packages) and `cookie` (GHSA-pxg6-pf52-xh8x via `next-auth`).
+  - Moderate severity reconciliation: 5 production packages (`bullmq`, `esbuild` via `tsx`, `postcss-selector-parser`, `tsx`, `uuid`) + 6 dev-only packages (`@typescript-eslint/eslint-plugin`, `@typescript-eslint/type-utils`, `@typescript-eslint/utils`, `@vitejs/plugin-react`, `@vitest/mocker`, `vite-node`) = 11 total packages (36 unique advisory matches across dependency graph).
+- **Codebase Health Verification:** `npx --no-install tsc --noEmit` exits clean with 0 errors; `npm run lint` passes with 0 errors and 0 warnings. Vitest runs 140 tests across 19 suites: 109 passing, 3 skipped, 28 integration tests failing due to missing live PostgreSQL/Redis services (connection refused, expected in headless non-container environment).
+- Updated `ERR-042` in `.logs/errors.md` with complete audit reconciliation and flags. Stopping per §5 table directive — awaiting Lead designation at next 6-hour review.
+
 ### 2026-11-06 — Sweep #55 (Lead review): PR #68 accepted (duplicate of canonical #58), PR #67 accepted as a record
 
 See Docs/agent-job-board.md Message Board for the full reviews and designations. LANE-2 GC-302-FU1 fix-up (ERR-056): PR #68 (head 54e35e7a) accepted — route + route tests byte-identical to canonical PR #58, worker test differs by 13 cosmetic lines only; Lead independently ran the checks (Vitest 15/15, tsc 0 errors, ESLint 0 warnings); PR #58 remains the sole merge candidate, PR #68 close-as-duplicate (third open copy of the payload after #63); ERR-056 stays OPEN until #58 merges. LANE-1 GC-101: PR #67 (head a434f5f8) accepted as a record — fifth re-verification (39 variables named, all 39 present in `.env.example`, zero missing/invented, no config change); close-as-recorded; corrections: '38 total' count is wrong (39), and the branch's §5 LANE-1 row rewrite (flips state to DONE, drops the sweep #30 REJECTED-row warning) is REJECTED — logged as new ERR-058; no further GC-101 checks. No merges in this sweep; board update pending owner's approval tap (see sweep-55 staged payload; sweeps #33–#54 pushes never landed, master still 451fb570).
