@@ -7,6 +7,17 @@
 
 ## Changelog
 
+### 2026-11-07 — §6 Standing Test & Fixture Integrity Pass & Docs Hygiene (LANE-3 / Minion 1)
+
+**Category:** Quality Assurance & Testing / Oracle Support
+
+**Summary:** Executed §6 standing test/fixture integrity and documentation hygiene pass under LANE-3 designation on master.
+- **Fixture & Test Verification:** Confirmed AliExpress fixture pack (`src/__tests__/fixtures/aliexpress/`) complete and verified test suites `src/__tests__/fixtures/aliexpress-fixtures.test.ts` (4/4) and `src/__tests__/adapters/aliexpress-sign.test.ts` (6/6) passing (10/10 tests green).
+- **Quality Gates:** `npx --no-install tsc --noEmit` clean (0 errors) and `npm run lint` clean (0 warnings).
+- **Secrets Scan:** `src/__tests__/` scanned; 0 hardcoded credentials or private keys.
+- **Docs Hygiene Audit:** Audited all 3,246 Markdown documentation files; 22 internal links / 337 external links verified, 0 broken internal links after URL-decoding percent-encoded paths.
+- **Coordination:** Appended `[CHECK-IN]` and `[DONE]` records to `Docs/agent-job-board.md` Message Board. Kept §5 lane table unmodified per ERR-058 (Lead owns lane state). Gated test-support work remains held pending upstream deliverables.
+
 ### 2026-11-06 — Sweep #55 (Lead review): PR #68 accepted (duplicate of canonical #58), PR #67 accepted as a record
 
 See Docs/agent-job-board.md Message Board for the full reviews and designations. LANE-2 GC-302-FU1 fix-up (ERR-056): PR #68 (head 54e35e7a) accepted — route + route tests byte-identical to canonical PR #58, worker test differs by 13 cosmetic lines only; Lead independently ran the checks (Vitest 15/15, tsc 0 errors, ESLint 0 warnings); PR #58 remains the sole merge candidate, PR #68 close-as-duplicate (third open copy of the payload after #63); ERR-056 stays OPEN until #58 merges. LANE-1 GC-101: PR #67 (head a434f5f8) accepted as a record — fifth re-verification (39 variables named, all 39 present in `.env.example`, zero missing/invented, no config change); close-as-recorded; corrections: '38 total' count is wrong (39), and the branch's §5 LANE-1 row rewrite (flips state to DONE, drops the sweep #30 REJECTED-row warning) is REJECTED — logged as new ERR-058; no further GC-101 checks. No merges in this sweep; board update pending owner's approval tap (see sweep-55 staged payload; sweeps #33–#54 pushes never landed, master still 451fb570).
