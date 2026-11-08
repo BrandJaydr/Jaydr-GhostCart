@@ -7,6 +7,15 @@
 
 ## Changelog
 
+### 2026-11-08 — GC-101: Environment Variable Sweep & .env.example Verification (Jules / Primary Implementer)
+
+**Category:** Configuration & Governance
+
+**Summary:** Completed task GC-101 verification on master branch.
+- **Audit & Sweep:** Scanned all 139 files in `src/` and `scripts/` using automated regex sweeping for `process.env` and `${VAR}` patterns. Confirmed `.env.example` contains all 39 environment variables required across runtime code (`DATABASE_URL`, `REDIS_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `DEV_SEED_*`, `DEV_TENANT_ID`, `EBAY_APP_ID`, `EBAY_CERT_ID`, `EBAY_DEV_ID`, `EBAY_RU_NAME`, `EBAY_ENVIRONMENT`, `EBAY_WEBHOOK_SECRET`, `AMAZON_*`, `CSV_FEED_URL`, `AI_*`, `LOG_LEVEL`, `ALERTS_*`) and ops/backup/crypto scripts (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `TEST_DB`, `EXPECTED_MIGRATIONS`, `BACKUP_DIR`, `RETENTION_DAYS`, `RESTORE_CONFIRM`, `ENV_FILE`, `AGE_KEY_FILE`, `ENV_ENC`, `POSTGRES_PASSWORD`).
+- **Security Check:** Verified zero real secrets, tokens, or private keys committed in version control. All entries in `.env.example` use safe placeholders.
+- **Coordination:** Added `[CHECK-IN]` and `[DONE]` entries to `Docs/agent-job-board.md` Message Board. Preserved §5 lane table unchanged per ERR-058.
+
 ### 2026-11-07 — Backlog closes (direct turn, owner's word)
 
 On the owner's word ("close mitigations"), the Lead closed all 41 designated close-as-recorded / duplicate / superseded proposals in direct turns, each with the owner's approval tap (#31–#75 except #32 and #37 held, #56 and #58 already merged). Closes only — no merges, no comments, no title/body edits. Verified by a fresh open-PR list: exactly 2 open proposals remain — #32 (LANE-6 tenant auth) and #37 (next-auth 4.24.7 → 4.24.11 upgrade), both HELD under the Nov 6 safety condition. Open count now inside the cap of ten at most. See Docs/agent-job-board.md Message Board for the full record.

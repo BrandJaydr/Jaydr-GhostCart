@@ -134,6 +134,20 @@ Builder launch times set by the owner (Jules side): **12:30 AM, 3:30 AM, 10:30 A
 
 ### Message Board — entries
 
+### [DONE] 2026-11-08 — Jules (Primary Implementer — Forge + Atlas)
+Completed GC-101 (`.env.example` process.env sweep & verification).
+- Files changed: `Docs/agent-job-board.md`, `tasks/todo.md`. (`.env.example` re-verified in complete sync; no config change needed).
+- Verification methodology: Executed full `process.env` and `${VAR}` regex sweep across all 139 files in `src/` and `scripts/`. Confirmed all environment variables read by application code (`DATABASE_URL`, `REDIS_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `DEV_SEED_*`, `DEV_TENANT_ID`, `EBAY_APP_ID`, `EBAY_CERT_ID`, `EBAY_DEV_ID`, `EBAY_RU_NAME`, `EBAY_ENVIRONMENT`, `EBAY_WEBHOOK_SECRET`, `AMAZON_*`, `CSV_FEED_URL`, `AI_*`, `LOG_LEVEL`, `ALERTS_*`) and database/backup/crypto scripts (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `TEST_DB`, `EXPECTED_MIGRATIONS`, `BACKUP_DIR`, `RETENTION_DAYS`, `RESTORE_CONFIRM`, `ENV_FILE`, `AGE_KEY_FILE`, `ENV_ENC`, `POSTGRES_PASSWORD`) are present in `.env.example` (exact count: 39 keys). Non-config names flagged by broad AST scans were verified as standard runtime flags (`CI`, `NODE_ENV`, `NEXT_PHASE`) or script-local temporary variables (`BACKUP_FILE`, `MIG_COUNT`, etc.).
+- Findings: Zero missing variables, zero invented variables, and zero real credentials, tokens, or secrets committed in version control.
+- Task status: Marked DONE per task assignment. In accordance with ERR-058 and project governance, §5 builder lane table is untouched (owned by Lead Engineer Lotus).
+
+### [CHECK-IN] 2026-11-08 — Jules (Primary Implementer — Forge + Atlas)
+Role: Primary Implementer (Forge + Atlas slots, LANE-1 "Thing 1").
+Runtime/Model: Jules (via API).
+Capabilities: Full-stack TypeScript/Next.js development, PostgreSQL schema/migrations, BullMQ worker queue pipelines, API integrations, unit and integration testing with Vitest, bash environment audit and verification.
+Constraints: Follow Lead Engineer (Lotus) assignments strictly; single-task focus; surgical changes only; no direct writes to master; never commit real credentials, tokens, or private keys.
+Status: Confirming assigned role as Primary Implementer and checking in for task GC-101.
+
 ### [STATUS] 2026-11-07 — Lotus (Lead Engineer) — Backlog closes (direct turn, owner's word)
 
 **Backlog closes complete (~8:42–8:55 PM ET, direct turn).** On the owner's word ("close mitigations"), the Lead closed all 41 designated close-as-recorded / duplicate / superseded proposals, each with the owner's approval tap: #31, #33, #34, #35, #36, #38, #39, #40, #41, #42, #43, #44, #45, #46, #47, #48, #49, #50, #51, #52, #53, #54, #55, #57, #59, #60, #61, #62, #63, #64, #65, #66, #67, #68, #69, #70, #71, #72, #73, #74, #75. Closes only — no merges, no comments, no title/body edits. Verified by a fresh open-PR list: exactly 2 open proposals remain — #32 (LANE-6 tenant auth) and #37 (next-auth 4.24.7 → 4.24.11 upgrade), both HELD under the Nov 6 safety condition (no execution evidence). Open count is now inside the owner's cap of ten at most. Designations unchanged: LANE-1 NEXT TASK GC-202; LANE-2 NEXT TASK GC-303 (gated on GC-202); LANE-3 NEXT TASK test support; LANE-4 NEXT TASK standing rotation; LANE-5 POOL-PICK; LANE-6 WS1→WS2 in sequence, WS3 held.
