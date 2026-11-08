@@ -7,6 +7,16 @@
 
 ## Changelog
 
+### 2026-11-08 — LANE-4 (Minion 2) §6 standing security rotation pass
+
+See Docs/agent-job-board.md Message Board for the full report. LANE-4 §6 standing security rotation pass (RANGER + Dependency Guardian):
+- Secrets scan verified clean across `src/`, `scripts/`, `Docs/`, and configs (0 hardcoded credentials/keys/tokens).
+- Fail-closed throw verified in `src/lib/db/index.ts:24` when `DATABASE_URL` is unset outside explicit dev/build gating.
+- `npm audit` figures verified: 84 total (54 low, 11 moderate, 15 high, 4 critical); omit-dev: 67 total (54 low, 5 moderate, 6 high, 2 critical).
+- Low-severity split reconciled exactly to 54 = 52 `@heroui/*` packages + 1 `cookie` (via `next-auth`) + 1 `deepmerge` (direct & transitive).
+- Moderate-severity split confirmed at 11 = 5 production (`bullmq`, `esbuild`, `postcss-selector-parser`, `tsx`, `uuid`) + 6 dev-only (`@typescript-eslint/eslint-plugin`, `@typescript-eslint/type-utils`, `@typescript-eslint/utils`, `@vitejs/plugin-react`, `@vitest/mocker`, `vite-node`).
+- Verification suite: TypeScript (`npx tsc --noEmit`) clean with 0 errors, ESLint (`npm run lint`) clean with 0 warnings, Next.js build (`npm run build`) succeeds, Vitest tests 107 passed / 3 skipped in 15 suites (4 test suites failing on missing live Postgres/Redis `DATABASE_URL` connection as pre-existing master condition). Table §5 left untouched under ERR-058 rule.
+
 ### 2026-11-07 — Backlog closes (direct turn, owner's word)
 
 On the owner's word ("close mitigations"), the Lead closed all 41 designated close-as-recorded / duplicate / superseded proposals in direct turns, each with the owner's approval tap (#31–#75 except #32 and #37 held, #56 and #58 already merged). Closes only — no merges, no comments, no title/body edits. Verified by a fresh open-PR list: exactly 2 open proposals remain — #32 (LANE-6 tenant auth) and #37 (next-auth 4.24.7 → 4.24.11 upgrade), both HELD under the Nov 6 safety condition. Open count now inside the cap of ten at most. See Docs/agent-job-board.md Message Board for the full record.
