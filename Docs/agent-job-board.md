@@ -134,6 +134,19 @@ Builder launch times set by the owner (Jules side): **12:30 AM, 3:30 AM, 10:30 A
 
 ### Message Board — entries
 
+### [DONE] 2026-11-08 — LANE-2 (Thing 2 — Builder / Forge)
+Completed §6 standing idle duties pass.
+- Role & Context: Builder — Forge (LANE-2). Track: GC-301 → GC-302 → GC-303. GC-302-FU1 and GC-302 are DONE (merged as PR #58); GC-303 remains gated on LANE-1 GC-202 (AliExpress token provider).
+- Standing Duties (§6) Execution & Evidence:
+  - Documentation link audit: scanned 3,246 Markdown files across repository (excluding node_modules and .git); verified 22 internal link occurrences with 0 broken after URL-decoding percent-encoded paths, 337 external link occurrences.
+  - Secrets scan: verified 0 hardcoded credentials, tokens, or private keys across `src/` and `scripts/`.
+  - Test & Build: Vitest 15/15 passing across submit route and listing worker tests (`src/__tests__/api/ebay-submit.test.ts` 7/7, `src/__tests__/worker/listing-worker.test.ts` 8/8); `npx --no-install tsc --noEmit` exits clean with 0 errors; `npm run lint` passes with 0 warnings; `npm run build` compiles and succeeds.
+- Stopping per §5 directive — §5 table untouched (Lead-owned per ERR-058); awaiting Lead review and designation at next 6-hour sweep.
+
+### [CHECK-IN] 2026-11-08 — LANE-2 (Thing 2 — Builder / Forge)
+Role: Builder — Forge (LANE-2, callsign "Thing 2"). Runtime: Jules.
+Checking in per §2/§3 and §5 table directives. Acknowledging that GC-302-FU1 and GC-302 are DONE on master (PR #58 merged, commit 0d7255d8; ERR-052/ERR-056 CLOSED). Next track task GC-303 remains gated on LANE-1 GC-202. Taking §6 standing idle duties (documentation link audit, secrets scan, and test/build verification).
+
 ### [STATUS] 2026-11-07 — Lotus (Lead Engineer) — Backlog closes (direct turn, owner's word)
 
 **Backlog closes complete (~8:42–8:55 PM ET, direct turn).** On the owner's word ("close mitigations"), the Lead closed all 41 designated close-as-recorded / duplicate / superseded proposals, each with the owner's approval tap: #31, #33, #34, #35, #36, #38, #39, #40, #41, #42, #43, #44, #45, #46, #47, #48, #49, #50, #51, #52, #53, #54, #55, #57, #59, #60, #61, #62, #63, #64, #65, #66, #67, #68, #69, #70, #71, #72, #73, #74, #75. Closes only — no merges, no comments, no title/body edits. Verified by a fresh open-PR list: exactly 2 open proposals remain — #32 (LANE-6 tenant auth) and #37 (next-auth 4.24.7 → 4.24.11 upgrade), both HELD under the Nov 6 safety condition (no execution evidence). Open count is now inside the owner's cap of ten at most. Designations unchanged: LANE-1 NEXT TASK GC-202; LANE-2 NEXT TASK GC-303 (gated on GC-202); LANE-3 NEXT TASK test support; LANE-4 NEXT TASK standing rotation; LANE-5 POOL-PICK; LANE-6 WS1→WS2 in sequence, WS3 held.

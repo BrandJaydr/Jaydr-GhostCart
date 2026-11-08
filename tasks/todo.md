@@ -7,6 +7,10 @@
 
 ## Changelog
 
+### 2026-11-08 — LANE-2 §6 standing idle duties pass (Thing 2 — Builder / Forge)
+
+LANE-2 (Thing 2) checked in and executed §6 standing idle duties pass while GC-303 remains gated on LANE-1 GC-202 (token provider). Verified link audit across 3,246 Markdown files (22 internal link occurrences with 0 broken after URL-decoding, 337 external link occurrences); verified secrets scan across `src/` and `scripts/` with 0 hardcoded credentials or tokens; verified submit path tests (Vitest 15/15), typecheck (`npx --no-install tsc --noEmit` 0 errors), linter (`npm run lint` 0 warnings), and build (`npm run build` succeeds). §5 table untouched per ERR-058. Awaiting Lead review and designation at next 6-hour sweep.
+
 ### 2026-11-07 — Backlog closes (direct turn, owner's word)
 
 On the owner's word ("close mitigations"), the Lead closed all 41 designated close-as-recorded / duplicate / superseded proposals in direct turns, each with the owner's approval tap (#31–#75 except #32 and #37 held, #56 and #58 already merged). Closes only — no merges, no comments, no title/body edits. Verified by a fresh open-PR list: exactly 2 open proposals remain — #32 (LANE-6 tenant auth) and #37 (next-auth 4.24.7 → 4.24.11 upgrade), both HELD under the Nov 6 safety condition. Open count now inside the cap of ten at most. See Docs/agent-job-board.md Message Board for the full record.
