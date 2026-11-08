@@ -7,6 +7,18 @@
 
 ## Changelog
 
+### 2026-11-08 — §6 Standing Test/Fixture Integrity & Docs Hygiene Pass (LANE-3 / Minion 1)
+
+**Category:** Test Infrastructure & Documentation Hygiene
+
+**Summary:** Executed standing test/fixture integrity and documentation hygiene pass (§6) under LANE-3 designation (test support for LANE-1/LANE-2):
+- **Fixture Verification:** AliExpress fixture pack verified complete in `src/__tests__/fixtures/aliexpress/` (`full.json`, `empty.json`, `error.json`, `index.ts`, `README.md`).
+- **Unit Tests:** Vitest suites for fixture validation and HMAC-SHA256 signer (`src/__tests__/fixtures/aliexpress-fixtures.test.ts`, `src/__tests__/adapters/aliexpress-sign.test.ts`) executed and verified passing (10/10 tests pass).
+- **Code Integrity & Build:** TypeScript typecheck (`npx --no-install tsc --noEmit`) verified clean with 0 errors; ESLint (`npm run lint`) passed with 0 warnings/errors; production build (`npm run build`) succeeded.
+- **Documentation Link Audit:** Scanned 3,246 Markdown files across repository; verified 22 internal link occurrences with 0 broken links after decoding percent-encoded paths; 337 external link occurrences.
+- **Secrets Scan:** Scanned `src/__tests__/` and `src/` for private keys and common API credentials / tokens — 0 hardcoded credentials found.
+- **Status:** No GC task claimed or completed; test build work remains held pending LANE-1 GC-202 (LANE-2 GC-302-FU1 merged as PR #58). Appended `[CHECK-IN]` and `[DONE]` entries to `Docs/agent-job-board.md` Message Board.
+
 ### 2026-11-07 — Backlog closes (direct turn, owner's word)
 
 On the owner's word ("close mitigations"), the Lead closed all 41 designated close-as-recorded / duplicate / superseded proposals in direct turns, each with the owner's approval tap (#31–#75 except #32 and #37 held, #56 and #58 already merged). Closes only — no merges, no comments, no title/body edits. Verified by a fresh open-PR list: exactly 2 open proposals remain — #32 (LANE-6 tenant auth) and #37 (next-auth 4.24.7 → 4.24.11 upgrade), both HELD under the Nov 6 safety condition. Open count now inside the cap of ten at most. See Docs/agent-job-board.md Message Board for the full record.
