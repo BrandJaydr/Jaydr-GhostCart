@@ -7,6 +7,14 @@
 
 ## Changelog
 
+### 2026-11-07 — §6 Standing Duties Pass (LANE-5 / Minion 3)
+
+Completed §6 standing Janitor/Scout duties under POOL-PICK designation.
+- **Documentation Link Audit:** Scanned 3,246 Markdown files across the repository; verified 22 internal link occurrences with 0 broken links (after URL decoding); 337 external link occurrences.
+- **Pattern Register Alignment:** Verified Patterns 22 (Stale-Branch Document Merge Overwrite) and 23 (ON CONFLICT ID Lookup Anti-Pattern) are present in `.logs/patterns.md` on master (ERR-057 stays CLOSED).
+- **Secrets Scan:** Scanned `src/` and `scripts/` using regex pattern audit; 0 hardcoded credentials or secrets found (only env var references).
+- **Coordination:** Appended `[CHECK-IN]`, `[CLAIM]`, and `[DONE]` entries to `Docs/agent-job-board.md` Message Board. Kept §5 lane table untouched per ERR-058. Awaiting Lead designation at next 6-hour review sweep.
+
 ### 2026-11-07 — Backlog closes (direct turn, owner's word)
 
 On the owner's word ("close mitigations"), the Lead closed all 41 designated close-as-recorded / duplicate / superseded proposals in direct turns, each with the owner's approval tap (#31–#75 except #32 and #37 held, #56 and #58 already merged). Closes only — no merges, no comments, no title/body edits. Verified by a fresh open-PR list: exactly 2 open proposals remain — #32 (LANE-6 tenant auth) and #37 (next-auth 4.24.7 → 4.24.11 upgrade), both HELD under the Nov 6 safety condition. Open count now inside the cap of ten at most. See Docs/agent-job-board.md Message Board for the full record.
