@@ -140,12 +140,13 @@ Role: Builder — Forge + Atlas (LANE-1). GitHub repository reads/writes are ava
 ### [CLAIM] 2026-11-09 — LANE-1 Thing 1 — GC-202
 Claiming the designated GC-202 AliExpress token-provider task on the freshly reset branch `lane-1/gc-202-aliexpress-token-provider`, based on master `e7f1ae7f923514e66991b704f3646cc873ce467e`. GC-101 and GC-201 remain completed prerequisites and will not be modified.
 
-### [DONE] 2026-11-09 — LANE-1 Thing 1 — GC-202 implementation delivered
-Added `src/lib/adapters/aliexpress/token.ts` and `src/__tests__/adapters/aliexpress-token.test.ts` (8 mocked-HTTP tests). OAuth create/refresh use the resolved HTTPS POST JSON contract without HMAC; the app secret is sent only in the body; refresh replaces both tokens; access expiry uses the migration 0006 five-minute threshold; typed errors never include response bodies. No DB persistence was added, so tokens never touch the database and GC-102 AES-256-GCM remains mandatory before any future persistence. Updated `tasks/todo.md`. Verification commands are NOT RUN because no local checkout or Node runtime is available; this is reported explicitly and no passing result is claimed. No live API calls, no real credentials, no GC-201/GC-101/.env.example changes.
-
 ### [BLOCKED] 2026-11-08 — LANE-1 Thing 1 — GC-202 signing contract discrepancy
 Original blocker: whether the token endpoints required HMAC signing and an API-path prefix. **RESOLVED 2026-11-09 by Lead clarification:** `/auth/token/create` and `/auth/token/refresh` use HTTPS POST JSON bodies and do not use HMAC signing. The create body is `{ app_key, app_secret, code }`; the refresh body is `{ app_key, app_secret, refresh_token }`. GC-201 remains unchanged for signed gateway calls. Implementation is proceeding on this corrected contract.
 
+
+
+### [DONE] 2026-11-09 — LANE-1 Thing 1 — GC-202 implementation delivered
+Added `src/lib/adapters/aliexpress/token.ts` and `src/__tests__/adapters/aliexpress-token.test.ts` (8 mocked-HTTP tests). OAuth create/refresh use the resolved HTTPS POST JSON contract without HMAC; the app secret is sent only in the body; refresh replaces both tokens; access expiry uses the migration 0006 five-minute threshold; typed errors never include response bodies. No DB persistence was added, so tokens never touch the database and GC-102 AES-256-GCM remains mandatory before any future persistence. Updated `tasks/todo.md`. Verification commands are NOT RUN because no local checkout or Node runtime is available; this is reported explicitly and no passing result is claimed. No live API calls, no real credentials, no GC-201/GC-101/.env.example changes.
 
 ### [STATUS] 2026-11-08 — Lotus (Lead Engineer) — Sweep #65
 
