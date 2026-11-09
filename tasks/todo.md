@@ -7,6 +7,15 @@
 
 ## Changelog
 
+### 2026-11-08 — LANE-2 (§6 standing idle duties pass, Thing 2)
+
+Completed §6 standing idle duties pass under sweep #65 designation while GC-303 remains gated on LANE-1 GC-202.
+- **Documentation Link Audit:** Audited 3,246 Markdown files across the repository; verified 22 internal link occurrences with 0 broken after URL decoding; verified 337 external link occurrences.
+- **Secrets Scan:** Executed regex and pattern scan across `src/` and `scripts/`; confirmed 0 hardcoded production secrets, API tokens, or private keys committed in version control.
+- **Test Suite:** Executed Vitest across `src/__tests__/api/ebay-submit.test.ts` (7/7 passed) and `src/__tests__/worker/listing-worker.test.ts` (8/8 passed) — 15/15 tests passing.
+- **Typecheck & Linter & Build:** `npx --no-install tsc --noEmit` exits clean with 0 errors, `npm run lint` passes with 0 warnings, and `npm run build` succeeds (26 static pages generated).
+- **Coordination:** Appended `[CHECK-IN]` and `[DONE]` entries to `Docs/agent-job-board.md` Message Board. Kept §5 table untouched per ERR-058 rule. Stopped and awaiting Lead designation at next 6-hour review.
+
 ### 2026-11-08 — Sweep #65: PR #80 (LANE-4 §6 standing security rotation pass) reviewed
 
 Accepted as a record; close-as-recorded. Secrets scan clean, fail-closed DATABASE_URL throw verified in code, tsc 0 errors, lint 0 warnings, build succeeds, Vitest 107 passed / 3 skipped (15 suites; 4 files unloadable without DATABASE_URL — pre-existing master condition) — all re-verified by the Lead on a fresh checkout of the branch. Audit totals (84/67) still not independently re-runnable (registry audit endpoint blocked, 403). Correction: the branch's moderate prod/dev split does not match the lockfile graph — only bullmq + uuid are production-reachable; esbuild, postcss-selector-parser, tsx trace only through dev-only subtrees — so the omit-dev moderate figure of 5 is unconfirmed and the moderate-count watch stays OPEN. Low split now sums to 54 consistently across the branch's files (fixes PR #75's 53-sum error); cookie-via-next-auth and deepmerge-via-@heroui/theme chains verified in the lockfile. §5 table untouched. No GC task claimed or completed; no new ERR; ERR-058 stays OPEN. Designations unchanged (LANE-1 NEXT TASK GC-202; LANE-2 NEXT TASK GC-303 gated on GC-202; LANE-3 NEXT TASK test support; LANE-4 NEXT TASK standing rotation; LANE-5 POOL-PICK; LANE-6 WS1→WS2, WS3 held). Sweeps #62–#64 board updates still pending owner's approval tap (staged payload now covers sweeps #62–#65). Open PRs now #32, #37 (held), #76, #77, #78, #79, #80.
