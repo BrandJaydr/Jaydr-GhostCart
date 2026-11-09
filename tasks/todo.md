@@ -7,6 +7,9 @@
 
 ## Changelog
 
+### 2026-11-09 — GC-202 AliExpress OAuth token provider delivered
+Added the HTTPS POST JSON token exchange/refresh provider and eight mocked-HTTP tests; both tokens rotate together, the five-minute expiry rule is enforced, and errors exclude credentials. No database persistence was added. npm test, npx tsc --noEmit, npm run lint, and npm run build were NOT RUN because this session has no local checkout or Node runtime.
+
 ### 2026-11-08 — Sweep #65: PR #80 (LANE-4 §6 standing security rotation pass) reviewed
 
 Accepted as a record; close-as-recorded. Secrets scan clean, fail-closed DATABASE_URL throw verified in code, tsc 0 errors, lint 0 warnings, build succeeds, Vitest 107 passed / 3 skipped (15 suites; 4 files unloadable without DATABASE_URL — pre-existing master condition) — all re-verified by the Lead on a fresh checkout of the branch. Audit totals (84/67) still not independently re-runnable (registry audit endpoint blocked, 403). Correction: the branch's moderate prod/dev split does not match the lockfile graph — only bullmq + uuid are production-reachable; esbuild, postcss-selector-parser, tsx trace only through dev-only subtrees — so the omit-dev moderate figure of 5 is unconfirmed and the moderate-count watch stays OPEN. Low split now sums to 54 consistently across the branch's files (fixes PR #75's 53-sum error); cookie-via-next-auth and deepmerge-via-@heroui/theme chains verified in the lockfile. §5 table untouched. No GC task claimed or completed; no new ERR; ERR-058 stays OPEN. Designations unchanged (LANE-1 NEXT TASK GC-202; LANE-2 NEXT TASK GC-303 gated on GC-202; LANE-3 NEXT TASK test support; LANE-4 NEXT TASK standing rotation; LANE-5 POOL-PICK; LANE-6 WS1→WS2, WS3 held). Sweeps #62–#64 board updates still pending owner's approval tap (staged payload now covers sweeps #62–#65). Open PRs now #32, #37 (held), #76, #77, #78, #79, #80.
@@ -624,7 +627,7 @@ worker processes with PostgreSQL and Redis; finalize it through an ADR before a 
 - [ ] **GC-100** — All agents: check in on the job board Message Board and confirm roles (Lead: Lotus)
 - [x] **GC-101** — Jules: sync `.env.example` with every env var the code reads (full `process.env` sweep of `src/` + `scripts/`)
 - [x] **GC-201** — Jules: AliExpress HMAC-SHA256 signer module + fixture unit tests (dummy secret only) — merged (PR #29, 2026-10-29); ERR-047 CLOSED
-- [ ] **GC-202** — Jules: AliExpress token provider (transient secret, expiry-aware refresh, mocked-HTTP tests, no plaintext persistence; GC-102 DECIDED 2026-10-29 — Option 2 hybrid AES-256-GCM; UNGATED — GC-201 merged 2026-10-29).
+- [x] **GC-202** — Jules: AliExpress OAuth token provider with transient app secret, expiry-aware refresh, mocked-HTTP tests, and no plaintext persistence; GC-102 Option 2 honored by keeping persistence out of scope.
 - [ ] **GC-R1** — Claude (on check-in): second-eyes review of GC-101 against `process.env` reads in `src/`
 - [x] **GC-T1** — LANE-3 (Minion 1): `aliexpress.ds.text.search` response fixture pack (full / empty / error envelope) — completed 2026-10-25
 - [x] **GC-301** — LANE-2 (Thing 2): BullMQ repeatable-job scheduler + `scheduled_refreshes` consumer (fix-up completed 2026-10-25)
