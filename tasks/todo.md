@@ -7,6 +7,12 @@
 
 ## Changelog
 
+### 2026-11-08 — GC-101: Environment Variable Sweep & .env.example Sync Verification (Jules / Primary Implementer)
+
+**Category:** Configuration & Governance
+
+**Summary:** Executed full process.env and script environment variable sweep across all 139 files in `src/` and `scripts/`. Confirmed `.env.example` contains all 39 configuration variables read by the application and operational scripts (`EBAY_DEV_ID`, `EBAY_RU_NAME`, `EBAY_ENVIRONMENT`, `EBAY_WEBHOOK_SECRET`, DB connection parameters, next-auth, queue, and ops alert settings). Confirmed runtime flags (`CI`, `NODE_ENV`, `NEXT_PHASE`) and script-local temporaries are excluded. Zero missing, zero invented variables. Confirmed secrets scan is clean with zero real credentials in source control.
+
 ### 2026-11-08 — Sweep #65: PR #80 (LANE-4 §6 standing security rotation pass) reviewed
 
 Accepted as a record; close-as-recorded. Secrets scan clean, fail-closed DATABASE_URL throw verified in code, tsc 0 errors, lint 0 warnings, build succeeds, Vitest 107 passed / 3 skipped (15 suites; 4 files unloadable without DATABASE_URL — pre-existing master condition) — all re-verified by the Lead on a fresh checkout of the branch. Audit totals (84/67) still not independently re-runnable (registry audit endpoint blocked, 403). Correction: the branch's moderate prod/dev split does not match the lockfile graph — only bullmq + uuid are production-reachable; esbuild, postcss-selector-parser, tsx trace only through dev-only subtrees — so the omit-dev moderate figure of 5 is unconfirmed and the moderate-count watch stays OPEN. Low split now sums to 54 consistently across the branch's files (fixes PR #75's 53-sum error); cookie-via-next-auth and deepmerge-via-@heroui/theme chains verified in the lockfile. §5 table untouched. No GC task claimed or completed; no new ERR; ERR-058 stays OPEN. Designations unchanged (LANE-1 NEXT TASK GC-202; LANE-2 NEXT TASK GC-303 gated on GC-202; LANE-3 NEXT TASK test support; LANE-4 NEXT TASK standing rotation; LANE-5 POOL-PICK; LANE-6 WS1→WS2, WS3 held). Sweeps #62–#64 board updates still pending owner's approval tap (staged payload now covers sweeps #62–#65). Open PRs now #32, #37 (held), #76, #77, #78, #79, #80.
