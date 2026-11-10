@@ -1,0 +1,11 @@
+{
+  "productId": "1005007429636284",
+  "title": "Fixture AliExpress product",
+  "description": "Fixture product detail for worker import",
+  "images": ["https://ae01.alicdn.com/kf/fixture-main.jpg"],
+  "skus": [
+    {"skuId":"red","properties":[{"property_value":"Red"}],"price":"3.10","currency":"USD","stock":8,"images":[],"raw":{"offer_sale_price":"3.10"}},
+    {"skuId":"blue","properties":[{"property_value":"Blue"}],"price":"4.20","currency":"USD","stock":0,"images":[],"raw":{"offer_sale_price":"4.20"}}
+  ],
+  "raw": {"ae_item_base_info_dto":{"subject":"Fixture AliExpress product"}}
+}
