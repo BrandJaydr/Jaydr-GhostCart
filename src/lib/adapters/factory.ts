@@ -1,6 +1,7 @@
 import type { ISupplierAdapter } from './supplier.interface';
 import { mockAdapter } from './mock.adapter';
 import { csvAdapter } from './csv.adapter';
+import { aliExpressAdapter } from './aliexpress/adapter';
 
 /**
  * Adapter Registry / Factory — Stage 2
@@ -17,9 +18,10 @@ import { csvAdapter } from './csv.adapter';
 const adapters = new Map<string, ISupplierAdapter>([
   ['mock', mockAdapter],
   ['csv', csvAdapter],
+  ['aliexpress', aliExpressAdapter],
 ]);
 
-/** Resolve a supplier adapter by its `adapterId` (e.g. 'mock', 'csv'). */
+/** Resolve a supplier adapter by its `adapterId` (e.g. 'mock', 'csv', 'aliexpress'). */
 export function getSupplierAdapter(
   adapterId: string,
 ): ISupplierAdapter | undefined {
