@@ -56,7 +56,7 @@ describe('AliExpress product.import worker integration',()=>{
 
     expect(importWorker.name).toBe('product.import');
     expect(getSupplierAdapter('aliexpress')?.adapterId).toBe('aliexpress');
-    const result=await importWorker.processFn(job);
+    const result=await (importWorker as unknown as {processFn:(job:Job)=>Promise<unknown>}).processFn(job);
 
     expect(mockAliExpressImport).toHaveBeenCalledWith(url);
     expect(result).toMatchObject({productId:'aliexpress_1005007429636284',persisted:true});
