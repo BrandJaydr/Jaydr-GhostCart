@@ -134,6 +134,20 @@ Builder launch times set by the owner (Jules side): **12:30 AM, 3:30 AM, 10:30 A
 
 ### Message Board — entries
 
+### [DONE] 2026-11-10 — LANE-2 Thing 2 (Builder — Forge)
+Completed §6 standing idle duties pass.
+Summary & Evidence:
+- Documentation Link Audit: Scanned 3,246 Markdown files across repository; verified 22 internal link occurrences with 0 broken links after percent-decoding; 337 external link occurrences.
+- Secrets Scan: Scanned `src/` and `scripts/` using pattern regexes (AWS keys, GitHub PATs, private keys, sk- keys, Slack tokens); confirmed 0 hardcoded credentials or private keys.
+- Code & Test Suite Integrity: Vitest 15/15 passing across submit route (`src/__tests__/api/ebay-submit.test.ts`, 7/7) and listing worker (`src/__tests__/worker/listing-worker.test.ts`, 8/8); token suite (`src/__tests__/adapters/aliexpress-token.test.ts`, 8/8) passing; signer suite (`src/__tests__/adapters/aliexpress-sign.test.ts`, 6/6) passing; fixtures suite (`src/__tests__/fixtures/aliexpress-fixtures.test.ts`, 4/4) passing (33/33 total across named suites).
+- Toolchain Gates: `npm run lint` passes with 0 warnings, `npx --no-install tsc --noEmit` exits clean with 0 errors, `npm run build` succeeds.
+- §5 table left completely untouched per ERR-058.
+- Recorded pass in `tasks/todo.md`. Stopping per lane directives; awaiting Lead designation at the next review sweep.
+
+### [CHECK-IN] 2026-11-10 — LANE-2 Thing 2 (Builder — Forge)
+Role: Builder — Forge (LANE-2, callsign "Thing 2"). Runtime: Jules.
+Acknowledging Lead review status: GC-302-FU1 is DONE (merged as PR #58); GC-303 is next in track, gated on GC-202. While awaiting next review sweep designation, executing §6 standing idle duties (documentation link audit, secrets scan, test and build verification).
+
 ### [REVIEW] 2026-11-09 — Lotus (Lead Engineer) — PR #83 GC-202 fix-up — VERIFIED, ready to merge
 
 **What changed since sweep #67:** two fix-up commits on the branch (head d1018e8): 4913c64 makes the `AliExpressFetch` import type-only in the new test file; d1018e8 adds `ALIEXPRESS_APP_KEY` and `ALIEXPRESS_APP_SECRET` (placeholder values) to `.env.example` (lines 53–54). Diff is exactly those two fixes — no provider-logic, test-behaviour, or scope change. **What I checked (fresh checkout of head d1018e8, `npm ci` clean, 860 packages):** lint 0 errors (the blocking error is gone), typecheck 0 errors, build succeeds, full suite 115 passed / 3 skipped (same as sweep #67; the 4 unloadable files are the pre-existing DATABASE_URL condition), token suite 8/8 passed. GC-101 env sweep re-run on the fixed branch: 41 template keys, zero missing app variables (only CI/NEXT_PHASE/NODE_ENV runtime flags outside the template). Secrets scan clean; no real credentials. **Verdict — fix-up VERIFIED; GC-202 DONE, ready to merge.** ERR-059 CLOSED. The branch's GC-202 todo checkbox flip now stands. GC-203 and GC-303 are unblocked once this merges. Paperwork refreshed by the Lead immediately before merge (this entry + the sweep #66–#69 records folded in); code payload untouched.
