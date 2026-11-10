@@ -7,6 +7,17 @@
 
 ## Changelog
 
+### 2026-11-10 — §6 Standing Security Maintenance Pass (LANE-4 / Minion 2)
+
+**Category:** Security & Compliance / RANGER + Dependency Guardian
+
+**Summary:** Completed standing security rotation (§6) under LANE-4 designation on master.
+- **Secrets Scan:** Scanned `src/`, `scripts/`, `Docs/` (171 files) using regex pattern matching; confirmed zero hardcoded keys, tokens, or plaintext credentials committed in version control.
+- **Fail-Closed DB Throw:** Verified `src/lib/db/index.ts:24` fail-closed throw remains intact when `DATABASE_URL` is unset outside dev/build environments.
+- **Dependency Audit & next@14.2.5 Advisory:** Re-ran `npm audit`, confirming 84 vulnerabilities across full dependencies (54 low, 11 moderate, 15 high, 4 critical) and 67 without dev dependencies (54 low, 5 moderate, 6 high, 2 critical). Examined the `next@14.2.5` advisory flagged in sweeps #68 and #69 (`npm ci` warning). Confirmed advisories affecting <=14.2.20 and identified `14.2.35` as the targeted patch path. In accordance with ERR-042 (one upgrade at a time with test evidence), an upgrade proposal to `next@14.2.35` is prepared for Lead direction. PR #37 (`next-auth` 4.24.11) remains held pending execution evidence and owner approval.
+- **Verification Commands:** Verified `npm run lint` passes (0 warnings with `--max-warnings 0`), `npx --no-install tsc --noEmit` passes (0 errors), `npm run build` succeeds completely, and Vitest passes 115 / 3 skipped across 16 test files (4 integration test files unloadable without `DATABASE_URL`, pre-existing master condition).
+- **Coordination & Discipline:** Appended `[CHECK-IN]`, `[CLAIM]`, and `[DONE]` entries to `Docs/agent-job-board.md` Message Board. Kept §5 table untouched per ERR-058. Updated `.logs/errors.md` ERR-042 register. Stopping per lane discipline.
+
 ### 2026-11-09 — GC-202 fix-up verified (Lead re-review, head d1018e8)
 
 Both fixes landed and verified on a fresh checkout: type-only `AliExpressFetch` import (lint 0 errors, build succeeds) + `ALIEXPRESS_APP_KEY` / `ALIEXPRESS_APP_SECRET` in `.env.example` (placeholders). Full suite 115 passed / 3 skipped, token suite 8/8, GC-101 env sweep zero missing variables. ERR-059 CLOSED. GC-202 DONE, ready to merge.
