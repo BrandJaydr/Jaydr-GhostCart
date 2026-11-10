@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { AliExpressFetch } from '../../lib/adapters/aliexpress/token';
 import {
-  AliExpressFetch,
   AliExpressTokenError,
   AliExpressTokenProvider,
 } from '../../lib/adapters/aliexpress/token';
