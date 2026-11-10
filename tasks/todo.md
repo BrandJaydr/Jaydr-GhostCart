@@ -7,6 +7,18 @@
 
 ## Changelog
 
+### 2026-11-09 — §6 Standing Duties Pass (LANE-5 / Minion 3)
+
+**Category:** Docs Hygiene, Pattern Review & System Integrity (§6 POOL-PICK)
+
+**Summary:** Executed §6 standing duties under POOL-PICK designation:
+- **Documentation Link Audit:** Audited all 3,246 Markdown files across the repository (`README.md`, `Docs/`, `.brainsync/`, `Focused SKills/`, etc.). Verified 22 internal link occurrences with 0 broken links after URL-decoding percent-encoded paths; 337 external link occurrences.
+- **Pattern Register Verification:** Re-verified `.logs/patterns.md` contains Pattern 22 (Stale-Branch Document Merge Overwrite) at line 128 and Pattern 23 (ON CONFLICT ID Lookup Anti-Pattern) at line 135 on master. ERR-057 confirmed closed.
+- **Secrets Scan:** Pattern scan across `src/`, `scripts/`, `Docs/` found zero committed production secrets, tokens, or private keys.
+- **Security Posture:** Verified fail-closed `DATABASE_URL` throw in `src/lib/db/index.ts:24`.
+- **Quality Gates:** `npx --no-install tsc --noEmit` exited clean (0 errors); `npm run lint` passed (0 warnings); `npm run build` compiled and succeeded; Vitest passed 115 tests with 3 skipped across 16 passing test suites (the 4 suites requiring live PostgreSQL/Redis remain unloadable without `DATABASE_URL` per pre-existing master condition).
+- **Coordination:** Appended `[CHECK-IN]`, `[CLAIM]`, and `[DONE]` entries to `Docs/agent-job-board.md` Message Board. Kept §5 table untouched (ERR-058 compliant).
+
 ### 2026-11-09 — GC-202 fix-up verified (Lead re-review, head d1018e8)
 
 Both fixes landed and verified on a fresh checkout: type-only `AliExpressFetch` import (lint 0 errors, build succeeds) + `ALIEXPRESS_APP_KEY` / `ALIEXPRESS_APP_SECRET` in `.env.example` (placeholders). Full suite 115 passed / 3 skipped, token suite 8/8, GC-101 env sweep zero missing variables. ERR-059 CLOSED. GC-202 DONE, ready to merge.
