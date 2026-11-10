@@ -2,8 +2,108 @@ import type {ISupplierAdapter} from '../supplier.interface';
 import type {CanonicalProduct} from '@/lib/types/canonical';
 import {normalizeAvailability,priceToMinorUnits} from '../normalize';
 import {AliExpressSearchClient,AliExpressSearchError,type AliExpressProductRecord} from './search';
-export interface AliExpressAdapterOptions{client?:AliExpressSearchClient;fetchProductById?:(id:string)=>Promise<AliExpressProductRecord>}
-function productUrl(s:string){try{return new URL(s).hostname.toLowerCase().includes('aliexpress.')}catch{return false}}
-function normalize(r:AliExpressProductRecord,tenantId:string,url:string):CanonicalProduct{const raw=r.raw,base=(raw.ae_item_base_info_dto&&typeof raw.ae_item_base_info_dto==='object'?raw.ae_item_base_info_dto:{}) as Record<string,unknown>,images=r.images,price=priceToMinorUnits(String(base.target_sale_price??raw.target_sale_price??raw.sale_price??raw.offer_sale_price??raw.price??''))??0;return{id:`aliexpress_${r.productId}`,tenantId,title:r.title||'AliExpress product',description:r.description,identifiers:{product_id:r.productId,...(r.skus[0]?{sku:r.skus[0].skuId}:{})},primaryImageUrl:images[0]??null,additionalImageUrls:images.slice(1),supplierPriceCents:price,currency:String(base.target_sale_price_currency??raw.target_sale_price_currency??raw.sale_price_currency??'USD').toUpperCase(),availability:normalizeAvailability(String(raw.product_status_type??(r.skus.some(s=>(s.stock??0)>0)?'in_stock':''))),sourceUrl:url,supplierId:'aliexpress',rawSourceMetadata:{adapter:'aliexpress',productId:r.productId,detail:raw,variations:r.skus},confidence:[{field:'title',score:r.title?1:0,warnings:r.title?[]:['Product title missing']},{field:'description',score:r.description?1:.4,warnings:r.description?[]:['Description missing']},{field:'primary_image_url',score:images.length?1:0,warnings:images.length?[]:['No images returned']},{field:'supplier_price_cents',score:price?1:0,warnings:price?[]:['No price returned']},{field:'variations',score:r.skus.length?1:.5,warnings:r.skus.length?[]:['No SKU variations returned']}],importedAt:new Date().toISOString(),lastRefreshedAt:null};}
-export class AliExpressSupplierAdapter implements ISupplierAdapter{readonly adapterId='aliexpress';private client?:AliExpressSearchClient;private fetchById?:AliExpressAdapterOptions['fetchProductById'];constructor(o:AliExpressAdapterOptions={}){this.client=o.client;this.fetchById=o.fetchProductById;}private getClient(){return this.client??(this.client=new AliExpressSearchClient());}async validateConnection(){try{await this.getClient().searchText('test',1,1);return{valid:true};}catch(e){return{valid:false,reason:e instanceof Error?e.message:'AliExpress connection failed'};}}async importProduct(url:string,tenantId:string){let r:AliExpressProductRecord;if(productUrl(url))r=await this.getClient().importProductUrl(url);else{const p=await this.getClient().searchText(url);const first=p.products[0];if(!first)throw new AliExpressSearchError('empty','AliExpress search returned no products');const id=String(first.product_id??'');r=this.fetchById?await this.fetchById(id):await this.getClient().getProductDetail(id);}return normalize(r,tenantId,productUrl(url)?url:`https://www.aliexpress.com/item/${r.productId}.html`);}async fetchProduct(id:string,tenantId:string){const key=id.replace(/^aliexpress_/,'');const r=this.fetchById?await this.fetchById(key):await this.getClient().getProductDetail(key);return normalize(r,tenantId,`https://www.aliexpress.com/item/${key}.html`);}}
-export const aliExpressAdapter=new AliExpressSupplierAdapter();
+
+export interface AliExpressAdapterOptions {
+  client?: AliExpressSearchClient;
+  fetchProductById?: (id: string) => Promise<AliExpressProductRecord>;
+}
+
+function productUrl(s: string) {
+  try { return new URL(s).hostname.toLowerCase().includes('aliexpress.'); }
+  catch { return false; }
+}
+
+function normalize(r: AliExpressProductRecord, tenantId: string, url: string): CanonicalProduct {
+  const raw = r.raw;
+  const base = (raw.ae_item_base_info_dto && typeof raw.ae_item_base_info_dto === 'object'
+    ? raw.ae_item_base_info_dto : {}) as Record<string, unknown>;
+  const images = r.images;
+  const productPrice = priceToMinorUnits(String(
+    base.target_sale_price ?? raw.target_sale_price ?? raw.sale_price ??
+    raw.offer_sale_price ?? raw.price ?? '',
+  ));
+  const skuPrices = r.skus
+    .map((sku) => priceToMinorUnits(String(sku.price ?? sku.raw.offer_sale_price ?? sku.raw.sku_price ?? '')))
+    .filter((price): price is number => price !== null)
+    .sort((a, b) => a - b);
+  const price = productPrice ?? skuPrices[0] ?? 0;
+  const explicitStatus = raw.product_status_type;
+  const availabilityValue = explicitStatus
+    ? String(explicitStatus)
+    : r.skus.some((sku) => (sku.stock ?? 0) > 0)
+      ? 'in_stock'
+      : r.skus.length > 0 && r.skus.every((sku) => sku.stock !== null && sku.stock <= 0)
+        ? 'out_of_stock'
+        : '';
+  return {
+    id: `aliexpress_${r.productId}`,
+    tenantId,
+    title: r.title || 'AliExpress product',
+    description: r.description,
+    identifiers: { product_id: r.productId, ...(r.skus[0] ? { sku: r.skus[0].skuId } : {}) },
+    primaryImageUrl: images[0] ?? null,
+    additionalImageUrls: images.slice(1),
+    supplierPriceCents: price,
+    currency: String(base.target_sale_price_currency ?? raw.target_sale_price_currency ??
+      raw.sale_price_currency ?? r.skus.find((sku) => sku.currency)?.currency ?? 'USD').toUpperCase(),
+    availability: normalizeAvailability(availabilityValue),
+    sourceUrl: url,
+    supplierId: 'aliexpress',
+    rawSourceMetadata: { adapter: 'aliexpress', productId: r.productId, detail: raw, variations: r.skus },
+    confidence: [
+      { field: 'title', score: r.title ? 1 : 0, warnings: r.title ? [] : ['Product title missing'] },
+      { field: 'description', score: r.description ? 1 : .4, warnings: r.description ? [] : ['Description missing'] },
+      { field: 'primary_image_url', score: images.length ? 1 : 0, warnings: images.length ? [] : ['No images returned'] },
+      { field: 'supplier_price_cents', score: price ? 1 : 0, warnings: price ? [] : ['No price returned'] },
+      { field: 'variations', score: r.skus.length ? 1 : .5, warnings: r.skus.length ? [] : ['No SKU variations returned'] },
+    ],
+    importedAt: new Date().toISOString(),
+    lastRefreshedAt: null,
+  };
+}
+
+export class AliExpressSupplierAdapter implements ISupplierAdapter {
+  readonly adapterId = 'aliexpress';
+  private client?: AliExpressSearchClient;
+  private fetchById?: AliExpressAdapterOptions['fetchProductById'];
+
+  constructor(o: AliExpressAdapterOptions = {}) {
+    this.client = o.client;
+    this.fetchById = o.fetchProductById;
+  }
+
+  private getClient() {
+    return this.client ?? (this.client = new AliExpressSearchClient());
+  }
+
+  async validateConnection() {
+    try {
+      await this.getClient().searchText('test', 1, 1);
+      return { valid: true };
+    } catch (e) {
+      return { valid: false, reason: e instanceof Error ? e.message : 'AliExpress connection failed' };
+    }
+  }
+
+  async importProduct(url: string, tenantId: string) {
+    let r: AliExpressProductRecord;
+    if (productUrl(url)) {
+      r = await this.getClient().importProductUrl(url);
+    } else {
+      const p = await this.getClient().searchText(url);
+      const first = p.products[0];
+      if (!first) throw new AliExpressSearchError('empty', 'AliExpress search returned no products');
+      const id = String(first.product_id ?? '');
+      r = this.fetchById ? await this.fetchById(id) : await this.getClient().getProductDetail(id);
+    }
+    return normalize(r, tenantId, productUrl(url) ? url : `https://www.aliexpress.com/item/${r.productId}.html`);
+  }
+
+  async fetchProduct(id: string, tenantId: string) {
+    const key = id.replace(/^aliexpress_/, '');
+    const r = this.fetchById ? await this.fetchById(key) : await this.getClient().getProductDetail(key);
+    return normalize(r, tenantId, `https://www.aliexpress.com/item/${key}.html`);
+  }
+}
+
+export const aliExpressAdapter = new AliExpressSupplierAdapter();
