@@ -28,13 +28,11 @@ function normalize(r: AliExpressProductRecord, tenantId: string, url: string): C
     .sort((a, b) => a - b);
   const price = productPrice ?? skuPrices[0] ?? 0;
   const explicitStatus = raw.product_status_type;
-  const availabilityValue = explicitStatus
-    ? String(explicitStatus)
-    : r.skus.some((sku) => (sku.stock ?? 0) > 0)
-      ? 'in_stock'
-      : r.skus.length > 0 && r.skus.every((sku) => sku.stock !== null && sku.stock <= 0)
-        ? 'out_of_stock'
-        : '';
+  const availabilityValue = r.skus.some((sku) => (sku.stock ?? 0) > 0)
+    ? 'in_stock'
+    : r.skus.length > 0 && r.skus.every((sku) => sku.stock !== null && sku.stock <= 0)
+      ? 'out_of_stock'
+      : String(explicitStatus ?? '');
   return {
     id: `aliexpress_${r.productId}`,
     tenantId,
