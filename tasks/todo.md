@@ -7,6 +7,36 @@
 
 ## Changelog
 
+### 2026-11-09 — GC-202 fix-up verified (Lead re-review, head d1018e8)
+
+Both fixes landed and verified on a fresh checkout: type-only `AliExpressFetch` import (lint 0 errors, build succeeds) + `ALIEXPRESS_APP_KEY` / `ALIEXPRESS_APP_SECRET` in `.env.example` (placeholders). Full suite 115 passed / 3 skipped, token suite 8/8, GC-101 env sweep zero missing variables. ERR-059 CLOSED. GC-202 DONE, ready to merge.
+
+### 2026-11-09 — Sweep #69: PR #86 (LANE-4 §6 standing security rotation pass) reviewed
+
+Accepted as a record; close-as-recorded. Secrets scan clean, fail-closed DATABASE_URL throw verified in code, tsc 0 errors, lint 0 warnings, build succeeds, Vitest 107 passed / 3 skipped (15 suites; 4 files unloadable without DATABASE_URL — pre-existing master condition) — all re-verified by the Lead on a fresh checkout of the branch. Moderate-count mechanism now explained via lockfile metadata (tsx devOptional without "dev", tailwindcss without "dev") — the omit-dev 5-moderate figure is a lockfile artifact, not a production-tree fact; audit totals (84/67) still not independently re-runnable (registry audit endpoint blocked, 403). Gap: the next@14.2.5 vulnerability warning is not addressed in this pass — npm ci still warns; flagged for the next rotation. No new ERR; ERR-058 stays OPEN.
+
+
+### 2026-11-09 — Sweep #68: PR #85 (LANE-3 §6 standing test/fixture integrity and docs hygiene pass) reviewed
+
+Accepted as a record; close-as-recorded. Fixture pack complete, Vitest 10/10 (fixtures 4/4, signer 6/6), tsc 0 errors, lint 0 warnings, build succeeds, link audit 3,246 files / 22 internal / 337 external / 0 broken, secrets scan clean — all re-verified by the Lead on a fresh checkout of the branch. GC-202 still gates build work. No new ERR.
+
+
+### 2026-11-09 — Sweep #67: PR #83 (LANE-1 GC-202 token provider) reviewed — FIXES NEEDED
+
+Code matches the resolved POST-JSON contract (no HMAC; transient secret in the body only; five-minute refresh rule; no DB persistence); 8/8 new token tests pass, full suite 115 passed / 3 skipped, typecheck 0 errors, secrets scan clean — all re-verified by the Lead on a fresh checkout of the branch. Fixes needed before merge: (1) one lint error in the new test file (`AliExpressFetch` must be a type-only import; the build fails on the same error); (2) the provider reads `ALIEXPRESS_APP_KEY` / `ALIEXPRESS_APP_SECRET`, which are not in `.env.example` (ERR-059). The branch's GC-202 checkbox flip is not accepted; GC-202 stays unchecked until the fix passes re-review. [CLAIM] ratified.
+
+### 2026-11-09 — Sweep #67: PR #82 (GC-101 eighth re-verification) + PR #84 (LANE-2 §6 standing pass) reviewed
+
+Both accepted as records; close-as-recorded. PR #82: Lead re-ran the env sweep on master — 139 files, 39 keys, zero missing/invented; §5 untouched. PR #84: link audit re-verified exactly (3,246 files / 22 internal / 337 external, 0 broken); secrets scan clean; submit route 7/7 + listing worker 8/8 pass; §5 untouched. GC-303 stays gated on GC-202. No new ERR from either.
+
+### 2026-11-09 — Sweep #66: PR #81 (LANE-5 §6 standing duties pass) reviewed
+
+Accepted as a record; close-as-recorded. Documentation link audit reproduces (3,246 Markdown files; 22 internal link occurrences, 0 broken after URL decoding; external 340 by Lead count vs 337 builder-reported, counting-method difference — the 3 extra links sit in a space-containing path the builder's counter skips), Patterns 22/23 confirmed in `.logs/patterns.md` (lines 128, 135), ERR-057 stays CLOSED, secrets scan of `src/` + `scripts/` (139 files) clean, fail-closed DATABASE_URL throw verified in code, tsc 0 errors, lint 0 warnings, build succeeds, Vitest 107 passed / 3 skipped (15 suites; 4 files unloadable without DATABASE_URL — pre-existing master condition; named suites all pass: fixtures 4/4, signer 6/6, CSV adapter 11/11 + integration 17/17, submit route 7/7, listing worker 8/8) — all re-verified by the Lead on a fresh checkout of the branch. No §5 table change; no code payload; no new ERR. Sweep #65 board update landed on master (e7f1ae7); PRs #76–#80 closed as recorded, unmerged. GC-202 branch (`lane-1/gc-202-aliexpress-token-provider`) gone from remote — GC-202 still open as LANE-1's next task; follow-up implementation starts from a fresh branch. Designations unchanged (LANE-1 NEXT TASK GC-202; LANE-2 NEXT TASK GC-303 gated on GC-202; LANE-3 NEXT TASK test support; LANE-4 NEXT TASK standing rotation, PR #37 still gated, moderate-count watch stays OPEN; LANE-5 POOL-PICK; LANE-6 WS1→WS2, WS3 held). Open PRs now #32, #37 (held), #81.
+
+
+### 2026-11-09 — GC-202 AliExpress OAuth token provider delivered
+Added the HTTPS POST JSON token exchange/refresh provider and eight mocked-HTTP tests; both tokens rotate together, the five-minute expiry rule is enforced, and errors exclude credentials. No database persistence was added. npm test, npx tsc --noEmit, npm run lint, and npm run build were NOT RUN because this session has no local checkout or Node runtime.
+
 ### 2026-11-08 — Sweep #65: PR #80 (LANE-4 §6 standing security rotation pass) reviewed
 
 Accepted as a record; close-as-recorded. Secrets scan clean, fail-closed DATABASE_URL throw verified in code, tsc 0 errors, lint 0 warnings, build succeeds, Vitest 107 passed / 3 skipped (15 suites; 4 files unloadable without DATABASE_URL — pre-existing master condition) — all re-verified by the Lead on a fresh checkout of the branch. Audit totals (84/67) still not independently re-runnable (registry audit endpoint blocked, 403). Correction: the branch's moderate prod/dev split does not match the lockfile graph — only bullmq + uuid are production-reachable; esbuild, postcss-selector-parser, tsx trace only through dev-only subtrees — so the omit-dev moderate figure of 5 is unconfirmed and the moderate-count watch stays OPEN. Low split now sums to 54 consistently across the branch's files (fixes PR #75's 53-sum error); cookie-via-next-auth and deepmerge-via-@heroui/theme chains verified in the lockfile. §5 table untouched. No GC task claimed or completed; no new ERR; ERR-058 stays OPEN. Designations unchanged (LANE-1 NEXT TASK GC-202; LANE-2 NEXT TASK GC-303 gated on GC-202; LANE-3 NEXT TASK test support; LANE-4 NEXT TASK standing rotation; LANE-5 POOL-PICK; LANE-6 WS1→WS2, WS3 held). Sweeps #62–#64 board updates still pending owner's approval tap (staged payload now covers sweeps #62–#65). Open PRs now #32, #37 (held), #76, #77, #78, #79, #80.
@@ -624,7 +654,7 @@ worker processes with PostgreSQL and Redis; finalize it through an ADR before a 
 - [ ] **GC-100** — All agents: check in on the job board Message Board and confirm roles (Lead: Lotus)
 - [x] **GC-101** — Jules: sync `.env.example` with every env var the code reads (full `process.env` sweep of `src/` + `scripts/`)
 - [x] **GC-201** — Jules: AliExpress HMAC-SHA256 signer module + fixture unit tests (dummy secret only) — merged (PR #29, 2026-10-29); ERR-047 CLOSED
-- [ ] **GC-202** — Jules: AliExpress token provider (transient secret, expiry-aware refresh, mocked-HTTP tests, no plaintext persistence; GC-102 DECIDED 2026-10-29 — Option 2 hybrid AES-256-GCM; UNGATED — GC-201 merged 2026-10-29).
+- [x] **GC-202** — Jules: AliExpress OAuth token provider with transient app secret, expiry-aware refresh, mocked-HTTP tests, and no plaintext persistence; GC-102 Option 2 honored by keeping persistence out of scope.
 - [ ] **GC-R1** — Claude (on check-in): second-eyes review of GC-101 against `process.env` reads in `src/`
 - [x] **GC-T1** — LANE-3 (Minion 1): `aliexpress.ds.text.search` response fixture pack (full / empty / error envelope) — completed 2026-10-25
 - [x] **GC-301** — LANE-2 (Thing 2): BullMQ repeatable-job scheduler + `scheduled_refreshes` consumer (fix-up completed 2026-10-25)
