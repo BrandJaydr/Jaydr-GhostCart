@@ -1,0 +1,3 @@
+# GC-204 Canonical variation representation gap
+
+The current CanonicalProduct contract has no typed variant/SKU collection. AliExpress product detail returns SKU-level option/property values, price, currency, available stock and images. The adapter preserves the full normalized SKU list and raw detail payload under rawSourceMetadata.variations and rawSourceMetadata.detail, so no SKU data is silently discarded. Consumers cannot query these fields through first-class canonical properties. A follow-up schema and persistence migration should add typed variants (SKU ID, option values, price/currency, stock and images). This task intentionally does not change the shared canonical schema or migrations.
