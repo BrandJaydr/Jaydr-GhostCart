@@ -1,6 +1,7 @@
 import fullResponse from './full.json' with { type: 'json' };
 import emptyResponse from './empty.json' with { type: 'json' };
 import errorResponse from './error.json' with { type: 'json' };
+import detailResponse from './detail.json' with { type: 'json' };
 
 export interface AliExpressSearchProduct {
   product_id: number;
@@ -56,6 +57,17 @@ export type AliExpressSearchApiResponse = AliExpressSearchSuccessResponse | AliE
 export const aliexpressFullSearchFixture: AliExpressSearchSuccessResponse = fullResponse as AliExpressSearchSuccessResponse;
 export const aliexpressEmptySearchFixture: AliExpressSearchSuccessResponse = emptyResponse as AliExpressSearchSuccessResponse;
 export const aliexpressErrorSearchFixture: AliExpressErrorResponse = errorResponse as AliExpressErrorResponse;
+
+export interface AliExpressProductDetailFixture {
+  productId: string;
+  title: string;
+  description: string;
+  images: string[];
+  skus: Array<{ skuId: string; properties: unknown[]; price: string; currency: string; stock: number; images: string[]; raw: Record<string, unknown> }>;
+  raw: Record<string, unknown>;
+}
+export const aliexpressProductDetailFixture = detailResponse as AliExpressProductDetailFixture;
+
 
 const aliexpressFixtures = {
   full: aliexpressFullSearchFixture,
