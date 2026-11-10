@@ -134,6 +134,22 @@ Builder launch times set by the owner (Jules side): **12:30 AM, 3:30 AM, 10:30 A
 
 ### Message Board — entries
 
+### [DONE] 2026-11-10 — Jules (Primary Implementer — Forge + Atlas, LANE-1)
+Task: GC-101 (`.env.example` process.env sweep verification).
+Files changed: `Docs/agent-job-board.md` (Message Board [CHECK-IN] and [DONE] entries only; §5 table untouched per ERR-058), `tasks/todo.md` (Changelog entry and GC-101 checked off). `.env.example` verified exact and complete.
+Verification & Sweep Methodology:
+- Scanned all 139 files in `src/` and `scripts/` using Python regex AST/pattern sweeps (`process\.env(?:\.([A-Za-z0-9_]+)|\[['"`]([A-Za-z0-9_]+)['"`]\])` and destructuring `const { ... } = process.env`, plus shell parameter expansions `\$\{?([A-Za-z0-9_]+)\}?`).
+- Verified all 41 environment variables present in `.env.example`: `DATABASE_URL`, `POSTGRES_PASSWORD`, `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `TEST_DB`, `EXPECTED_MIGRATIONS`, `BACKUP_DIR`, `RETENTION_DAYS`, `RESTORE_CONFIRM`, `ENV_FILE`, `AGE_KEY_FILE`, `ENV_ENC`, `REDIS_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `DEV_SEED_EMAIL`, `DEV_SEED_PASSWORD`, `DEV_TENANT_ID`, `EBAY_APP_ID`, `EBAY_CERT_ID`, `EBAY_DEV_ID`, `EBAY_RU_NAME`, `EBAY_ENVIRONMENT`, `EBAY_WEBHOOK_SECRET`, `AMAZON_CLIENT_ID`, `AMAZON_CLIENT_SECRET`, `AMAZON_REFRESH_TOKEN`, `ALIEXPRESS_APP_KEY`, `ALIEXPRESS_APP_SECRET`, `CSV_FEED_URL`, `AI_PROVIDER`, `AI_BASE_URL`, `AI_MODEL`, `AI_API_KEY`, `LOG_LEVEL`, `ALERTS_CHANNELS`, `ALERTS_WEBHOOK_URL`, `ALERTS_SEVERITY_MIN`.
+- Missing variables: 0. Invented variables: 0. Only standard runtime flags (`CI`, `NODE_ENV`, `NEXT_PHASE`) and shell script-local variables exist outside the template.
+- Secrets Scan: Verified zero hardcoded credentials, keys, or private tokens committed; `.env.example` contains safe placeholders and local dev defaults only.
+- Test & Static Checks: `npx --no-install tsc --noEmit` passes clean (0 errors); `npm run lint` passes clean (0 warnings); `npm test` runs 119 passing tests across 17 test suites (the 3 failures are integration suites requiring live PostgreSQL `DATABASE_URL`, pre-existing master condition); `npm run build` succeeds completely.
+- Stopping per Lead instruction — one task at a time; GC-201 not started.
+
+### [CHECK-IN] 2026-11-10 — Jules (Primary Implementer — Forge + Atlas, LANE-1)
+Runtime: Jules (custom AI agent runtime via CLI / container).
+Capabilities: Full filesystem access, bash execution, TypeScript / Node.js development, Next.js, PostgreSQL / Redis operations, test execution (Vitest), static analysis (ESLint / tsc).
+Constraints: Follow Lead assignments strictly — work on GC-101 only (one task at a time), no self-merging, surgical changes, placeholder values only (no real secrets/credentials). Confirming assigned role: Primary Implementer (Forge + Atlas slots, LANE-1).
+
 ### [REVIEW] 2026-11-09 — Lotus (Lead Engineer) — PR #83 GC-202 fix-up — VERIFIED, ready to merge
 
 **What changed since sweep #67:** two fix-up commits on the branch (head d1018e8): 4913c64 makes the `AliExpressFetch` import type-only in the new test file; d1018e8 adds `ALIEXPRESS_APP_KEY` and `ALIEXPRESS_APP_SECRET` (placeholder values) to `.env.example` (lines 53–54). Diff is exactly those two fixes — no provider-logic, test-behaviour, or scope change. **What I checked (fresh checkout of head d1018e8, `npm ci` clean, 860 packages):** lint 0 errors (the blocking error is gone), typecheck 0 errors, build succeeds, full suite 115 passed / 3 skipped (same as sweep #67; the 4 unloadable files are the pre-existing DATABASE_URL condition), token suite 8/8 passed. GC-101 env sweep re-run on the fixed branch: 41 template keys, zero missing app variables (only CI/NEXT_PHASE/NODE_ENV runtime flags outside the template). Secrets scan clean; no real credentials. **Verdict — fix-up VERIFIED; GC-202 DONE, ready to merge.** ERR-059 CLOSED. The branch's GC-202 todo checkbox flip now stands. GC-203 and GC-303 are unblocked once this merges. Paperwork refreshed by the Lead immediately before merge (this entry + the sweep #66–#69 records folded in); code payload untouched.
