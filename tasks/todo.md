@@ -7,6 +7,14 @@
 
 ## Changelog
 
+### 2026-11-10 — §6 Standing Idle Duties Pass (LANE-2 / Thing 2)
+
+Completed standing idle duties pass (§6) under LANE-2 designation on master.
+- **Documentation Link Audit:** Scanned 3,246 Markdown files across the repository; verified 22 internal link occurrences with 0 broken links after percent-decoding; 337 external link occurrences.
+- **Secrets Scan:** Scanned `src/`, `scripts/`, and `Docs/` using pattern regexes (AWS keys, GitHub PATs, private keys, sk- keys, Slack tokens); confirmed 0 hardcoded credentials or private keys committed in version control.
+- **Test & Toolchain Verification:** Vitest 15/15 passing across submit route (7/7) and listing worker (8/8); token suite (8/8), signer suite (6/6), and fixtures suite (4/4) passing (33/33 total across named suites). Toolchain clean: `npm run lint` passes with 0 warnings, `npx --no-install tsc --noEmit` exits clean with 0 errors, `npm run build` succeeds.
+- **Coordination:** Appended `[CHECK-IN]` and `[DONE]` entries to `Docs/agent-job-board.md` Message Board. Kept §5 table untouched per ERR-058. Stopping per lane directives; awaiting Lead designation at the next review sweep.
+
 ### 2026-11-09 — GC-202 fix-up verified (Lead re-review, head d1018e8)
 
 Both fixes landed and verified on a fresh checkout: type-only `AliExpressFetch` import (lint 0 errors, build succeeds) + `ALIEXPRESS_APP_KEY` / `ALIEXPRESS_APP_SECRET` in `.env.example` (placeholders). Full suite 115 passed / 3 skipped, token suite 8/8, GC-101 env sweep zero missing variables. ERR-059 CLOSED. GC-202 DONE, ready to merge.
