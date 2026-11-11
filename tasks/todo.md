@@ -7,6 +7,17 @@
 
 ## Changelog
 
+### 2026-11-11 — LANE-3 (§6 standing test/fixture integrity and docs hygiene pass)
+
+Completed §6 standing test/fixture integrity and docs hygiene pass under LANE-3 designation (Minion 1):
+- Fixture pack complete in `src/__tests__/fixtures/aliexpress/` (`full.json`, `empty.json`, `error.json`, `index.ts`, `README.md`).
+- Vitest fixture tests and signer suite pass 10/10 (`aliexpress-fixtures.test.ts` 4/4, `aliexpress-sign.test.ts` 6/6).
+- Vitest AliExpress token suite passes 8/8 (`aliexpress-token.test.ts`).
+- Documentation link audit: 3,246 Markdown files, 22 internal link occurrences with 0 broken after URL-decoding, 337 external link occurrences.
+- Secrets scan: scanned `src/`, `scripts/`, and `Docs/` for credential patterns, 0 hardcoded secrets found.
+- Verification: `npm run lint` clean (0 warnings), `npx --no-install tsc --noEmit` clean (0 errors), `npm run build` succeeds.
+- Coordination: Appended `[CHECK-IN]` and `[DONE]` entries to `Docs/agent-job-board.md` Message Board. §5 table untouched (clean under ERR-058). Stopping work awaiting Lead designation at next 6-hour review.
+
 ### 2026-11-09 — GC-202 fix-up verified (Lead re-review, head d1018e8)
 
 Both fixes landed and verified on a fresh checkout: type-only `AliExpressFetch` import (lint 0 errors, build succeeds) + `ALIEXPRESS_APP_KEY` / `ALIEXPRESS_APP_SECRET` in `.env.example` (placeholders). Full suite 115 passed / 3 skipped, token suite 8/8, GC-101 env sweep zero missing variables. ERR-059 CLOSED. GC-202 DONE, ready to merge.
