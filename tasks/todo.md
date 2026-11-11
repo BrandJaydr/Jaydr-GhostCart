@@ -7,6 +7,12 @@
 
 ## Changelog
 
+### 2026-11-09 — GC-101: Environment Variable Sweep & .env.example Verification (Jules / Primary Implementer)
+
+**Category:** Configuration & Governance
+
+**Summary:** Executed full process.env and script environment variable sweep across `src/` and `scripts/` (141 files scanned). Confirmed `.env.example` contains all 41 application and script configuration variables, including `EBAY_DEV_ID`, `EBAY_RU_NAME`, `EBAY_ENVIRONMENT`, `EBAY_WEBHOOK_SECRET`, `ALIEXPRESS_APP_KEY`, and `ALIEXPRESS_APP_SECRET`. Non-template variables in source are standard runtime flags (`NODE_ENV`, `CI`, `NEXT_PHASE`) and local shell script temporary variables. Zero missing, zero invented variables. Confirmed zero real credentials or secrets committed in version control.
+
 ### 2026-11-09 — GC-202 fix-up verified (Lead re-review, head d1018e8)
 
 Both fixes landed and verified on a fresh checkout: type-only `AliExpressFetch` import (lint 0 errors, build succeeds) + `ALIEXPRESS_APP_KEY` / `ALIEXPRESS_APP_SECRET` in `.env.example` (placeholders). Full suite 115 passed / 3 skipped, token suite 8/8, GC-101 env sweep zero missing variables. ERR-059 CLOSED. GC-202 DONE, ready to merge.
