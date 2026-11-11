@@ -7,6 +7,18 @@
 
 ## Changelog
 
+### 2026-11-11 — §6 Standing Security Maintenance Pass (LANE-4 / Minion 2)
+
+**Category:** Security & Compliance / RANGER + Dependency Guardian
+
+**Summary:** Completed standing security rotation (§6) under LANE-4 designation on master.
+- **Secrets Scan:** Scanned `src/`, `scripts/`, and `Docs/` using pattern regexes; confirmed zero plaintext credentials, private keys, or API tokens committed in source control.
+- **Database Connection Hardening:** Verified fail-closed error handling in `src/lib/db/index.ts:24` when `DATABASE_URL` is unset outside development/build modes.
+- **Dependency Audit:** Re-ran live `npm audit` and `npm audit --omit=dev`. Full scope yields 84 vulnerabilities (4 critical, 15 high, 11 moderate, 54 low); `--omit=dev` yields 67 vulnerabilities (2 critical, 6 high, 5 moderate, 54 low). Confirmed the 54 low split (52 `@heroui/*` + 1 `deepmerge` + 1 `cookie` via `next-auth`) and 11 moderate split (5 omit-dev lockfile artifacts: `bullmq`, `uuid`, `tsx`, `esbuild`, `postcss-selector-parser`; 6 dev-only).
+- **Next.js 14.2.5 Advisory:** Investigated the `npm ci` advisory warning (Next.js security update 2025-12-11 / GHSA-gp8f-8m3g-qvj9). Patch available in `next@14.2.35`. In adherence to ERR-042 and Dependency Guardian rules, framework version bumps must be handled as isolated single-package upgrade proposals with dedicated validation rather than bundled into maintenance passes. PR #37 (`next-auth` 4.24.11) remains held pending execution evidence + owner's word.
+- **Code Posture & Test Suite:** Verified `npm run lint` (0 warnings), `npx --no-install tsc --noEmit` (0 errors), `npm run build` (succeeds), and `npm test` (115 passed / 3 skipped across 16 passing suites; 4 suites fail collection due to pre-existing missing `DATABASE_URL` requirement).
+- **Coordination:** Recorded `[CHECK-IN]`, `[CLAIM]`, and `[DONE]` entries in `Docs/agent-job-board.md` Message Board. Left §5 table untouched per ERR-058.
+
 ### 2026-11-09 — GC-202 fix-up verified (Lead re-review, head d1018e8)
 
 Both fixes landed and verified on a fresh checkout: type-only `AliExpressFetch` import (lint 0 errors, build succeeds) + `ALIEXPRESS_APP_KEY` / `ALIEXPRESS_APP_SECRET` in `.env.example` (placeholders). Full suite 115 passed / 3 skipped, token suite 8/8, GC-101 env sweep zero missing variables. ERR-059 CLOSED. GC-202 DONE, ready to merge.
