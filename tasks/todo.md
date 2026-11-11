@@ -7,6 +7,17 @@
 
 ## Changelog
 
+### 2026-11-11 — §6 Standing Duties Pass (LANE-5 / Minion 3)
+
+**Category:** Project governance / Docs hygiene & verification
+
+**Summary:** Completed standing duties pass under LANE-5 POOL-PICK designation.
+- **Documentation Link Audit:** Scanned 3,246 Markdown files across the repository; verified 22 internal link occurrences with 0 broken links after URL-decoding percent-encoded paths; 337 external link occurrences.
+- **Pattern Register Review:** Confirmed Patterns 22 (Stale-Branch Document Merge Overwrite) and 23 (ON CONFLICT ID Lookup Anti-Pattern) present in `.logs/patterns.md` (lines 128, 135). ERR-057 confirmed CLOSED on master; ERR-058 maintained (no edits made to §5 builder lane table).
+- **Secrets Scan:** Scanned 141 files across `src/` and `scripts/` for hardcoded credentials, private keys, and API tokens; 0 hits, clean.
+- **Codebase Verification:** Verified `src/lib/db/index.ts:24` fail-closed `DATABASE_URL` throw intact; `npx --no-install tsc --noEmit` exits with 0 errors; `npm run lint` passes with 0 warnings; `npm run build` succeeds; Vitest full suite passes 115 passed / 3 skipped across 16 suites (4 files require live `DATABASE_URL`, pre-existing master condition; token provider suite 8/8 passes, fixtures 4/4, signer 6/6, submit route 7/7, listing worker 8/8).
+- **Coordination:** Appended `[CHECK-IN]`, `[CLAIM]`, and `[DONE]` entries to `Docs/agent-job-board.md` Message Board (§7) without modifying the §5 lane table (ERR-058 compliance). Awaiting next Lead review sweep designation.
+
 ### 2026-11-09 — GC-202 fix-up verified (Lead re-review, head d1018e8)
 
 Both fixes landed and verified on a fresh checkout: type-only `AliExpressFetch` import (lint 0 errors, build succeeds) + `ALIEXPRESS_APP_KEY` / `ALIEXPRESS_APP_SECRET` in `.env.example` (placeholders). Full suite 115 passed / 3 skipped, token suite 8/8, GC-101 env sweep zero missing variables. ERR-059 CLOSED. GC-202 DONE, ready to merge.
