@@ -7,6 +7,51 @@
 
 ## Changelog
 
+### 2026-11-12 — Backlog closes (PRs #81, #82, #84, #85, #86, #97 closed as recorded)
+
+On the owner's word in a direct turn (voice call, Nov 12 evening), six paperwork-only record proposals were closed as recorded (unmerged), each with its own approval tap: #81, #82, #84, #85, #86, #97. Verified by a fresh open-PR list. Open PRs now 3: #87 (GC-203 + GC-204, ERR-060 fix still pending), #32 (held draft), #37 (held). The staged sweeps #70–#77 board payload lands with this entry.
+
+
+### 2026-11-11 — Sweep #77 Lead review (PR #97 accepted as a record; PRs #91–#96 closed as recorded)
+
+PR #97 (LANE-4 §6 standing security maintenance pass) reviewed by the Lead on a fresh checkout of head ad861bd: npm ci clean; tsc 0 errors, lint 0 warnings, build succeeds (26/26 static pages); Vitest 115 passed / 3 skipped (4 integration files unloadable without a live DATABASE_URL — pre-existing master condition); secrets scan clean; fail-closed DATABASE_URL throw verified at src/lib/db/index.ts:24; audit counts 84/67 match PR #86's live-confirmed numbers but could not be re-run here (registry audit endpoint blocked, 403, same as sweeps #57/#61/#64/#65/#69/#73); low split 52+1+1=54 and moderate split 5+6=11 reconcile; cookie/deepmerge attribution chains verified in the lockfile; next@14.2.35 confirmed as the latest 14.2.x release — upgrade proposal only, sequenced behind PR #37; §5 table untouched (ERR-058). Claim ratified. Accepted as a record; close-as-recorded, not merged. PRs #91–#96 CLOSED as recorded 2026-11-11 (unmerged, direct turn) — open PRs now 9, back inside the owner's cap of ten. PR #87 (GC-203 + GC-204) unchanged — ERR-060 one-line mock fix still pending. No new ERR; ERR-060 stays OPEN.
+
+
+### 2026-11-11 — Sweep #76 Lead review (PR #96 accepted as a record)
+
+PR #96 (LANE-3 §6 standing test/fixture integrity and docs hygiene pass) reviewed by the Lead on a fresh checkout of head 76637e5: named suites 18/18 (fixtures 4/4, signer 6/6, token 8/8); fixture pack complete (5/5 files); tsc 0 errors, lint 0 warnings, build succeeds (26/26 static pages); link audit 3,246 files, 22 internal, 0 broken, 337 external — exact match; secrets scan clean; §5 table untouched (ERR-058). Claim ratified under the standing precedent (check-in frames the pass as the designated NEXT TASK; no separate [CLAIM] entry). Accepted as a record; close-as-recorded, not merged. NOTE: third LANE-3 standing pass in a row — next launch should be actual test support for the GC-203 fix-up (ERR-060) or GC-303. PR #87 (GC-203 + GC-204) unchanged — ERR-060 one-line mock fix still pending. Open PRs now 14 — four over the owner's cap of ten. No new ERR; ERR-060 stays OPEN.
+
+
+### 2026-11-11 — Sweep #75 Lead review (PR #94 + PR #95 accepted as records)
+
+PR #94 (LANE-1 GC-101 tenth re-verification) reviewed by the Lead on a fresh checkout of head 8ad475e: npm ci clean (860 packages); tsc 0 errors, lint 0 warnings, build succeeds (26/26 static pages); Vitest 115 passed / 3 skipped (4 integration files unloadable without a live DATABASE_URL — pre-existing master condition); env sweep 41 template keys, zero missing/invented (only CI/NEXT_PHASE/NODE_ENV outside the template); secrets scan clean; §5 table untouched (ERR-058). NOTE: tenth repeat of a check the Lead had closed; the lane's designated GC-203 fix-up (ERR-060) remains undone — no further GC-101 checks. PR #95 (LANE-2 §6 standing idle duties pass) reviewed on a fresh checkout of head 759a07d: named suites 33/33 (submit 7/7, listing worker 8/8, token 8/8, signer 6/6, fixtures 4/4); link audit 3,246 files, 337 external, 0 broken (internal 21 by Lead count vs 22 claimed — counting-method difference); secrets scan clean; fail-closed DATABASE_URL throw verified at src/lib/db/index.ts:24; §5 table untouched. Both accepted as records; close-as-recorded, not merged. PR #87 (GC-203 + GC-204) unchanged — ERR-060 one-line mock fix still pending. Open PRs now 13 — three over the owner's cap of ten. No new ERR; ERR-060 stays OPEN.
+
+
+### 2026-11-11 — Sweep #74 Lead review (PR #93 accepted as a record)
+
+LANE-5 §6 standing duties pass (PR #93) reviewed by the Lead on a fresh checkout of head d1bb950: npm ci clean (860 packages); tsc 0 errors, lint 0 warnings, build succeeds (26/26 static pages); Vitest 115 passed / 3 skipped (4 integration files unloadable without a live DATABASE_URL — pre-existing master condition); named suites token 8/8, fixtures 4/4, signer 6/6, submit route 7/7, listing worker 8/8; link audit 3,246 files, 22 internal / 0 broken, 337 external — exact match; Patterns 22/23 confirmed at .logs/patterns.md lines 128, 135; secrets scan clean; fail-closed DATABASE_URL throw verified at src/lib/db/index.ts:24; file counts 3,246 md / 141 src+scripts as claimed; §5 table untouched (ERR-058). Claim ratified. Accepted as a record; close-as-recorded, not merged. PR #87 (GC-203 + GC-204) unchanged — ERR-060 one-line mock fix still pending. Open PRs now 11 — one over the owner's cap of ten. No new ERR; ERR-060 stays OPEN.
+
+
+### 2026-11-10 — Sweep #73 Lead review (PR #92 accepted as a record)
+
+LANE-4 §6 standing security maintenance pass (PR #92) reviewed by the Lead on a fresh checkout of head c16b48d: npm ci clean (860 packages); tsc 0 errors, lint 0 warnings, build succeeds (26/26 static pages); Vitest 115 passed / 3 skipped (4 integration files unloadable without a live DATABASE_URL — pre-existing master condition); secrets scan clean; fail-closed DATABASE_URL throw verified at src/lib/db/index.ts:24; file count 171 under src/ + scripts/ + Docs/ as claimed; §5 table untouched (ERR-058). Audit counts 84/67 match PR #86's live-confirmed numbers but could not be re-run here (registry audit endpoint blocked, 403). next@14.2.35 upgrade proposal recorded in ERR-042 — target confirmed as newest 14.2.x release; proposal only, sequenced behind PR #37. Claim ratified. Accepted as a record; close-as-recorded, not merged. PR #87 (GC-203 + GC-204) unchanged — ERR-060 one-line mock fix still pending. Open PRs now 10 — exactly at the owner's cap of ten. No new ERR; ERR-060 stays OPEN; ERR-042 stays OPEN.
+
+
+### 2026-11-10 — Sweep #72 Lead review (PR #91 accepted as a record)
+
+LANE-3 §6 standing test/fixture integrity and documentation hygiene pass (PR #91) reviewed by the Lead on a fresh checkout of head 1395beb: named suites 18/18 (fixtures 4/4, signer 6/6, token 8/8); tsc 0 errors, lint 0 warnings, build succeeds (26/26 static pages); link audit 3,246 files, 22 internal / 0 broken, 337 external; secrets scan clean; fixture pack intact; §5 table untouched (ERR-058). Claim ratified. Accepted as a record; close-as-recorded, not merged. PR #87 (GC-203 + GC-204) unchanged — ERR-060 one-line mock fix still pending. Open PRs now 9 (back inside the cap of ten after #88/#89/#90 closed as recorded). No new ERR; ERR-060 stays OPEN.
+
+
+### 2026-11-10 — Sweep #71: PR #89 (LANE-1 GC-101 ninth re-verification) and PR #90 (LANE-2 §6 standing idle duties pass) reviewed
+
+Both accepted as records; close-as-recorded, not merged. PR #89: env sweep re-verified exactly by the Lead on a fresh checkout (41 `.env.example` keys, zero missing app variables; only `BASH_SOURCE` outside the template); tsc 0 / lint 0 / build succeeds; full suite 115 passed / 3 skipped (4 files unloadable without DATABASE_URL — pre-existing master condition). Correction: the branch's [DONE] entry claims 119 passing across 17 suites with 3 failures — does not reproduce; corrected figures are 115 / 3 skipped / 4 unloadable. PR #90: link audit (3,246 files, 22 internal / 0 broken, 337 external), secrets scan clean, named suites 33/33, tsc 0 / lint 0 / build succeeds — all re-verified. PR #87 (GC-203 fix-up) unchanged — ERR-060 still OPEN. Open PRs now 11, over the owner's cap of ten; closes happen in a direct turn. GC-303 NOW UNGATED for LANE-2.
+
+
+### 2026-11-10 — Sweep #70: PR #87 (LANE-1 GC-203 + GC-204 fix-up) and PR #88 (LANE-5 §6 standing duties pass) reviewed
+
+PR #87 FIXES NEEDED, do not merge yet: 9 fix-up commits (head 948f4c2) — SKU price fallback verified (lowest SKU price used when no product-level price; test asserts 310 cents), all three token env vars now in `.env.example`, all-zero-stock SKUs now `out_of_stock`, new fixture-backed worker-path test passes; tsc 0 errors, lint 0 warnings, build succeeds, targeted suites 18/18, full suite 125 passed / 3 skipped (4 files unloadable without DATABASE_URL — pre-existing master condition) — all re-verified by the Lead on a fresh checkout of the branch. One fix left: the new worker test's mocked bullmq Worker lacks `close()`, so the shutdown handler throws an unhandled rejection and `vitest run` exits 1 (ERR-060, one-line mock fix); description still carries raw HTML detail; still no board entries on the branch. GC-203 stays unchecked until the fix passes re-review; GC-204 stays gated on GC-203. PR #88 accepted as a record; close-as-recorded (link audit, Patterns 22/23, secrets scan, fail-closed throw, tsc/lint/build, Vitest 115 passed / 3 skipped — all re-verified by the Lead on a fresh checkout of the branch; §5 untouched). GC-202 MERGED Nov 9 (PR #83, master f57b295) — GC-303 is now ungated (deps GC-202 + GC-301 both done). Open PRs now 9: #32, #37 (held), #81, #82, #84, #85, #86, #87, #88.
+
+
 ### 2026-11-09 — GC-202 fix-up verified (Lead re-review, head d1018e8)
 
 Both fixes landed and verified on a fresh checkout: type-only `AliExpressFetch` import (lint 0 errors, build succeeds) + `ALIEXPRESS_APP_KEY` / `ALIEXPRESS_APP_SECRET` in `.env.example` (placeholders). Full suite 115 passed / 3 skipped, token suite 8/8, GC-101 env sweep zero missing variables. ERR-059 CLOSED. GC-202 DONE, ready to merge.
@@ -655,6 +700,8 @@ worker processes with PostgreSQL and Redis; finalize it through an ADR before a 
 - [x] **GC-101** — Jules: sync `.env.example` with every env var the code reads (full `process.env` sweep of `src/` + `scripts/`)
 - [x] **GC-201** — Jules: AliExpress HMAC-SHA256 signer module + fixture unit tests (dummy secret only) — merged (PR #29, 2026-10-29); ERR-047 CLOSED
 - [x] **GC-202** — Jules: AliExpress OAuth token provider with transient app secret, expiry-aware refresh, mocked-HTTP tests, and no plaintext persistence; GC-102 Option 2 honored by keeping persistence out of scope.
+- [ ] **GC-203** — LANE-1 (Thing 1): AliExpress search client — `aliexpress.ds.text.search` call layer (signed, session token, typed errors, timeout + single retry) + URL import via `aliexpress.ds.product.get` (all details incl. images and variations) — PR #87 open, fix-up reviewed sweep #70 (ERR-060)
+- [ ] **GC-204** — LANE-1 (Thing 1): AliExpress supplier adapter — implement `ISupplierAdapter`, map search/detail data to `CanonicalProduct`, register `'aliexpress'` in `factory.ts` — PR #87 open, gated on GC-203 passing re-review
 - [ ] **GC-R1** — Claude (on check-in): second-eyes review of GC-101 against `process.env` reads in `src/`
 - [x] **GC-T1** — LANE-3 (Minion 1): `aliexpress.ds.text.search` response fixture pack (full / empty / error envelope) — completed 2026-10-25
 - [x] **GC-301** — LANE-2 (Thing 2): BullMQ repeatable-job scheduler + `scheduled_refreshes` consumer (fix-up completed 2026-10-25)
