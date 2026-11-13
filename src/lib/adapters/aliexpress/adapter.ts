@@ -13,6 +13,24 @@ function productUrl(s: string) {
   catch { return false; }
 }
 
+function stripHtml(value: string): string {
+  return value
+    .replace(/<\s*(script|style)\b[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/gi, ' ')
+    .replace(/<\s*br\s*\/?\s*>/gi, '\n')
+    .replace(/<\s*\/\s*(p|div|li|h[1-6])\s*>/gi, '\n')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;|&#160;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/[ \t]+/g, ' ')
+    .replace(/ *\n */g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 function normalize(r: AliExpressProductRecord, tenantId: string, url: string): CanonicalProduct {
   const raw = r.raw;
   const base = (raw.ae_item_base_info_dto && typeof raw.ae_item_base_info_dto === 'object'
@@ -37,7 +55,7 @@ function normalize(r: AliExpressProductRecord, tenantId: string, url: string): C
     id: `aliexpress_${r.productId}`,
     tenantId,
     title: r.title || 'AliExpress product',
-    description: r.description,
+    description: stripHtml(r.description),
     identifiers: { product_id: r.productId, ...(r.skus[0] ? { sku: r.skus[0].skuId } : {}) },
     primaryImageUrl: images[0] ?? null,
     additionalImageUrls: images.slice(1),

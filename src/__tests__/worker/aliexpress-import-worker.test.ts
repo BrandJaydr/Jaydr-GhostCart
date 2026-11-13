@@ -13,6 +13,7 @@ vi.mock('bullmq',()=>({
     processFn:(job:Job)=>Promise<unknown>;
     constructor(name:string,processor:(job:Job)=>Promise<unknown>){this.name=name;this.processFn=processor;}
     on(){return this;}
+    close(){return Promise.resolve();}
   },
 }));
 
