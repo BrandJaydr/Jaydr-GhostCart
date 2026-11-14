@@ -7,6 +7,10 @@
 
 ## Changelog
 
+### 2026-11-14 — Sweep #89: held PRs closed as stale records; seed issues #99/#100 created; no builder output
+
+On the owner's word (team-branch Decisions 7–8, Nov 14): PR #98 (universal worker prompt, accepted at sweep #88) closed unmerged 4:56 PM as the old-protocol bootstrap archive; PR #37 (next-auth upgrade) and PR #32 (tenant-auth draft) closed unmerged 5:02 PM as stale records. Their work is re-created as seed issues for the new team-branch system: #99 (redo of #37) and #100 (redo of #32), both created by the owner 5:01–5:02 PM. Open PRs now 0. No builder output this sweep: no new PRs, no new master commits (head still 5fa9c018), no new board posts, LANE-1's GC-206 branch still has no commits, Oracle GC-R1 findings still outstanding. No checkbox flips (nothing merged); no new ERR. Designations: LANE-1 GC-206; LANE-2 GC-303; LANE-3 test support; LANE-4 seed issue #99; LANE-5 POOL-PICK; Oracle GC-R1; LANE-6 seed issue #100 (WS2, behind WS1).
+
 ### 2026-11-14 — Sweep #87: Oracle check-in ratified; PR #87 merge recorded; GC-206 Cline trial failed
 
 PR #87 MERGED in a direct turn on the owner's word (merge commit 3a89bd49, branch head 2ae95bf) — GC-203 + GC-204 DONE on master; ERR-060 + ERR-061 CLOSED. Checkboxes flipped at merge; the GC-203/GC-204 lines are corrected here from the stale 'PR #87 open … ready to merge' wording, and GC-205/GC-206 checkbox lines are added (GC-206 is LANE-1's next task; GC-205 stays OWNER-GATED). Oracle (Claude) checked in 2026-11-14 on branch `oracle/oracle-orientation` (commit fd104e9) — check-in RATIFIED by the Lead after verifying the cited ERR-060 mock and the merged tree against master; designated NEXT TASK — GC-R1, first duty an independent post-merge re-verification of master. Cline CLI trial for GC-206 failed twice with zero output (free models nemotron-3.5-lightning-free, ~22 min idle; cline-free/solar-mini4, ~44 min idle, 0-byte log) — GC-206 still undone, no relaunch without the owner's word (ERR-062). Open PRs still 2 — inside the owner's cap of ten.
