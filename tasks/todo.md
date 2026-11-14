@@ -7,6 +7,10 @@
 
 ## Changelog
 
+### 2026-11-13 — Sweep #85: PR #87 fix-up reviewed (FIXES NEEDED, one line)
+
+PR #87 fix-up (head c153b731) reviewed by the Lead on a fresh checkout: npm ci clean (860 packages); tsc 0 errors, lint 0 warnings, build succeeds; Vitest 125 passed / 1 failed / 3 skipped (4 files unloadable without DATABASE_URL — pre-existing master condition); worker test 1/1 (ERR-060 mock fix verified in substance — no unhandled rejection); stripHtml verified correct; the only failure is the new regression test's own expectation (expects single \n, implementation correctly returns \n\n) — one-line fix (ERR-061). [CLAIM] ratified; no [DONE] claimed. GC-203 stays unchecked; GC-204 stays gated on GC-203. Open PRs still 3 — inside the owner's cap of ten.
+
 ### 2026-11-12 — Backlog closes (PRs #81, #82, #84, #85, #86, #97 closed as recorded)
 
 On the owner's word in a direct turn (voice call, Nov 12 evening), six paperwork-only record proposals were closed as recorded (unmerged), each with its own approval tap: #81, #82, #84, #85, #86, #97. Verified by a fresh open-PR list. Open PRs now 3: #87 (GC-203 + GC-204, ERR-060 fix still pending), #32 (held draft), #37 (held). The staged sweeps #70–#77 board payload lands with this entry.
@@ -700,7 +704,7 @@ worker processes with PostgreSQL and Redis; finalize it through an ADR before a 
 - [x] **GC-101** — Jules: sync `.env.example` with every env var the code reads (full `process.env` sweep of `src/` + `scripts/`)
 - [x] **GC-201** — Jules: AliExpress HMAC-SHA256 signer module + fixture unit tests (dummy secret only) — merged (PR #29, 2026-10-29); ERR-047 CLOSED
 - [x] **GC-202** — Jules: AliExpress OAuth token provider with transient app secret, expiry-aware refresh, mocked-HTTP tests, and no plaintext persistence; GC-102 Option 2 honored by keeping persistence out of scope.
-- [ ] **GC-203** — LANE-1 (Thing 1): AliExpress search client — `aliexpress.ds.text.search` call layer (signed, session token, typed errors, timeout + single retry) + URL import via `aliexpress.ds.product.get` (all details incl. images and variations) — PR #87 open, fix-up reviewed sweep #70 (ERR-060)
+- [ ] **GC-203** — LANE-1 (Thing 1): AliExpress search client — `aliexpress.ds.text.search` call layer (signed, session token, typed errors, timeout + single retry) + URL import via `aliexpress.ds.product.get` (all details incl. images and variations) — PR #87 open, fix-up reviewed sweep #85 (ERR-060 fix verified in substance; ERR-061 one-line test-expectation fix needed)
 - [ ] **GC-204** — LANE-1 (Thing 1): AliExpress supplier adapter — implement `ISupplierAdapter`, map search/detail data to `CanonicalProduct`, register `'aliexpress'` in `factory.ts` — PR #87 open, gated on GC-203 passing re-review
 - [ ] **GC-R1** — Claude (on check-in): second-eyes review of GC-101 against `process.env` reads in `src/`
 - [x] **GC-T1** — LANE-3 (Minion 1): `aliexpress.ds.text.search` response fixture pack (full / empty / error envelope) — completed 2026-10-25
