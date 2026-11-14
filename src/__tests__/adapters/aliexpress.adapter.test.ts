@@ -1,0 +1,44 @@
+import {describe,it,expect,vi} from 'vitest';
+import {AliExpressSearchClient,AliExpressSearchError,extractAliExpressProductId} from '@/lib/adapters/aliexpress/search';
+import {AliExpressSupplierAdapter} from '@/lib/adapters/aliexpress/adapter';
+import {aliexpressFullSearchFixture,aliexpressEmptySearchFixture,aliexpressErrorSearchFixture} from '@/__tests__/fixtures/aliexpress';
+
+const provider={getValidToken:vi.fn(async()=>({accessToken:'dummy',refreshToken:'dummy-refresh',expiresAt:new Date(Date.now()+3600000)}))} as never;
+const response=(p:unknown)=>new Response(JSON.stringify(p),{status:200});
+const opts=(fetcher:typeof fetch)=>({appKey:'dummy-key',appSecret:'dummy-secret',tokenProvider:provider,currentToken:async()=>({accessToken:'dummy',refreshToken:'dummy-refresh',expiresAt:new Date(Date.now()+3600000)}),fetch:fetcher});
+
+describe('AliExpress GC-203/204',()=>{
+  it('searches fixture success',async()=>{const c=new AliExpressSearchClient(opts(vi.fn(async()=>response(aliexpressFullSearchFixture))));expect((await c.searchText('earbuds')).products).toHaveLength(2);});
+  it('handles empty fixture',async()=>{const c=new AliExpressSearchClient(opts(vi.fn(async()=>response(aliexpressEmptySearchFixture))));expect((await c.searchText('none')).products).toEqual([]);});
+  it('parses error envelope',async()=>{const c=new AliExpressSearchClient(opts(vi.fn(async()=>response(aliexpressErrorSearchFixture))));await expect(c.searchText('bad')).rejects.toMatchObject({kind:'api'});});
+  it('extracts URL product ID',()=>expect(extractAliExpressProductId('https://www.aliexpress.com/item/1005007429636284.html')).toBe('1005007429636284'));
+  it('returns typed invalid URL error',()=>expect(()=>extractAliExpressProductId('https://www.aliexpress.com/category')).toThrow(AliExpressSearchError));
+  it('retries one transient network error',async()=>{const f=vi.fn().mockRejectedValueOnce(Error('offline')).mockResolvedValueOnce(response(aliexpressEmptySearchFixture));const c=new AliExpressSearchClient(opts(f));await c.searchText('retry');expect(f).toHaveBeenCalledTimes(2);});
+  const detailFixture={productId:'1005007429636284',title:'Item',description:'Desc',images:['https://img/a.jpg'],skus:[
+    {skuId:'red',properties:[{property_value:'Red'}],price:'3.10',currency:'USD',stock:8,images:[],raw:{offer_sale_price:'3.10'}},
+    {skuId:'blue',properties:[{property_value:'Blue'}],price:'4.20',currency:'USD',stock:0,images:[],raw:{offer_sale_price:'4.20'}},
+  ],raw:{ae_item_base_info_dto:{subject:'Item'}}};
+  it('keeps every variation and its stock, price, properties and images',async()=>{
+    const fixture={aliexpress_ds_product_get_response:{rsp_code:200,result:{ae_item_base_info_dto:{subject:'Item',detail:'Desc',ae_multimedia_info_dto:{image_urls:{string:['https://img/a.jpg','https://img/b.jpg']}}},ae_item_sku_info_dtos:{ae_item_sku_info_d_t_o:[{sku_id:'red',sku_available_stock:8,offer_sale_price:'3.10',ae_sku_property_dtos:[{property_value:'Red'}],sku_image:'https://img/red.jpg'},{sku_id:'blue',sku_available_stock:0,offer_sale_price:'4.20',ae_sku_property_dtos:[{property_value:'Blue'}],sku_image:'https://img/blue.jpg'}]}}}};
+    const c=new AliExpressSearchClient(opts(vi.fn(async()=>response(fixture))));
+    const d=await c.importProductUrl('https://www.aliexpress.com/item/1005007429636284.html');
+    expect(d.images).toHaveLength(2);expect(d.skus).toHaveLength(2);expect(d.skus[1]).toMatchObject({skuId:'blue',stock:0,price:'4.20'});
+  });
+  it('adapter retains variations and uses the lowest SKU price when detail has no product-level price',async()=>{
+    const a=new AliExpressSupplierAdapter({fetchProductById:async()=>detailFixture});
+    const product=await a.fetchProduct('1005007429636284','tenant-1');
+    expect(product.rawSourceMetadata.variations).toHaveLength(2);
+    expect(product.supplierPriceCents).toBe(310);
+  });
+  it('marks a product out of stock when all SKUs have zero stock',async()=>{
+    const record={...detailFixture,skus:detailFixture.skus.map(s=>({...s,stock:0}))};
+    const a=new AliExpressSupplierAdapter({fetchProductById:async()=>record});
+    expect((await a.fetchProduct('1005007429636284','tenant-1')).availability).toBe('out_of_stock');
+  });
+  it('strips HTML markup and decodes entities in product descriptions',async()=>{
+    const record={...detailFixture,description:'<p>Wireless &amp; durable</p><br><strong>More details</strong>'};
+    const a=new AliExpressSupplierAdapter({fetchProductById:async()=>record});
+    const product=await a.fetchProduct('1005007429636284','tenant-1');
+    expect(product.description).toBe('Wireless & durable\n\nMore details');
+  });
+});
