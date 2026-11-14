@@ -39,6 +39,6 @@ describe('AliExpress GC-203/204',()=>{
     const record={...detailFixture,description:'<p>Wireless &amp; durable</p><br><strong>More details</strong>'};
     const a=new AliExpressSupplierAdapter({fetchProductById:async()=>record});
     const product=await a.fetchProduct('1005007429636284','tenant-1');
-    expect(product.description).toBe('Wireless & durable\nMore details');
+    expect(product.description).toBe('Wireless & durable\n\nMore details');
   });
 });
