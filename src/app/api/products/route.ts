@@ -1,14 +1,18 @@
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { ProductListQuerySchema, ProductImportSchema } from '@/lib/validation/schemas';
-import { db, DEV_TENANT_ID } from '@/lib/db/index';
+import { withTenant } from '@/lib/db/index';
 import { checkDuplicateSourceUrl } from '@/lib/api/idempotency';
+import { getAuthenticatedTenantId } from '@/lib/auth/tenant';
 
 /**
  * GET /api/products
  * List products for the authenticated tenant with pagination and filtering.
  */
 export async function GET(req: NextRequest) {
+  const tenantId = await getAuthenticatedTenantId();
+  if (!tenantId) return apiError('Unauthorized', null, 401);
+
   const url = new URL(req.url);
   const queryParams = Object.fromEntries(url.searchParams.entries());
 
@@ -19,10 +23,6 @@ export async function GET(req: NextRequest) {
 
   const { page, limit, supplierId } = parseResult.data;
   const offset = (page - 1) * limit;
-
-  // @agent:forge Replace this with the tenantId resolved from the
-  // authenticated session once next-auth is configured.
-  const tenantId = DEV_TENANT_ID;
 
   try {
     // Build WHERE clause for optional filters
@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
 
     // Performance optimization: Combine data query and count query into single CTE
     // to reduce database round trips from 2 to 1
-    const result = await db.query(
+    const result = await withTenant(tenantId, (client) => client.query(
       `WITH product_data AS (
         SELECT
           p.id, p.tenant_id, p.title, p.description, p.identifiers, p.primary_image_url,
@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
       )
       SELECT * FROM product_data, total_count`,
       [...values, limit, offset],
-    );
+    ));
 
     const total = parseInt(result.rows[0].total as string, 10);
 
@@ -106,6 +106,9 @@ export async function GET(req: NextRequest) {
  * the product to a CanonicalProduct, and persists it to PostgreSQL.
  */
 export async function POST(req: NextRequest) {
+  const tenantId = await getAuthenticatedTenantId();
+  if (!tenantId) return apiError('Unauthorized', null, 401);
+
   let body: unknown;
   try {
     body = await req.json();
@@ -119,51 +122,41 @@ export async function POST(req: NextRequest) {
   }
 
   const { url, supplierId, idempotencyKey } = parseResult.data;
-  const fallbackJobId = `job_${Date.now()}`;
-
-  // @agent:forge (Stage 2) Replace this with the tenantId resolved from the
-  // authenticated session once next-auth is configured.
-  // @agent:archivist Seeded dev tenant UUID (migration 0003) — lets the worker
-  // persist under the tenants FK + RLS instead of the old 'tenant_demo' string.
-  const tenantId = '00000000-0000-0000-0000-000000000001';
-
   // ── Idempotency guard (API layer) ──────────────────────────────────────────
   // Fast 409 feedback for duplicate source_url within this tenant.
-  const isDuplicate = await checkDuplicateSourceUrl(tenantId, url);
+  let isDuplicate: boolean;
+  try {
+    isDuplicate = await withTenant(tenantId, (client) =>
+      checkDuplicateSourceUrl(tenantId, url, client),
+    );
+  } catch (err) {
+    console.error('[api/products] Duplicate check failed:', err);
+    return apiError('Product import is temporarily unavailable', null, 503);
+  }
   if (isDuplicate) {
     return apiError('Duplicate import', { sourceUrl: url }, 409);
   }
 
-  // Graceful enqueue (Option C): the queue module throws at import time when
-  // REDIS_URL is unset, so we guard with `process.env.REDIS_URL` and lazy-import
-  // inside try/catch. In environments without Redis (e.g. unit tests) the route
-  // still returns 202 — the worker picks the job up once the queue is reachable.
-  if (process.env.REDIS_URL) {
-    try {
-      const { importQueue } = await import('@/lib/queue');
-      const job = await importQueue.add(
-        'product.import',
-        { url, supplierId, tenantId, idempotencyKey },
-        { jobId: `import_${idempotencyKey}` },
-      );
-      if (job?.id) {
-        return apiSuccess(
-          { jobId: job.id, status: 'queued', idempotencyKey },
-          undefined,
-          202,
-        );
-      }
-    } catch (err) {
-      console.warn(
-        '[api/products] Enqueue failed — falling back to 202 stub:',
-        (err as Error).message,
-      );
-    }
+  if (!process.env.REDIS_URL) {
+    return apiError('Queue is temporarily unavailable', null, 503);
   }
 
-  return apiSuccess(
-    { jobId: fallbackJobId, status: 'queued', idempotencyKey },
-    undefined,
-    202,
-  );
+  try {
+    const { importQueue } = await import('@/lib/queue');
+    const job = await importQueue.add(
+      'product.import',
+      { url, supplierId, tenantId, idempotencyKey },
+      { jobId: `import_${idempotencyKey}` },
+    );
+    if (!job?.id) return apiError('Queue did not accept the import', null, 503);
+
+    return apiSuccess(
+      { jobId: job.id, status: 'queued', idempotencyKey },
+      undefined,
+      202,
+    );
+  } catch (err) {
+    console.warn('[api/products] Enqueue failed:', (err as Error).message);
+    return apiError('Queue is temporarily unavailable', null, 503);
+  }
 }

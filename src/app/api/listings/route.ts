@@ -2,13 +2,17 @@ import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { ListingListQuerySchema, ListingCreateSchema } from '@/lib/validation/schemas';
 import type { ListingDraft } from '@/lib/types/canonical';
-import { withTenant, DEV_TENANT_ID } from '@/lib/db';
+import { withTenant } from '@/lib/db';
+import { getAuthenticatedTenantId } from '@/lib/auth/tenant';
 
 /**
  * GET /api/listings
  * List listing drafts for the authenticated tenant.
  */
 export async function GET(req: NextRequest) {
+  const tenantId = await getAuthenticatedTenantId();
+  if (!tenantId) return apiError('Unauthorized', null, 401);
+
   const url = new URL(req.url);
   const queryParams = Object.fromEntries(url.searchParams.entries());
 
@@ -22,11 +26,13 @@ export async function GET(req: NextRequest) {
 
   try {
     const result = await withTenant<{ rows: ListingDraft[]; count: string }>(
-      DEV_TENANT_ID,
+      tenantId,
       async (client) => {
-        const whereClause = state ? 'WHERE state = $3' : '';
+        const whereClause = state
+          ? 'WHERE tenant_id = $1 AND state = $2'
+          : 'WHERE tenant_id = $1';
         const countQuery = `SELECT COUNT(*) FROM listing_drafts ${whereClause}`;
-        const countResult = await client.query(countQuery, state ? [state] : []);
+        const countResult = await client.query(countQuery, state ? [tenantId, state] : [tenantId]);
 
         const dataQuery = `
           SELECT id, tenant_id, product_id, marketplace, state, title, description,
@@ -36,9 +42,11 @@ export async function GET(req: NextRequest) {
             FROM listing_drafts
            ${whereClause}
            ORDER BY updated_at DESC
-           LIMIT $1 OFFSET $2
+           LIMIT $${state ? 3 : 2} OFFSET $${state ? 4 : 3}
         `;
-        const params = state ? [limit, offset, state] : [limit, offset];
+        const params = state
+          ? [tenantId, state, limit, offset]
+          : [tenantId, limit, offset];
         const dataResult = await client.query(dataQuery, params);
 
         const rows = dataResult.rows.map((row) => ({
@@ -78,6 +86,9 @@ export async function GET(req: NextRequest) {
  * Create a new listing draft from a reviewed product.
  */
 export async function POST(req: NextRequest) {
+  const tenantId = await getAuthenticatedTenantId();
+  if (!tenantId) return apiError('Unauthorized', null, 401);
+
   let body: unknown;
   try {
     body = await req.json();
@@ -94,8 +105,14 @@ export async function POST(req: NextRequest) {
 
   try {
     const draft = await withTenant<ListingDraft>(
-      DEV_TENANT_ID,
+      tenantId,
       async (client) => {
+        const product = await client.query(
+          'SELECT id FROM products WHERE id = $1 AND tenant_id = $2 LIMIT 1',
+          [productId, tenantId],
+        );
+        if (product.rowCount === 0) throw new Error('Product not found');
+
         const id = `lst_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
         const now = new Date().toISOString();
         const key = idempotencyKey ?? null;
@@ -113,7 +130,7 @@ export async function POST(req: NextRequest) {
                      list_price_cents, currency, attributes, shipping, image_urls,
                      idempotency_key, marketplace_listing_id, last_error,
                      created_at, updated_at`,
-          [id, DEV_TENANT_ID, productId, marketplace, key, now, now],
+          [id, tenantId, productId, marketplace, key, now, now],
         );
 
         const row = (await client.query(
@@ -122,8 +139,8 @@ export async function POST(req: NextRequest) {
                   idempotency_key, marketplace_listing_id, last_error,
                   created_at, updated_at
              FROM listing_drafts
-            WHERE id = $1`,
-          [id],
+             WHERE id = $1 AND tenant_id = $2`,
+          [id, tenantId],
         )).rows[0];
 
         return {

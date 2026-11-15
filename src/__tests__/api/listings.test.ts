@@ -13,6 +13,9 @@ vi.mock('@/lib/db/index.js', () => ({
   DEV_TENANT_ID: '00000000-0000-0000-0000-000000000001',
   setTenantContextOn: vi.fn(async () => undefined),
 }));
+vi.mock('@/lib/auth/tenant', () => ({
+  getAuthenticatedTenantId: vi.fn(async () => '00000000-0000-0000-0000-000000000001'),
+}));
 
 const { GET: getListings, POST: postListings } = await import('@/app/api/listings/route');
 import { NextRequest } from 'next/server';
@@ -62,6 +65,19 @@ describe('/api/listings API routes', () => {
 
     const body = await res.json();
     expect(body.status).toBe('error');
+  });
+
+  it('rejects unauthenticated listing requests before opening a tenant transaction', async () => {
+    const auth = await import('@/lib/auth/tenant');
+    vi.mocked(auth.getAuthenticatedTenantId).mockResolvedValueOnce(null);
+    const mockWithTenant = (await import('@/lib/db/index.js')).withTenant as unknown as ReturnType<typeof vi.fn>;
+    mockWithTenant.mockClear();
+
+    const req = new NextRequest('http://localhost:3000/api/listings');
+    const res = await getListings(req);
+
+    expect(res.status).toBe(401);
+    expect(mockWithTenant).not.toHaveBeenCalled();
   });
 
   it('POST /api/listings creates a draft listing with 201 status', async () => {

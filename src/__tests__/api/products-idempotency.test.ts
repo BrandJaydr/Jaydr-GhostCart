@@ -19,7 +19,16 @@ vi.mock('@/lib/db/index.js', () => ({
       release: vi.fn(),
     })),
   },
+  withTenant: vi.fn(async (_tenantId: string, work: (client: unknown) => Promise<unknown>) =>
+    work({ query: vi.fn(async () => ({ rowCount: 0, rows: [] })) }),
+  ),
   setTenantContextOn: vi.fn(async () => undefined),
+}));
+vi.mock('@/lib/auth/tenant', () => ({
+  getAuthenticatedTenantId: vi.fn(async () => '00000000-0000-0000-0000-000000000001'),
+}));
+vi.mock('@/lib/queue', () => ({
+  importQueue: { add: vi.fn(async () => ({ id: 'job_123' })) },
 }));
 
 const idempotencyModule = await import('@/lib/api/idempotency');
@@ -49,6 +58,7 @@ describe('POST /api/products — Idempotency', () => {
   });
 
   it('should accept new source URLs and enqueue job', async () => {
+    vi.stubEnv('REDIS_URL', 'redis://localhost:6379');
     vi.spyOn(idempotencyModule, 'checkDuplicateSourceUrl').mockResolvedValue(false);
     const req = new NextRequest('http://localhost:3000/api/products', {
       method: 'POST',
@@ -63,6 +73,7 @@ describe('POST /api/products — Idempotency', () => {
     const body = await res.json();
     expect(body.status).toBe('success');
     expect(body.data.status).toBe('queued');
+    vi.unstubAllEnvs();
   });
 
   it('should prevent duplicates via DB constraint if API check fails', async () => {
