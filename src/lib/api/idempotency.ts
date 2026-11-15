@@ -9,6 +9,7 @@
  */
 
 import { db } from '@/lib/db/index';
+import type { PoolClient } from 'pg';
 import { createHash } from 'node:crypto';
 
 /**
@@ -20,8 +21,9 @@ import { createHash } from 'node:crypto';
 export async function checkDuplicateSourceUrl(
   tenantId: string,
   sourceUrl: string,
+  client: Pick<PoolClient, 'query'> = db,
 ): Promise<boolean> {
-  const result = await db.query(
+  const result = await client.query(
     'SELECT 1 FROM products WHERE tenant_id = $1 AND source_url = $2 LIMIT 1',
     [tenantId, sourceUrl],
   );

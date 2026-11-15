@@ -1,16 +1,28 @@
 import { describe, it, expect, vi } from 'vitest';
 
+const { mockQuery } = vi.hoisted(() => ({
+  mockQuery: vi.fn(async () => ({ rowCount: 0, rows: [] })),
+}));
 // Mock db before importing routes that transitively load idempotency → db.
 vi.mock('@/lib/db/index.js', () => ({
   db: {
-    query: vi.fn(async () => ({ rowCount: 0, rows: [] })),
+    query: mockQuery,
     connect: vi.fn(async () => ({
       query: vi.fn(async () => undefined),
       release: vi.fn(),
     })),
   },
+  withTenant: vi.fn(async (_tenantId: string, work: (client: unknown) => Promise<unknown>) =>
+    work({ query: mockQuery }),
+  ),
   setTenantContextOn: vi.fn(async () => undefined),
   DEV_TENANT_ID: '00000000-0000-0000-0000-000000000001',
+}));
+vi.mock('@/lib/auth/tenant', () => ({
+  getAuthenticatedTenantId: vi.fn(async () => '00000000-0000-0000-0000-000000000001'),
+}));
+vi.mock('@/lib/queue', () => ({
+  importQueue: { add: vi.fn(async () => ({ id: 'job_123' })) },
 }));
 
 const { GET: getProducts, POST: postProducts } = await import('@/app/api/products/route');
@@ -45,6 +57,7 @@ describe('/api/products API routes', () => {
   });
 
   it('POST /api/products enqueues import job with valid body', async () => {
+    vi.stubEnv('REDIS_URL', 'redis://localhost:6379');
     vi.spyOn(idempotencyModule, 'checkDuplicateSourceUrl').mockResolvedValue(false);
     const req = new NextRequest('http://localhost:3000/api/products', {
       method: 'POST',
@@ -61,6 +74,74 @@ describe('/api/products API routes', () => {
     expect(body.status).toBe('success');
     expect(body.data.status).toBe('queued');
     expect(body.data.idempotencyKey).toBe('idemp_key_123');
+    vi.unstubAllEnvs();
+  });
+
+  it('POST /api/products fails closed when Redis is unavailable', async () => {
+    vi.stubEnv('REDIS_URL', '');
+    vi.spyOn(idempotencyModule, 'checkDuplicateSourceUrl').mockResolvedValue(false);
+    const req = new NextRequest('http://localhost:3000/api/products', {
+      method: 'POST',
+      body: JSON.stringify({
+        url: 'https://example.com/product/123',
+        supplierId: 'sup_demo',
+        idempotencyKey: 'idemp_key_123',
+      }),
+    });
+
+    const res = await postProducts(req);
+    expect(res.status).toBe(503);
+    vi.unstubAllEnvs();
+  });
+
+  it('POST /api/products fails closed when enqueue throws', async () => {
+    vi.stubEnv('REDIS_URL', 'redis://localhost:6379');
+    vi.spyOn(idempotencyModule, 'checkDuplicateSourceUrl').mockResolvedValue(false);
+    const queue = await import('@/lib/queue');
+    vi.mocked(queue.importQueue.add).mockRejectedValueOnce(new Error('redis down'));
+    const req = new NextRequest('http://localhost:3000/api/products', {
+      method: 'POST',
+      body: JSON.stringify({
+        url: 'https://example.com/product/123',
+        supplierId: 'sup_demo',
+        idempotencyKey: 'idemp_key_123',
+      }),
+    });
+
+    const res = await postProducts(req);
+    expect(res.status).toBe(503);
+    vi.unstubAllEnvs();
+  });
+
+  it('POST /api/products fails closed when the queue returns no job ID', async () => {
+    vi.stubEnv('REDIS_URL', 'redis://localhost:6379');
+    vi.spyOn(idempotencyModule, 'checkDuplicateSourceUrl').mockResolvedValue(false);
+    const queue = await import('@/lib/queue');
+    vi.mocked(queue.importQueue.add).mockResolvedValueOnce({ id: undefined } as never);
+    const req = new NextRequest('http://localhost:3000/api/products', {
+      method: 'POST',
+      body: JSON.stringify({
+        url: 'https://example.com/product/123',
+        supplierId: 'sup_demo',
+        idempotencyKey: 'idemp_key_123',
+      }),
+    });
+
+    const res = await postProducts(req);
+    expect(res.status).toBe(503);
+    vi.unstubAllEnvs();
+  });
+
+  it('rejects unauthenticated product requests before querying the database', async () => {
+    const auth = await import('@/lib/auth/tenant');
+    vi.mocked(auth.getAuthenticatedTenantId).mockResolvedValueOnce(null);
+    const db = (await import('@/lib/db/index.js')).db;
+    const querySpy = vi.spyOn(db, 'query');
+    const req = new NextRequest('http://localhost:3000/api/products');
+
+    const res = await getProducts(req);
+    expect(res.status).toBe(401);
+    expect(querySpy).not.toHaveBeenCalled();
   });
 
   it('POST /api/products returns 400 on invalid URL', async () => {
