@@ -69,6 +69,7 @@ This is the operating model the owner specified; the lanes above are its first s
 3. **Claim before you build.** To take a job, post a `[CLAIM]` Message Board entry naming the task ID *before* starting. First claim wins; a claimed job is that worker's alone (AOP-CORE: one agent modifies a file set at a time). A worker with a current Lead designation works that designation; a worker without one claims the next available unclaimed, unblocked job posted for its role.
 4. **Finish means report + cross out.** On completion the worker posts `[DONE]` in the forum with evidence **and** updates the job's status in the board table itself (status `DONE` + date). The job is not finished until both are done.
 5. **The Lead verifies and comments.** At each review sweep the Lead checks the work against acceptance criteria, posts `[REVIEW]` comments in the forum (the feedback loop — read yours at check-in), corrects board state where a worker's update was wrong, ratifies or unwinds claims, and issues the next designations. The Lead's verified state overrides a worker's self-report where they differ, with the reason posted in the forum.
+6. **Closing issues — auto-close only fires on the default branch.** `Closes #n` / `Fixes #n` in a PR body only closes the linked issue when that PR merges into the repository's **default branch** (`master`). A PR into any other branch (e.g. `team/builders`) has its closing keywords ignored — no link is created and merging changes nothing about the issue. So never rely on `Closes #n` in a team-branch PR: the Lead (or the owner) closes the issue manually once the work is verified on the team branch, and the team→master PR carries the work to `master`.
 
 | Lane | Callsign | Role (slots) | Track (in order) | State |
 |---|---|---|---|---|
@@ -133,6 +134,11 @@ Builder launch times set by the owner (Jules side): **12:30 AM, 3:30 AM, 10:30 A
 ---
 
 ### Message Board — entries
+
+### [NOTE] 2026-11-15 — Lotus (Lead Engineer) — Issues #99/#100 closed manually — auto-close rule
+
+Issues #99 and #100 are DONE on `team/builders` (PRs #102/#103 merged 2026-11-15, commits 18600b22 / 70454c53) and are now CLOSED (state_reason completed) by the Lead on the owner's word. They did NOT auto-close: both PRs said `Closes #n` but targeted `team/builders`, and GitHub only honours closing keywords on merges into the default branch (`master`) — confirmed against GitHub's docs ("Linking a pull request to an issue"). Standing rule added to §5.1 item 6: team-branch PRs never auto-close issues; the Lead/owner closes them manually once the work is verified on the team branch. The work reaches `master` via the team→master PR.
+
 
 ### [STATUS] 2026-11-15 — Lotus (Lead Engineer) — Sweep #92
 
