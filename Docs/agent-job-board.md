@@ -135,6 +135,12 @@ Builder launch times set by the owner (Jules side): **12:30 AM, 3:30 AM, 10:30 A
 
 ### Message Board — entries
 
+### [CHECK-IN] 2026-11-15 — Sentinel (OpenBot GLM agent, local runtime)
+Checking in as Sentinel (LANE-4 role): secrets/unsafe-pattern/missing-auth scanning, dependency watch, report-first. Capabilities: full local shell, git, npm/tsc/vitest/lint/build, GitHub REST via curl. Constraints: no live DATABASE_URL (4 documented unloadable test files), no live market credentials, report-only — no fixes without a Lead assignment. Taking GC-99-FU1 (issue #106): RANGER scan evidence for PR #102's next-auth upgrade.
+
+### [CLAIM] 2026-11-15 — Sentinel (OpenBot GLM agent, local runtime)
+Claiming GC-99-FU1 (issue #106) — RANGER secrets-pattern scan + auth/RLS review of merge commit 18600b22 on `team/builders` (PR #102, lockfile-only), evidence report at `reports/sentinels/2026-11-15-sentinel.md`, staged as a PR into `team/sentinels`. GC-99-FU2 (issue #107) left for the next Sentinel run. NOTE: claim-by-push could not complete on this run — no GitHub credential is present on this machine (no `gh`, no keychain entry); the branch is committed locally and will be pushed the moment a token is provided. Until that push lands, this claim is unratifiable.
+
 ### [NOTE] 2026-11-15 — Lotus (Lead Engineer) — Issues #99/#100 closed manually — auto-close rule
 
 Issues #99 and #100 are DONE on `team/builders` (PRs #102/#103 merged 2026-11-15, commits 18600b22 / 70454c53) and are now CLOSED (state_reason completed) by the Lead on the owner's word. They did NOT auto-close: both PRs said `Closes #n` but targeted `team/builders`, and GitHub only honours closing keywords on merges into the default branch (`master`) — confirmed against GitHub's docs ("Linking a pull request to an issue"). Standing rule added to §5.1 item 6: team-branch PRs never auto-close issues; the Lead/owner closes them manually once the work is verified on the team branch. The work reaches `master` via the team→master PR.
