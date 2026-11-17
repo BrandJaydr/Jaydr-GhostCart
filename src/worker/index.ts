@@ -360,16 +360,24 @@ export const refreshWorker = new Worker(
       throw new Error(`Unknown supplier adapter: ${supplierId}`);
     }
 
-    // Get current product data for change detection
+    // Get current product data for change detection, plus the supplier-side
+    // product id captured at import time (GC-206): `products.id` is an internal
+    // UUID, but adapters resolve by their supplier identifier, persisted in
+    // `identifiers.product_id` by persistImport.
     const currentProduct = await db.query(
-      'SELECT supplier_price_cents, current_stock FROM products WHERE id = $1',
+      'SELECT supplier_price_cents, current_stock, identifiers FROM products WHERE id = $1',
       [productId],
     );
 
     const oldPrice = (currentProduct.rowCount ?? 0) > 0 ? currentProduct.rows[0].supplier_price_cents : null;
     const oldStock = (currentProduct.rowCount ?? 0) > 0 ? currentProduct.rows[0].current_stock : null;
 
-    const product = await adapter.fetchProduct(productId, tenantId);
+    const identifiers = (currentProduct.rows[0]?.identifiers ?? null) as Record<string, unknown> | null;
+    const supplierProductId =
+      typeof identifiers?.product_id === 'string' && identifiers.product_id.length > 0
+        ? identifiers.product_id
+        : productId;
+    const product = await adapter.fetchProduct(supplierProductId, tenantId);
 
     let persisted = true;
     let priceChanged = false;
