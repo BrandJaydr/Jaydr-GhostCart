@@ -111,7 +111,9 @@ export async function POST(req: NextRequest) {
           'SELECT id FROM products WHERE id = $1 AND tenant_id = $2 LIMIT 1',
           [productId, tenantId],
         );
-        if (product.rowCount === 0) throw new Error('Product not found');
+        if (product.rowCount === 0) {
+          throw Object.assign(new Error('Product not found'), { status: 404 });
+        }
 
         const id = `lst_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
         const now = new Date().toISOString();
@@ -167,7 +169,9 @@ export async function POST(req: NextRequest) {
 
     return apiSuccess(draft, undefined, 201);
   } catch (err) {
+    const status = (err as { status?: number }).status;
     console.error('[API] POST /api/listings DB error:', (err as Error).message);
+    if (status === 404) return apiError('Product not found', null, 404);
     return apiError('Failed to create listing draft', undefined, 500);
   }
 }

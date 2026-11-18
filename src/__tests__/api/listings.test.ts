@@ -119,6 +119,27 @@ describe('/api/listings API routes', () => {
     expect(body.data.marketplace).toBe('ebay');
   });
 
+  it('POST /api/listings returns 404 when the product does not exist', async () => {
+    const mockWithTenant = (await import('@/lib/db/index.js')).withTenant as unknown as ReturnType<typeof vi.fn>;
+    // Inside the tenant transaction the product lookup returns no rows,
+    // so the route must surface a 404 instead of a 500.
+    mockWithTenant.mockImplementationOnce(
+      async (_tenantId: string, work: (client: unknown) => Promise<unknown>) =>
+        work({ query: vi.fn(async () => ({ rowCount: 0, rows: [] })) }),
+    );
+
+    const req = new NextRequest('http://localhost:3000/api/listings', {
+      method: 'POST',
+      body: JSON.stringify({ productId: 'prod_missing', marketplace: 'ebay' }),
+    });
+    const res = await postListings(req);
+
+    expect(res.status).toBe(404);
+    const body = await res.json();
+    expect(body.status).toBe('error');
+    expect(body.error).toBe('Product not found');
+  });
+
   it('POST /api/listings returns 400 when missing required fields', async () => {
     const req = new NextRequest('http://localhost:3000/api/listings', {
       method: 'POST',
