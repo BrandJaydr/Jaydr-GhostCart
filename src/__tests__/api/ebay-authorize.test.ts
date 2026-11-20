@@ -1,12 +1,22 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { NextRequest } from 'next/server';
 
+// These tests mock withTenant/db.query, so they cannot observe RLS behaviour or
+// a bad column list. The pass-1 bug (bare pool -> every callback 401s) was
+// invisible to this suite; a real-DB integration test is still needed.
 const mockDbQuery = vi.fn();
+let inTenantTransaction = false;
+const mockWithTenant = vi.fn().mockImplementation(async (_tenantId, fn) => {
+  const client = { query: mockDbQuery };
+  inTenantTransaction = true;
+  try {
+    return await fn(client);
+  } finally {
+    inTenantTransaction = false;
+  }
+});
 vi.mock('@/lib/db/index.js', () => ({
-  withTenant: vi.fn().mockImplementation(async (tenantId, fn) => {
-      const client = { query: mockDbQuery };
-      return await fn(client);
-    }),
+  withTenant: mockWithTenant,
   db: {
     query: vi.fn(),
   },
@@ -27,9 +37,20 @@ const { GET: getAuthorize, POST: postAuthorize } = await import('@/app/api/ebay/
 describe('eBay OAuth authorize routes', () => {
   const originalEnv = process.env;
   const devTenantId = '00000000-0000-0000-0000-000000000001';
+  let exchangeCalledInTransaction: boolean | undefined;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    inTenantTransaction = false;
+    exchangeCalledInTransaction = undefined;
+    mockExchangeCodeForToken.mockImplementation(async () => {
+      exchangeCalledInTransaction = inTenantTransaction;
+      return {
+        accessToken: 'test-access-token',
+        refreshToken: 'test-refresh-token',
+        expiresAt: new Date(Date.now() + 3600000).toISOString(),
+      };
+    });
     process.env = {
       ...originalEnv,
       EBAY_APP_ID: 'test-app-id',
@@ -149,6 +170,26 @@ describe('eBay OAuth authorize routes', () => {
       // plaintext tokens in the database.
       expect(mockDbQuery).toHaveBeenCalledTimes(1);
       expect((mockDbQuery.mock.calls[0] as [string])[0]).toContain('FROM audit_events');
+    });
+
+    it('verifies state through withTenant and exchanges outside the transaction', async () => {
+      mockDbQuery.mockResolvedValueOnce({
+        rows: [{ issued_at: new Date().toISOString() }],
+      });
+
+      const req = new NextRequest(
+        `http://localhost:3000/api/ebay/authorize?code=${validCode}&state=${validState}`,
+      );
+      const res = await getAuthorize(req);
+      expect(res.status).toBe(200);
+
+      // The state SELECT must carry the tenant GUC via withTenant, not use the
+      // bare pool (which made every legitimate callback 401 in pass 1).
+      expect(mockWithTenant).toHaveBeenCalledTimes(1);
+      expect((mockWithTenant.mock.calls[0] as [string])[0]).toBe(devTenantId);
+
+      // The outbound eBay HTTP call must not hold a pooled client open.
+      expect(exchangeCalledInTransaction).toBe(false);
     });
 
     it('returns 400 when a required eBay env var is missing', async () => {

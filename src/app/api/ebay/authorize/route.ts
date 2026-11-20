@@ -47,8 +47,7 @@ function missingEbayEnv(): string[] {
  */
 async function verifyStoredState(client: PoolClient, tenantId: string, state: string): Promise<boolean> {
   const { rows } = await client.query(
-    `SELECT metadata->>'state' AS stored_state,
-            created_at AS issued_at
+    `SELECT created_at AS issued_at
        FROM audit_events
       WHERE tenant_id = $1
         AND action = 'ebay.auth_initiated'
@@ -62,11 +61,11 @@ async function verifyStoredState(client: PoolClient, tenantId: string, state: st
     return false;
   }
 
-  const row = rows[0] as { stored_state?: string; issued_at?: string };
-  if (row.stored_state !== state) {
-    return false;
-  }
-
+  // The WHERE clause already matches the exact state, so a second comparison
+  // here is dead code. audit_events is append-only (migration 0003), which
+  // also means a stale row cannot shadow a fresh one — the freshness check
+  // below is the replay defence.
+  const row = rows[0] as { issued_at?: string };
   const issuedAt = row.issued_at ? new Date(row.issued_at).getTime() : NaN;
   if (!Number.isFinite(issuedAt) || Date.now() - issuedAt > STATE_MAX_AGE_MS) {
     return false;
@@ -128,7 +127,10 @@ export async function POST(req: NextRequest) {
     const authUrl = oauthClient.getAuthorizationUrl(state);
 
     // Store state in database for verification (audit_events is immutable:
-    // INSERT only, no UPDATE/DELETE — see migration 0003).
+    // INSERT only, no UPDATE/DELETE — see migration 0003). Rows are never
+    // pruned here, so a periodic cleanup of ebay.auth_initiated rows older
+    // than N days is a separate Medium ops follow-up; migration 0002 already
+    // indexes tenant_id/created_at DESC for that query.
     //
     // All DB work runs inside withTenant so the `ghostcart.tenant_id` GUC is
     // set on the connection before RLS policies evaluate. Without it the
@@ -205,40 +207,40 @@ export async function GET(req: NextRequest) {
   };
 
   try {
-    // All DB work runs inside withTenant so the `ghostcart.tenant_id` GUC is
-    // set on the connection before RLS policies evaluate. verifyStoredState
-    // receives the transaction client so its audit_events SELECT sees rows.
-    return await withTenant(tenantId, async (client: PoolClient) => {
-      // Verify the returned state against the value stored at initiation time
-      // and enforce freshness. A forged, mismatched, or expired state is
-      // rejected before any token exchange happens (fail closed).
-      const stateValid = await verifyStoredState(client, tenantId, state);
-      if (!stateValid) {
-        return apiError('Invalid or expired state parameter', null, 401);
-      }
+    // Verify the returned state in a short tenant-scoped transaction, then
+    // release the pooled client before any network I/O. withTenant sets the
+    // ghostcart.tenant_id GUC before the SELECT; a bare pool query would see
+    // no rows and reject every legitimate callback.
+    const stateValid = await withTenant(tenantId, async (client: PoolClient) =>
+      verifyStoredState(client, tenantId, state),
+    );
 
-      // Create eBay client and exchange code for token
-      const oauthClient = new eBayClient(config);
-      const tokenResponse = await oauthClient.exchangeCodeForToken(code);
+    if (!stateValid) {
+      // A forged, mismatched, or expired state is rejected before any token
+      // exchange happens. This is returned, never thrown, so no catch-branch
+      // string match is needed.
+      return apiError('Invalid or expired state parameter', null, 401);
+    }
 
-      // Token persistence is deliberately NOT done here. Writers must not
-      // store tokens in audit_events (INSERT-only, no UPDATE/DELETE per
-      // migration 0003) and must not store them in plaintext; the GC-102
-      // decision requires application-layer encryption before any token is
-      // written. Persistence is tracked as GC-121-B1-FU1 (issue #127).
+    // The exchange runs outside any transaction. Holding a pooled client
+    // (max 10, connectionTimeoutMillis 5000) across this outbound HTTP call
+    // would let a slow eBay token endpoint starve the whole pool.
+    const oauthClient = new eBayClient(config);
+    const tokenResponse = await oauthClient.exchangeCodeForToken(code);
 
-      return apiSuccess({
-        message: 'Token exchange successful',
-        tokenExpiresAt: tokenResponse.expiresAt,
-        hasRefreshToken: !!tokenResponse.refreshToken,
-      });
+    // Token persistence is deliberately NOT done here. Writers must not
+    // store tokens in audit_events (INSERT-only, no UPDATE/DELETE per
+    // migration 0003) and must not store them in plaintext; the GC-102
+    // decision requires application-layer encryption before any token is
+    // written. Persistence is tracked as GC-121-B1-FU1 (issue #127).
+
+    return apiSuccess({
+      message: 'Token exchange successful',
+      tokenExpiresAt: tokenResponse.expiresAt,
+      hasRefreshToken: !!tokenResponse.refreshToken,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
-    // Distinguish auth rejection from infrastructure errors
-    if (message.includes('Invalid or expired state parameter')) {
-      return apiError(message, null, 401);
-    }
     return apiError(`Failed to exchange code for token: ${message}`, null, 500);
   }
 }
