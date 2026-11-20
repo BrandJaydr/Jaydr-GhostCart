@@ -124,8 +124,8 @@ export async function POST(req: NextRequest) {
     const state = Buffer.from(`${tenantId}:${Date.now()}`).toString('base64');
 
     // Create eBay client and get authorization URL
-    const ebayClient = new eBayClient(config);
-    const authUrl = eBayClient.getAuthorizationUrl(state);
+    const oauthClient = new eBayClient(config);
+    const authUrl = oauthClient.getAuthorizationUrl(state);
 
     // Store state in database for verification (audit_events is immutable:
     // INSERT only, no UPDATE/DELETE — see migration 0003).
@@ -218,8 +218,8 @@ export async function GET(req: NextRequest) {
       }
 
       // Create eBay client and exchange code for token
-      const ebayClient = new eBayClient(config);
-      const tokenResponse = await ebayClient.exchangeCodeForToken(code);
+      const oauthClient = new eBayClient(config);
+      const tokenResponse = await oauthClient.exchangeCodeForToken(code);
 
       // Token persistence is deliberately NOT done here. Writers must not
       // store tokens in audit_events (INSERT-only, no UPDATE/DELETE per
