@@ -34,6 +34,8 @@ describe('eBay OAuth authorize routes', () => {
       ...originalEnv,
       EBAY_APP_ID: 'test-app-id',
       EBAY_CERT_ID: 'test-cert-id',
+      EBAY_DEV_ID: 'test-dev-id',
+      EBAY_RU_NAME: 'test-ru-name',
     };
   });
 
@@ -58,8 +60,17 @@ describe('eBay OAuth authorize routes', () => {
       expect(body.data.state).toMatch(/^[A-Za-z0-9+/]+=*$/);
       expect(body.data.expiresIn).toBe(600);
 
-      // Verify state was stored via withTenant wrapper
-      
+      // The state must be recorded at initiation time — the callback compares
+      // against this row, so a missing write would make every callback 401.
+      expect(mockDbQuery).toHaveBeenCalledTimes(1);
+      const [sql, params] = mockDbQuery.mock.calls[0] as [string, unknown[]];
+      expect(sql).toContain('INSERT INTO audit_events');
+      expect(sql).toContain("'ebay.auth_initiated'");
+      expect(params[0]).toBe(devTenantId);
+      expect(JSON.parse(params[1] as string)).toMatchObject({
+        state: body.data.state,
+        environment: 'sandbox',
+      });
     });
 
     it('returns 400 when EBAY_APP_ID is missing', async () => {
@@ -71,6 +82,23 @@ describe('eBay OAuth authorize routes', () => {
 
       const res = await postAuthorize(req);
       expect(res.status).toBe(400);
+    });
+
+    it('returns 400 when EBAY_DEV_ID or EBAY_RU_NAME is missing', async () => {
+      for (const name of ['EBAY_DEV_ID', 'EBAY_RU_NAME'] as const) {
+        process.env[name] = '';
+        const req = new NextRequest('http://localhost:3000/api/ebay/authorize', {
+          method: 'POST',
+          body: JSON.stringify({}),
+        });
+
+        const res = await postAuthorize(req);
+        expect(res.status).toBe(400);
+        const body = await res.json();
+        expect(body.error).toContain(name);
+
+        process.env[name] = `test-${name.toLowerCase()}`;
+      }
     });
 
     it('returns 400 when request body is invalid JSON', async () => {
@@ -115,6 +143,23 @@ describe('eBay OAuth authorize routes', () => {
       expect(res.status).toBe(200);
       expect(body.data.message).toBe('Token exchange successful');
       expect(body.data.hasRefreshToken).toBe(true);
+
+      // Only the state lookup runs: token persistence is out of this PR's
+      // scope (issue #127, GC-102 encryption first). A write here would put
+      // plaintext tokens in the database.
+      expect(mockDbQuery).toHaveBeenCalledTimes(1);
+      expect((mockDbQuery.mock.calls[0] as [string])[0]).toContain('FROM audit_events');
+    });
+
+    it('returns 400 when a required eBay env var is missing', async () => {
+      process.env.EBAY_RU_NAME = '';
+      const req = new NextRequest(
+        `http://localhost:3000/api/ebay/authorize?code=${validCode}&state=${validState}`,
+      );
+
+      const res = await getAuthorize(req);
+      expect(res.status).toBe(400);
+      expect(mockExchangeCodeForToken).not.toHaveBeenCalled();
     });
 
     it('returns 401 when state is forged (not found in audit_events)', async () => {

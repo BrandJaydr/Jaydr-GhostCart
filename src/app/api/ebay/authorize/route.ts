@@ -20,6 +20,21 @@ const AuthorizeSchema = z.object({
 const STATE_MAX_AGE_MS = 10 * 60 * 1000; // 10 minutes
 
 /**
+ * All four eBay app credentials are required by the OAuth flow: `ruName` is
+ * sent as `redirect_uri` by both getAuthorizationUrl() and
+ * exchangeCodeForToken(), and devId is part of the app identity. Checking only
+ * appId/certId let a misconfigured environment build a broken auth URL or fail
+ * the exchange downstream instead of failing closed here.
+ *
+ * @returns the names of the missing variables (never their values).
+ */
+const REQUIRED_EBAY_ENV = ['EBAY_APP_ID', 'EBAY_CERT_ID', 'EBAY_DEV_ID', 'EBAY_RU_NAME'] as const;
+
+function missingEbayEnv(): string[] {
+  return REQUIRED_EBAY_ENV.filter((name) => !process.env[name]);
+}
+
+/**
  * Verify the OAuth state returned by eBay against the value stored at
  * authorize-initiation time.
  *
@@ -83,6 +98,15 @@ export async function POST(req: NextRequest) {
 
   const { environment = 'sandbox' } = parseResult.data;
 
+  const missing = missingEbayEnv();
+  if (missing.length > 0) {
+    return apiError(
+      `Missing required eBay environment variables: ${missing.join(', ')}`,
+      null,
+      400,
+    );
+  }
+
   // @agent:forge Replace with session tenantId
   const tenantId = DEV_TENANT_ID;
 
@@ -96,16 +120,12 @@ export async function POST(req: NextRequest) {
       environment,
     };
 
-    if (!config.appId || !config.certId) {
-      return apiError('EBAY_APP_ID or EBAY_CERT_ID environment variable not set', null, 400);
-    }
-
     // Generate state parameter for CSRF protection
     const state = Buffer.from(`${tenantId}:${Date.now()}`).toString('base64');
 
     // Create eBay client and get authorization URL
     const ebayClient = new eBayClient(config);
-    const authUrl = ebayClient.getAuthorizationUrl(state);
+    const authUrl = eBayClient.getAuthorizationUrl(state);
 
     // Store state in database for verification (audit_events is immutable:
     // INSERT only, no UPDATE/DELETE — see migration 0003).
@@ -166,6 +186,15 @@ export async function GET(req: NextRequest) {
   // @agent:forge Replace with session tenantId
   const tenantId = DEV_TENANT_ID;
 
+  const missing = missingEbayEnv();
+  if (missing.length > 0) {
+    return apiError(
+      `Missing required eBay environment variables: ${missing.join(', ')}`,
+      null,
+      400,
+    );
+  }
+
   // Load eBay config from environment variables
   const config: eBayConfig = {
     appId: process.env.EBAY_APP_ID || '',
@@ -174,10 +203,6 @@ export async function GET(req: NextRequest) {
     ruName: process.env.EBAY_RU_NAME || '',
     environment: 'sandbox',
   };
-
-  if (!config.appId || !config.certId) {
-    return apiError('EBAY_APP_ID or EBAY_CERT_ID environment variable not set', null, 400);
-  }
 
   try {
     // All DB work runs inside withTenant so the `ghostcart.tenant_id` GUC is
@@ -196,42 +221,11 @@ export async function GET(req: NextRequest) {
       const ebayClient = new eBayClient(config);
       const tokenResponse = await ebayClient.exchangeCodeForToken(code);
 
-      // Upsert the live tokens into marketplace_connections so the sync
-      // worker can pick them up. audit_events is INSERT-only (no UPDATE/
-      // DELETE per migration 0003) so we can't store tokens there.
-      await client.query(
-        `INSERT INTO marketplace_connections
-           (tenant_id, marketplace, connection_name, access_token, refresh_token,
-            token_expires_at, app_id, cert_id, dev_id, ru_name, environment,
-            status, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, now(), now())
-        ON CONFLICT (tenant_id, marketplace)
-        DO UPDATE SET
-           access_token = EXCLUDED.access_token,
-           refresh_token = EXCLUDED.refresh_token,
-           token_expires_at = EXCLUDED.token_expires_at,
-           app_id = EXCLUDED.app_id,
-           cert_id = EXCLUDED.cert_id,
-           dev_id = EXCLUDED.dev_id,
-           ru_name = EXCLUDED.ru_name,
-           environment = EXCLUDED.environment,
-           status = EXCLUDED.status,
-           updated_at = now()`,
-        [
-          tenantId,
-          'ebay',
-          'eBay Store',
-          tokenResponse.accessToken,
-          tokenResponse.refreshToken,
-          tokenResponse.expiresAt,
-          config.appId,
-          config.certId,
-          config.devId,
-          config.ruName,
-          config.environment,
-          'connected',
-        ],
-      );
+      // Token persistence is deliberately NOT done here. Writers must not
+      // store tokens in audit_events (INSERT-only, no UPDATE/DELETE per
+      // migration 0003) and must not store them in plaintext; the GC-102
+      // decision requires application-layer encryption before any token is
+      // written. Persistence is tracked as GC-121-B1-FU1 (issue #127).
 
       return apiSuccess({
         message: 'Token exchange successful',
