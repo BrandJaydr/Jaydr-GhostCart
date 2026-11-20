@@ -1,8 +1,9 @@
 import type { NextRequest } from 'next/server';
+import type { PoolClient } from 'pg';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { z } from 'zod';
 import { type eBayConfig, eBayClient } from '@/lib/adapters/ebay/ebay-client';
-import { db, DEV_TENANT_ID } from '@/lib/db/index';
+import { withTenant, DEV_TENANT_ID } from '@/lib/db/index';
 
 /**
  * Schema for eBay authorization request
@@ -29,8 +30,8 @@ const STATE_MAX_AGE_MS = 10 * 60 * 1000; // 10 minutes
  *
  * @returns true when the state is valid and fresh.
  */
-async function verifyStoredState(tenantId: string, state: string): Promise<boolean> {
-  const { rows } = await db.query(
+async function verifyStoredState(client: PoolClient, tenantId: string, state: string): Promise<boolean> {
+  const { rows } = await client.query(
     `SELECT metadata->>'state' AS stored_state,
             created_at AS issued_at
        FROM audit_events
@@ -108,12 +109,24 @@ export async function POST(req: NextRequest) {
 
     // Store state in database for verification (audit_events is immutable:
     // INSERT only, no UPDATE/DELETE — see migration 0003).
-    await db.query(
-      `INSERT INTO audit_events
-         (tenant_id, user_id, action, entity_type, entity_id, metadata, created_at)
-       VALUES ($1, NULL, 'ebay.auth_initiated', 'marketplace_connections', NULL, $2, now())`,
-      [tenantId, JSON.stringify({ state, environment })],
-    );
+    //
+    // All DB work runs inside withTenant so the `ghostcart.tenant_id` GUC is
+    // set on the connection before RLS policies evaluate. Without it the
+    // audit_events SELECT in verifyStoredState() sees no rows and every
+    // legitimate callback 401s.
+    try {
+      await withTenant(tenantId, async (client: PoolClient) => {
+        await client.query(
+          `INSERT INTO audit_events
+             (tenant_id, user_id, action, entity_type, entity_id, metadata, created_at)
+            VALUES ($1, NULL, 'ebay.auth_initiated', 'marketplace_connections', NULL, $2, now())`,
+          [tenantId, JSON.stringify({ state, environment })],
+        );
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      return apiError(`Failed to initiate authorization: ${message}`, null, 500);
+    }
 
     return apiSuccess({ authorizationUrl: authUrl, state, expiresIn: 600 });
   } catch (error) {
@@ -153,55 +166,85 @@ export async function GET(req: NextRequest) {
   // @agent:forge Replace with session tenantId
   const tenantId = DEV_TENANT_ID;
 
+  // Load eBay config from environment variables
+  const config: eBayConfig = {
+    appId: process.env.EBAY_APP_ID || '',
+    certId: process.env.EBAY_CERT_ID || '',
+    devId: process.env.EBAY_DEV_ID || '',
+    ruName: process.env.EBAY_RU_NAME || '',
+    environment: 'sandbox',
+  };
+
+  if (!config.appId || !config.certId) {
+    return apiError('EBAY_APP_ID or EBAY_CERT_ID environment variable not set', null, 400);
+  }
+
   try {
-    // Verify the returned state against the value stored at initiation time
-    // and enforce freshness. A forged, mismatched, or expired state is
-    // rejected before any token exchange happens (fail closed).
-    const stateValid = await verifyStoredState(tenantId, state);
-    if (!stateValid) {
-      return apiError('Invalid or expired state parameter', null, 401);
-    }
+    // All DB work runs inside withTenant so the `ghostcart.tenant_id` GUC is
+    // set on the connection before RLS policies evaluate. verifyStoredState
+    // receives the transaction client so its audit_events SELECT sees rows.
+    return await withTenant(tenantId, async (client: PoolClient) => {
+      // Verify the returned state against the value stored at initiation time
+      // and enforce freshness. A forged, mismatched, or expired state is
+      // rejected before any token exchange happens (fail closed).
+      const stateValid = await verifyStoredState(client, tenantId, state);
+      if (!stateValid) {
+        return apiError('Invalid or expired state parameter', null, 401);
+      }
 
-    // Load eBay config from environment variables
-    const config: eBayConfig = {
-      appId: process.env.EBAY_APP_ID || '',
-      certId: process.env.EBAY_CERT_ID || '',
-      devId: process.env.EBAY_DEV_ID || '',
-      ruName: process.env.EBAY_RU_NAME || '',
-      environment: 'sandbox',
-    };
+      // Create eBay client and exchange code for token
+      const ebayClient = new eBayClient(config);
+      const tokenResponse = await ebayClient.exchangeCodeForToken(code);
 
-    if (!config.appId || !config.certId) {
-      return apiError('EBAY_APP_ID or EBAY_CERT_ID environment variable not set', null, 400);
-    }
+      // Upsert the live tokens into marketplace_connections so the sync
+      // worker can pick them up. audit_events is INSERT-only (no UPDATE/
+      // DELETE per migration 0003) so we can't store tokens there.
+      await client.query(
+        `INSERT INTO marketplace_connections
+           (tenant_id, marketplace, connection_name, access_token, refresh_token,
+            token_expires_at, app_id, cert_id, dev_id, ru_name, environment,
+            status, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, now(), now())
+        ON CONFLICT (tenant_id, marketplace)
+        DO UPDATE SET
+           access_token = EXCLUDED.access_token,
+           refresh_token = EXCLUDED.refresh_token,
+           token_expires_at = EXCLUDED.token_expires_at,
+           app_id = EXCLUDED.app_id,
+           cert_id = EXCLUDED.cert_id,
+           dev_id = EXCLUDED.dev_id,
+           ru_name = EXCLUDED.ru_name,
+           environment = EXCLUDED.environment,
+           status = EXCLUDED.status,
+           updated_at = now()`,
+        [
+          tenantId,
+          'ebay',
+          'eBay Store',
+          tokenResponse.accessToken,
+          tokenResponse.refreshToken,
+          tokenResponse.expiresAt,
+          config.appId,
+          config.certId,
+          config.devId,
+          config.ruName,
+          config.environment,
+          'connected',
+        ],
+      );
 
-    // Create eBay client and exchange code for token
-    const ebayClient = new eBayClient(config);
-    const tokenResponse = await ebayClient.exchangeCodeForToken(code);
-
-    // Store token response in database (audit event for now)
-    // In production, this should be stored in a secure token storage
-    await db.query(
-      `INSERT INTO audit_events
-         (tenant_id, user_id, action, entity_type, entity_id, metadata, created_at)
-       VALUES ($1, NULL, 'ebay.token_received', 'marketplace_connections', NULL, $2, now())`,
-      [
-        tenantId,
-        JSON.stringify({
-          hasAccessToken: !!tokenResponse.accessToken,
-          hasRefreshToken: !!tokenResponse.refreshToken,
-          expiresAt: tokenResponse.expiresAt,
-        }),
-      ],
-    );
-
-    return apiSuccess({
-      message: 'Token exchange successful',
-      tokenExpiresAt: tokenResponse.expiresAt,
-      hasRefreshToken: !!tokenResponse.refreshToken,
+      return apiSuccess({
+        message: 'Token exchange successful',
+        tokenExpiresAt: tokenResponse.expiresAt,
+        hasRefreshToken: !!tokenResponse.refreshToken,
+      });
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
+    // Distinguish auth rejection from infrastructure errors
+    if (message.includes('Invalid or expired state parameter')) {
+      return apiError(message, null, 401);
+    }
     return apiError(`Failed to exchange code for token: ${message}`, null, 500);
   }
 }
