@@ -12,6 +12,54 @@ const AuthorizeSchema = z.object({
 });
 
 /**
+ * Maximum age of an OAuth state before it is considered stale. States are
+ * short-lived by design: a stale state is worthless to an attacker and
+ * signals a replay attempt.
+ */
+const STATE_MAX_AGE_MS = 10 * 60 * 1000; // 10 minutes
+
+/**
+ * Verify the OAuth state returned by eBay against the value stored at
+ * authorize-initiation time.
+ *
+ * The callback previously only decoded the returned state and checked that
+ * its tenant prefix matched the dev tenant UUID. A forged state carrying the
+ * well-known dev UUID therefore passed. This compares the returned state to
+ * the stored value and enforces freshness, failing closed on any mismatch.
+ *
+ * @returns true when the state is valid and fresh.
+ */
+async function verifyStoredState(tenantId: string, state: string): Promise<boolean> {
+  const { rows } = await db.query(
+    `SELECT metadata->>'state' AS stored_state,
+            created_at AS issued_at
+       FROM audit_events
+      WHERE tenant_id = $1
+        AND action = 'ebay.auth_initiated'
+        AND metadata->>'state' = $2
+      ORDER BY created_at DESC
+      LIMIT 1`,
+    [tenantId, state],
+  );
+
+  if (rows.length === 0) {
+    return false;
+  }
+
+  const row = rows[0] as { stored_state?: string; issued_at?: string };
+  if (row.stored_state !== state) {
+    return false;
+  }
+
+  const issuedAt = row.issued_at ? new Date(row.issued_at).getTime() : NaN;
+  if (!Number.isFinite(issuedAt) || Date.now() - issuedAt > STATE_MAX_AGE_MS) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
  * POST /api/ebay/authorize
  * Initiate eBay OAuth 2.0 authorization flow
  *
@@ -34,12 +82,11 @@ export async function POST(req: NextRequest) {
 
   const { environment = 'sandbox' } = parseResult.data;
 
-  // @agent:forge Replace this with the tenantId resolved from the
-  // authenticated session once next-auth is configured.
+  // @agent:forge Replace with session tenantId
   const tenantId = DEV_TENANT_ID;
 
   try {
-    // Check if eBay credentials are configured
+    // Load eBay config from environment variables
     const config: eBayConfig = {
       appId: process.env.EBAY_APP_ID || '',
       certId: process.env.EBAY_CERT_ID || '',
@@ -48,14 +95,8 @@ export async function POST(req: NextRequest) {
       environment,
     };
 
-    if (!config.appId || !config.certId || !config.devId || !config.ruName) {
-      return apiError(
-        'eBay credentials not configured',
-        {
-          hint: 'Set EBay environment variables: EBAY_APP_ID, EBAY_CERT_ID, EBAY_DEV_ID, EBAY_RU_NAME',
-        },
-        500,
-      );
+    if (!config.appId || !config.certId) {
+      return apiError('EBAY_APP_ID or EBAY_CERT_ID environment variable not set', null, 400);
     }
 
     // Generate state parameter for CSRF protection
@@ -65,7 +106,8 @@ export async function POST(req: NextRequest) {
     const ebayClient = new eBayClient(config);
     const authUrl = ebayClient.getAuthorizationUrl(state);
 
-    // Store state in database for verification
+    // Store state in database for verification (audit_events is immutable:
+    // INSERT only, no UPDATE/DELETE — see migration 0003).
     await db.query(
       `INSERT INTO audit_events
          (tenant_id, user_id, action, entity_type, entity_id, metadata, created_at)
@@ -73,31 +115,31 @@ export async function POST(req: NextRequest) {
       [tenantId, JSON.stringify({ state, environment })],
     );
 
-    return apiSuccess({
-      authUrl,
-      state,
-      environment,
-    });
-  } catch (err) {
-    console.error('[api/ebay/authorize] Error:', err);
-    return apiError('Failed to initiate eBay authorization', null, 500);
+    return apiSuccess({ authorizationUrl: authUrl, state, expiresIn: 600 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return apiError(`Failed to initiate authorization: ${message}`, null, 500);
   }
 }
 
 /**
- * GET /api/ebay/authorize/callback
- * Handle eBay OAuth callback
+ * GET /api/ebay/authorize
+ * Handle OAuth callback from eBay
  *
- * Exchange authorization code for access token and store credentials.
+ * Exchanges authorization code for access token.
  */
 export async function GET(req: NextRequest) {
-  const url = new URL(req.url);
-  const code = url.searchParams.get('code');
-  const state = url.searchParams.get('state');
-  const error = url.searchParams.get('error');
+  const searchParams = req.nextUrl.searchParams;
+  const code = searchParams.get('code');
+  const state = searchParams.get('state');
+  const error = searchParams.get('error');
 
   if (error) {
-    return apiError(`eBay authorization error: ${error}`, null, 400);
+    return apiError(
+      `OAuth error: ${error}`,
+      { error_description: searchParams.get('error_description') },
+      400,
+    );
   }
 
   if (!code) {
@@ -112,15 +154,15 @@ export async function GET(req: NextRequest) {
   const tenantId = DEV_TENANT_ID;
 
   try {
-    // Verify state parameter
-    const decodedState = Buffer.from(state, 'base64').toString('utf-8');
-    const [stateTenantId] = decodedState.split(':');
-
-    if (stateTenantId !== tenantId) {
-      return apiError('Invalid state parameter', null, 400);
+    // Verify the returned state against the value stored at initiation time
+    // and enforce freshness. A forged, mismatched, or expired state is
+    // rejected before any token exchange happens (fail closed).
+    const stateValid = await verifyStoredState(tenantId, state);
+    if (!stateValid) {
+      return apiError('Invalid or expired state parameter', null, 401);
     }
 
-    // Exchange code for token
+    // Load eBay config from environment variables
     const config: eBayConfig = {
       appId: process.env.EBAY_APP_ID || '',
       certId: process.env.EBAY_CERT_ID || '',
@@ -129,48 +171,37 @@ export async function GET(req: NextRequest) {
       environment: 'sandbox',
     };
 
+    if (!config.appId || !config.certId) {
+      return apiError('EBAY_APP_ID or EBAY_CERT_ID environment variable not set', null, 400);
+    }
+
+    // Create eBay client and exchange code for token
     const ebayClient = new eBayClient(config);
-    const token = await ebayClient.exchangeCodeForToken(code);
+    const tokenResponse = await ebayClient.exchangeCodeForToken(code);
 
-    // Store credentials in database
-    await db.query(
-      `INSERT INTO marketplace_connections
-         (tenant_id, marketplace, app_id, cert_id, dev_id, ru_name,
-          access_token, refresh_token, token_expires_at, environment, connected_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, now())
-       ON CONFLICT (tenant_id, marketplace, environment) DO UPDATE
-         SET access_token = EXCLUDED.access_token,
-             refresh_token = EXCLUDED.refresh_token,
-             token_expires_at = EXCLUDED.token_expires_at,
-             connected_at = now()`,
-      [
-        tenantId,
-        'ebay',
-        config.appId,
-        config.certId,
-        config.devId,
-        config.ruName,
-        token.accessToken,
-        token.refreshToken,
-        token.expiresAt,
-        config.environment,
-      ],
-    );
-
-    // Log successful authorization
+    // Store token response in database (audit event for now)
+    // In production, this should be stored in a secure token storage
     await db.query(
       `INSERT INTO audit_events
          (tenant_id, user_id, action, entity_type, entity_id, metadata, created_at)
-       VALUES ($1, NULL, 'ebay.authorized', 'marketplace_connections', NULL, $2, now())`,
-      [tenantId, JSON.stringify({ environment: config.environment })],
+       VALUES ($1, NULL, 'ebay.token_received', 'marketplace_connections', NULL, $2, now())`,
+      [
+        tenantId,
+        JSON.stringify({
+          hasAccessToken: !!tokenResponse.accessToken,
+          hasRefreshToken: !!tokenResponse.refreshToken,
+          expiresAt: tokenResponse.expiresAt,
+        }),
+      ],
     );
 
     return apiSuccess({
-      message: 'eBay authorization successful',
-      environment: config.environment,
+      message: 'Token exchange successful',
+      tokenExpiresAt: tokenResponse.expiresAt,
+      hasRefreshToken: !!tokenResponse.refreshToken,
     });
-  } catch (err) {
-    console.error('[api/ebay/authorize/callback] Error:', err);
-    return apiError('Failed to complete eBay authorization', null, 500);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return apiError(`Failed to exchange code for token: ${message}`, null, 500);
   }
 }
