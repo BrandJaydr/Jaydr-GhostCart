@@ -129,6 +129,19 @@ export async function GET(req: NextRequest) {
       environment: 'sandbox',
     };
 
+    // Validate credentials before attempting the token exchange, so an
+    // incomplete OAuth flow fails closed instead of calling eBay with
+    // empty/partial credentials.
+    if (!config.appId || !config.certId || !config.devId || !config.ruName) {
+      return apiError(
+        'eBay credentials not configured',
+        {
+          hint: 'Set eBay environment variables: EBAY_APP_ID, EBAY_CERT_ID, EBAY_DEV_ID, EBAY_RU_NAME',
+        },
+        500,
+      );
+    }
+
     const ebayClient = new eBayClient(config);
     const token = await ebayClient.exchangeCodeForToken(code);
 
