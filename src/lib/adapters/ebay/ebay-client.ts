@@ -269,7 +269,7 @@ export class eBayClient {
     const offerData = await offerResponse.json();
 
     // Finally publish the offer
-    const publishUrl = `${this.baseUrl}/sell/inventory/v1/publish_offer`;
+    const publishUrl = `${this.baseUrl}/sell/inventory/v1/offer/${offerData.offerId}/publish`;
     const publishResponse = await fetch(publishUrl, {
       method: 'POST',
       headers: {
@@ -277,9 +277,6 @@ export class eBayClient {
         'Content-Type': 'application/json',
         'Content-Language': 'en-US',
       },
-      body: JSON.stringify({
-        offerId: offerData.offerId,
-      }),
     });
 
     if (!publishResponse.ok) {
