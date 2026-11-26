@@ -24,6 +24,10 @@ import type { CanonicalProduct } from '../lib/types/canonical.js';
 import { randomUUID } from 'node:crypto';
 import { notify } from '../lib/alerts/index.js';
 import { processScheduledRefreshes } from './scheduler.js';
+import {
+  ALIEXPRESS_TOKEN_REFRESH_INTERVAL_MS,
+  processAliExpressTokenRefreshes,
+} from './aliexpress-token-refresh.js';
 
 console.warn('[Worker] Starting GhostCart worker process...');
 
@@ -39,6 +43,15 @@ const schedulerTimer = setInterval(() => {
 void processScheduledRefreshes().catch((err) => {
   console.error('[Worker] Initial scheduled refresh check failed:', (err as Error).message);
 });
+
+// GC-303: rotate expiring AliExpress tokens on a dedicated tick. Failures are
+// alerted inside the processor (see aliexpress-token-refresh.ts); this catch is
+// only for a fatal sweep error, and never stops the interval.
+const tokenRefreshTimer = setInterval(() => {
+  void processAliExpressTokenRefreshes().catch((err) => {
+    console.error('[Worker] AliExpress token refresh tick failed:', (err as Error).message);
+  });
+}, ALIEXPRESS_TOKEN_REFRESH_INTERVAL_MS);
 
 /**
  * Persistence helpers for the product.import worker.
@@ -660,6 +673,7 @@ listingWorker.on('failed', (job, err) => {
 process.on('SIGTERM', async () => {
   console.warn('[Worker] Shutting down...');
   clearInterval(schedulerTimer);
+  clearInterval(tokenRefreshTimer);
   await Promise.allSettled([importWorker.close(), refreshWorker.close(), listingWorker.close()]);
   process.exit(0);
 });
